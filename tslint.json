@@ -1,0 +1,72 @@
+{
+    "defaultSeverity": "error",
+    "extends": [
+        "tslint:recommended"
+    ],
+    "jsRules": {
+        "no-console": false,
+        "no-switch-case-fall-through": true,
+        "object-literal-sort-keys": false,
+        "semicolon": [
+            true,
+            "never"
+        ],
+        "space-before-function-paren": [
+            true,
+            {
+                "anonymous": "always",
+                "asyncArrow": "always",
+                "named": "never",
+                "method": "never",
+                "constructor": "never"
+            }
+        ],
+        "trailing-comma": false
+    },
+    "rules": {
+        "array-type": false,
+        "arrow-parens": false,
+        "interface-name": false,
+        "max-line-length": {
+            "options": [
+                140
+            ]
+        },
+        "no-bitwise": false,
+        "object-literal-sort-keys": false,
+        "no-any": true,
+        "no-consecutive-blank-lines": false,
+        "no-invalid-this": [
+            true,
+            "check-function-in-method"
+        ],
+        "max-classes-per-file": false,
+        "no-switch-case-fall-through": true,
+        "space-before-function-paren": [
+            true,
+            {
+                "anonymous": "always",
+                "asyncArrow": "always",
+                "named": "never",
+                "method": "never",
+                "constructor": "never"
+            }
+        ],
+        "semicolon": [
+            true,
+            "never"
+        ],
+        "align": false,
+        "trailing-comma": false,
+        "typedef": [
+            true,
+            "call-signature",
+            "parameter",
+            "property-declaration",
+            "member-variable-declaration",
+            "object-destructuring",
+            "array-destructuring"
+        ]
+    },
+    "rulesDirectory": []
+}
