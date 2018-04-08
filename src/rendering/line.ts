@@ -13,7 +13,7 @@ export function rasterize(from: Position, to: Position, overshoot: boolean = fal
 
   let d = 2.0 * delta.y - delta.x
   let index = 0
-  const current = { ...from }
+  const current = { x: from.x, y: from.y }
   let done = false
 
   return () => {
@@ -21,7 +21,7 @@ export function rasterize(from: Position, to: Position, overshoot: boolean = fal
       return undefined
     }
 
-    const result = { ...current }
+    const result = new Position(current.x, current.y)
     if (overshoot || index < delta.x) {
       while (d > 0) {
         d -= 2 * delta.x

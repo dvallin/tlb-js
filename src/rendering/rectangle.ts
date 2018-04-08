@@ -1,4 +1,5 @@
 import { Rectangle } from "@/geometry/Rectangle"
+import { Position } from "@/components/Position"
 import { RenderIterator } from "@/rendering"
 
 export function rasterize(rectangle: Rectangle, fill: boolean = false): RenderIterator {
@@ -10,7 +11,7 @@ export function rasterize(rectangle: Rectangle, fill: boolean = false): RenderIt
         if (done) {
             return undefined
         }
-        const result = { x, y }
+        const result = new Position(x, y)
         x++
         if (x > rectangle.right) {
             x = rectangle.left

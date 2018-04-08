@@ -32,6 +32,7 @@
                 140
             ]
         },
+        "ordered-imports": false,
         "no-bitwise": false,
         "object-literal-sort-keys": false,
         "no-any": true,

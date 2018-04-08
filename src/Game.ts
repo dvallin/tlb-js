@@ -3,9 +3,10 @@ import ROT, { Display } from "rot-js"
 import { World } from "mogwai-ecs/lib"
 
 import { GameSystem } from "@/systems/GameSystem"
+import { gray } from "@/palettes"
 
-const DEFAULT_WIDTH = 100
-const DEFAULT_HEIGHT = 50
+export const DEFAULT_WIDTH = 98
+export const DEFAULT_HEIGHT = 61
 
 export interface GameSettings {
   framerate?: number
@@ -13,7 +14,7 @@ export interface GameSettings {
 
 export function defaultSettings(): GameSettings {
   return {
-    framerate: 30
+    framerate: 100
   }
 }
 
@@ -30,7 +31,11 @@ export class Game {
 
     const displayOptions: ROT.DisplayOptions = {
       width: DEFAULT_WIDTH,
-      height: DEFAULT_HEIGHT
+      height: DEFAULT_HEIGHT,
+      forceSquareRatio: true,
+      fontSize: 17,
+      fontFamily: "Lucida Console, Monaco, monospace",
+      bg: gray[4]
     }
     this.display = new ROT.Display(displayOptions)
     this.world = new World()
@@ -45,6 +50,16 @@ export class Game {
 
   public build(): void {
     document.body.appendChild(this.display.getContainer())
+    const btn = document.getElementById("goFS")
+    if (btn !== null) {
+      btn.addEventListener("click", () => {
+        if (document.body.requestFullscreen) {
+          document.body.requestFullscreen()
+        } else if (document.body.webkitRequestFullscreen) {
+          document.body.webkitRequestFullscreen()
+        }
+      }, false)
+    }
     this.systems.forEach(system =>
       system.build(this.world)
     )

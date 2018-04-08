@@ -1,7 +1,7 @@
 import { Position } from "@/components/Position"
 import LazyJS from "lazy.js"
 
-export type RenderIterator = () => { x: number, y: number } | undefined
+export type RenderIterator = () => Position | undefined
 
 export function toStream(iter: RenderIterator): LazyJS.Sequence<Position> {
   return LazyJS.generate(iter)

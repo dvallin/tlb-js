@@ -16,13 +16,15 @@
   "dependencies": {
     "lazy.js": "^0.5.1",
     "mogwai-ecs": "^0.3.6",
-    "rot-js": "^0.6.5"
+    "rot-js": "^0.6.5",
+    "seedrandom": "^2.4.3"
   },
   "devDependencies": {
     "@types/jest": "^22.1.3",
     "@types/lazy.js": "^0.3.28",
     "@types/node": "^9.4.6",
     "@types/rot-js": "^0.6.1",
+    "@types/seedrandom": "^2.4.27",
     "babel-core": "^6.26.0",
     "babel-jest": "^22.2.2",
     "babel-loader": "^7.1.2",
