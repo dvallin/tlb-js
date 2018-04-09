@@ -1,7 +1,7 @@
 import { Game } from "./Game"
 
 import { Input } from "@/systems/Input"
-import { Map } from "@/systems/Map"
+import { Map } from "@/map/Map"
 
 const game = new Game()
 
