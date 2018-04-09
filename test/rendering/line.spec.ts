@@ -1,4 +1,4 @@
-import { Position } from "@/components/Position"
+import { Position } from "@/geometry/Position"
 import { toStream } from "@/rendering"
 import { rasterize } from "@/rendering/line"
 

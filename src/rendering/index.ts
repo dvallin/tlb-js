@@ -1,4 +1,4 @@
-import { Position } from "@/components/Position"
+import { Position } from "@/geometry/Position"
 import LazyJS from "lazy.js"
 
 export type RenderIterator = () => Position | undefined

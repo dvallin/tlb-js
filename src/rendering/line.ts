@@ -1,4 +1,4 @@
-import { Position } from "@/components/Position"
+import { Position } from "@/geometry/Position"
 import { RenderIterator } from "@/rendering"
 
 export function rasterize(from: Position, to: Position, overshoot: boolean = false): RenderIterator {

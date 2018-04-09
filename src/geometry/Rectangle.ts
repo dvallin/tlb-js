@@ -1,6 +1,6 @@
-import { Position } from "@/components/Position"
-import { Size } from "@/components/Size"
-import { Direction } from "@/components/Direction"
+import { Position } from "@/geometry/Position"
+import { Size } from "@/geometry/Size"
+import { Direction } from "@/geometry/Direction"
 
 export class Rectangle {
     public static from(position: Position, size: Size, facing?: Direction): Rectangle {

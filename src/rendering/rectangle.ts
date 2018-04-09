@@ -1,5 +1,5 @@
 import { Rectangle } from "@/geometry/Rectangle"
-import { Position } from "@/components/Position"
+import { Position } from "@/geometry/Position"
 import { RenderIterator } from "@/rendering"
 
 export function rasterize(rectangle: Rectangle, fill: boolean = false): RenderIterator {

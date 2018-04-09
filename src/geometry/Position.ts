@@ -1,5 +1,5 @@
-import { Direction } from "@/components/Direction"
-import { Size } from "@/components/Size"
+import { Direction } from "@/geometry/Direction"
+import { Size } from "@/geometry/Size"
 
 export class Position {
 

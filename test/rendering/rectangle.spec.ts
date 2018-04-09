@@ -1,5 +1,5 @@
-import { Position } from "@/components/Position"
-import { Size } from "@/components/Size"
+import { Position } from "@/geometry/Position"
+import { Size } from "@/geometry/Size"
 import { Rectangle } from "@/geometry/Rectangle"
 import { toStream } from "@/rendering"
 import { rasterize } from "@/rendering/rectangle"

@@ -1,19 +1,19 @@
-import { World, VectorStorage, MapStorage } from "mogwai-ecs/lib"
-import { Display } from "rot-js"
-
+import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from "@/Game"
+import { Direction, leftOf, rightOf } from "@/geometry/Direction"
+import { Position } from "@/geometry/Position"
+import { Size } from "@/geometry/Size"
+import { Rectangle } from "@/geometry/Rectangle"
+import { gray, primary } from "@/palettes"
+import { bernoulli, binomialNormed, dualDecision, ternaryDecision, uniformInteger } from "@/random"
+import { foreach, toArray } from "@/rendering"
 import { GameSystem, RenderLayer } from "@/systems/GameSystem"
-
-import { Position } from "@/components/Position"
-import { Direction, leftOf, rightOf } from "@/components/Direction"
+import { MapStorage, VectorStorage, World } from "mogwai-ecs/lib"
+import { Display } from "rot-js"
+import { strangeSymbols } from "@/symbols"
 
 import { rasterize as rasterizeRectangle } from "@/rendering/rectangle"
-import { foreach, toArray } from "@/rendering"
+import { Boxed } from "@/components/Boxed"
 
-import { DEFAULT_WIDTH, DEFAULT_HEIGHT } from "@/Game"
-import { bernoulli, binomialNormed, ternaryDecision, dualDecision, uniformInteger } from "@/random"
-import { Rectangle } from "@/geometry/Rectangle"
-import { Size } from "@/components/Size"
-import { primary, gray } from "@/palettes"
 
 export interface Drawable {
     character: string,
@@ -52,8 +52,6 @@ function tunnelerTile(): Tile {
     return new Tile("T", "red", -1)
 }
 
-const strangeSymbols: string[] = ["ƒ"]
-
 function randomWeapon(): Drawable {
     return { color: primary[3], character: strangeSymbols[uniformInteger(0, strangeSymbols.length)] }
 }
@@ -77,18 +75,17 @@ function asset(data: string[], colors: string[], palette: string[], room: number
 }
 
 function machine(room: number): (Tile | undefined)[] {
-    return asset([
-        " ╓- ",
-        "│██╕",
-        "╘██│",
-        " -╜ "
-    ],
+    return asset(
+        [
+            " ╓– ",
+            "│██╕",
+            "╘██│",
+            " –╜ "],
         [
             " 34 ",
             "4113",
             "3114",
-            " 43 "
-        ],
+            " 43 "],
         primary, room)
 }
 
@@ -119,7 +116,7 @@ export class Map implements GameSystem {
         world.registerComponent("active", new MapStorage<Tile>())
         world.registerComponent("tunneler", new MapStorage<Tunneler>())
         world.registerComponent("drawable", new MapStorage<Drawable>())
-        world.registerComponent("position", new VectorStorage<Position>())
+        world.registerComponent("position", new VectorStorage<Boxed<Position>>())
     }
 
     public build(world: World): void {
@@ -132,7 +129,7 @@ export class Map implements GameSystem {
         const entrance = new Position(Math.floor(DEFAULT_WIDTH / 2), 0)
         world.entity()
             .with("tunneler", new Tunneler(10, Direction.South, 3, 8, this.rooms))
-            .with("position", entrance)
+            .with("position", new Boxed<Position>(entrance))
             .close()
     }
 
@@ -156,19 +153,19 @@ export class Map implements GameSystem {
         world.fetch()
             .on(v => v.hasLabel("active").hasLabel("tunneler"))
             .withComponents("position", "tunneler")
-            .stream().each((comp: { entity: number, position: Position, tunneler: Tunneler }) => {
+            .stream().each((comp: { entity: number, position: Boxed<Position>, tunneler: Tunneler }) => {
                 updated = true
 
-                this.renderTunneler(comp.tunneler, comp.position)
+                this.renderTunneler(comp.tunneler, comp.position.value)
                 if (bernoulli(0.2)) {
-                    this.changeDirection(world, comp.entity, comp.tunneler, comp.position)
+                    this.changeDirection(comp.tunneler, comp.position)
                 }
-                this.moveTunneler(world, comp.entity, comp.tunneler, comp.position)
+                this.moveTunneler(comp.tunneler, comp.position)
 
-                if (comp.tunneler.roomsBuilt >= 3) {
-                    this.spawnHub(world, comp.tunneler, comp.position)
+                if (bernoulli(comp.tunneler.roomsBuilt / 5)) {
+                    this.spawnHub(world, comp.tunneler, comp.position.value)
                 } else {
-                    this.buildRooms(world, comp.tunneler, comp.position, new Size(uniformInteger(4, 10), uniformInteger(4, 10)))
+                    this.buildRooms(world, comp.tunneler, comp.position.value, new Size(uniformInteger(4, 10), uniformInteger(4, 10)))
                 }
 
                 if (!comp.tunneler.alive) {
@@ -180,9 +177,9 @@ export class Map implements GameSystem {
             world.fetch()
                 .on(v => v.hasLabel("tunneler"))
                 .withComponents("position")
-                .stream().each((comp: { entity: number, position: Position }) => {
+                .stream().each((comp: { entity: number, position: Boxed<Position> }) => {
                     world.entity(comp.entity).with("active").close()
-                    this.set(comp.position, wallTile())
+                    this.set(comp.position.value, wallTile())
                 })
         }
     }
@@ -196,38 +193,37 @@ export class Map implements GameSystem {
         world.fetch()
             .on(v => v.hasLabel("drawable").hasLabel("position"))
             .withComponents("position", "drawable")
-            .stream().each((comp: { position: Position, drawable: Drawable }) => {
-                this.renderDrawable(display, comp.position, comp.drawable)
+            .stream().each((comp: { position: Boxed<Position>, drawable: Drawable }) => {
+                this.renderDrawable(display, comp.position.value, comp.drawable)
             })
     }
 
-    private moveTunneler(world: World, entity: number, tunneler: Tunneler, position: Position): void {
-        const newPosition = position.add(Position.from(tunneler.direction))
+    private moveTunneler(tunneler: Tunneler, position: Boxed<Position>): void {
+        const newPosition = position.value.add(Position.from(tunneler.direction))
         if (this.inside(newPosition)) {
-            this.setTunnelerPosition(world, entity, newPosition)
+            position.value = newPosition
         } else {
             tunneler.alive = false
         }
     }
 
-    private changeDirection(world: World, entity: number, tunneler: Tunneler, position: Position): void {
-        const forward = this.freeCells(position, tunneler.direction, tunneler.width)
+    private changeDirection(tunneler: Tunneler, position: Boxed<Position>): void {
+        const forward = this.freeCells(position.value, tunneler.direction, tunneler.width)
+
         const length = -Math.floor(tunneler.width / 2)
-        const savePosition = position.add(Position.from(tunneler.direction).mult(length))
+        const savePosition = position.value.add(Position.from(tunneler.direction).mult(length))
         const left = this.freeCells(savePosition, leftOf(tunneler.direction), tunneler.width)
         const right = this.freeCells(savePosition, rightOf(tunneler.direction), tunneler.width)
 
-        if (forward < left) {
-            tunneler.direction = leftOf(tunneler.direction)
-            this.setTunnelerPosition(world, entity, savePosition)
-        } else if (forward < right) {
-            tunneler.direction = rightOf(tunneler.direction)
-            this.setTunnelerPosition(world, entity, savePosition)
-        }
-    }
+        if (forward < Math.max(left, right)) {
+            position.value = savePosition
 
-    private setTunnelerPosition(world: World, entity: number, newPosition: Position): void {
-        world.entity(entity).update("position", (p: Position) => p.assign(newPosition)).close()
+            if (forward < left) {
+                tunneler.direction = leftOf(tunneler.direction)
+            } else {
+                tunneler.direction = rightOf(tunneler.direction)
+            }
+        }
     }
 
     private spawnHub(world: World, tunneler: Tunneler, position: Position): void {
@@ -284,7 +280,9 @@ export class Map implements GameSystem {
             foreach(rasterizeRectangle(rectangle, true), (p: Position) =>
                 this.set(p, roomTile(this.rooms))
             )
-            world.entity().with("position", rectangle.mid).with("drawable", randomWeapon()).close()
+            world.entity()
+                .with("position", new Boxed<Position>(rectangle.mid))
+                .with("drawable", randomWeapon()).close()
         }
     }
 
@@ -338,7 +336,7 @@ export class Map implements GameSystem {
         if (isWalls) {
             world.entity()
                 .with("tunneler", child)
-                .with("position", position)
+                .with("position", new Boxed<Position>(position))
                 .close()
             this.set(position, tunnelerTile())
         }
