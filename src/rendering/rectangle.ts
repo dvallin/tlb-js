@@ -11,7 +11,7 @@ export function rasterize(rectangle: Rectangle, fill: boolean = false): RenderIt
         if (done) {
             return undefined
         }
-        const result = new Position(x, y)
+        const result = new Position(Math.floor(x), Math.floor(y))
         x++
         if (x > rectangle.right) {
             x = rectangle.left

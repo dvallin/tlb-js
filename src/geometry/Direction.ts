@@ -2,7 +2,8 @@ export enum Direction {
     North = "North",
     West = "West",
     East = "East",
-    South = "South"
+    South = "South",
+    Center = "Center",
 }
 
 export function leftOf(facing: Direction): Direction {
@@ -11,6 +12,7 @@ export function leftOf(facing: Direction): Direction {
         case Direction.East: return Direction.North
         case Direction.South: return Direction.East
         case Direction.West: return Direction.South
+        case Direction.Center: return Direction.Center
     }
 }
 
@@ -20,5 +22,6 @@ export function rightOf(facing: Direction): Direction {
         case Direction.East: return Direction.South
         case Direction.South: return Direction.West
         case Direction.West: return Direction.North
+        case Direction.Center: return Direction.Center
     }
 }

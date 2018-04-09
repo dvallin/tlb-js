@@ -65,31 +65,28 @@ export class Rectangle {
         return new Rectangle(this.left - size, this.right + size, this.top - size, this.bottom + size)
     }
 
-    public addDirection(facing: Direction): Position {
-        let x: number
-        let y: number
-        switch (facing) {
-            case Direction.West:
-                x = this.left - 1
-                break
-            case Direction.North:
-            case Direction.South:
-                x = this.mid.x
-                break
-            case Direction.East:
-                x = this.right + 1
+    public add(position: Position): Rectangle {
+        return new Rectangle(this.left + position.x, this.right + position.x, this.top + position.y, this.bottom + position.y)
+    }
+
+    public isInside(position: Position): boolean {
+        return position.x >= this.left && position.x <= this.right && position.y >= this.top && position.y < this.bottom
+    }
+
+    public clamp(size: Size): Rectangle {
+        let result = new Rectangle(this.left, this.right, this.top, this.bottom)
+        if (this.left < 0) {
+            result = result.add(new Position(-this.left, 0))
         }
-        switch (facing) {
-            case Direction.North:
-                y = this.top - 1
-                break
-            case Direction.West:
-            case Direction.East:
-                y = this.mid.y
-                break
-            case Direction.South:
-                y = this.bottom + 1
+        if (this.right > size.width - 1) {
+            result = result.add(new Position(size.width - this.right, 0))
         }
-        return new Position(x!, y!)
+        if (this.top < 0) {
+            result = result.add(new Position(0, -this.top))
+        }
+        if (this.bottom > size.height - 1) {
+            result = result.add(new Position(0, size.height - 1 - this.bottom))
+        }
+        return result
     }
 }

@@ -32,7 +32,7 @@ export class TunnelingBuilder {
 
     public startAt(entrance: Position): TunnelingBuilder {
         this.world.entity()
-            .with("tunneler", new Tunneler(10, Direction.South, 3, 8, this.map.rooms))
+            .with("tunneler", new Tunneler(10, Direction.South, 3, 14, this.map.rooms))
             .with("position", new Boxed<Position>(entrance))
             .close()
         return this
@@ -62,7 +62,7 @@ export class TunnelingBuilder {
                 }
                 this.moveTunneler(comp.tunneler, comp.position)
 
-                if (bernoulli(comp.tunneler.roomsBuilt / 5)) {
+                if (bernoulli(Math.min(comp.tunneler.roomsBuilt / 7, 0.5))) {
                     this.spawnHub(comp.tunneler, comp.position.value)
                 } else {
                     this.buildRooms(comp.tunneler, comp.position.value, new Size(uniformInteger(4, 10), uniformInteger(4, 10)))

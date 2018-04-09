@@ -37,12 +37,16 @@ export class Position {
     return new Position(this.x + position.x, this.y + position.y)
   }
 
+  public subtract(position: Position): Position {
+    return new Position(this.x - position.x, this.y - position.y)
+  }
+
   public mult(scalar: number): Position {
-    return new Position(Math.floor(this.x * scalar), Math.floor(this.y * scalar))
+    return new Position(this.x * scalar, this.y * scalar)
   }
 
   public scale(resize: Size): Position {
-    return new Position(Math.floor(this.x * resize.width), Math.floor(this.y * resize.height))
+    return new Position(this.x * resize.width, this.y * resize.height)
   }
 
   public normal(): Position {

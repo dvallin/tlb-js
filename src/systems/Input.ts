@@ -21,6 +21,8 @@ export interface Modifiers {
 export interface Mouse {
   x: number
   y: number
+  clickX: number | undefined
+  clickY: number | undefined
   click_count: number
   left: boolean
   right: boolean
@@ -42,6 +44,8 @@ export class Input implements GameSystem {
         click_count: 0,
         x: 0,
         y: 0,
+        clickX: undefined,
+        clickY: undefined,
         left: false,
         right: false
       },
@@ -115,16 +119,13 @@ export class Input implements GameSystem {
   }
 
 
-  private handleMouse(mouse: Mouse, e: MouseEvent, invert: boolean): void {
+  private handleMouse(mouse: Mouse, e: MouseEvent): void {
     const pos = this.eventToPosition(e) as [number, number]
     mouse.x = pos[0]
     mouse.y = pos[1]
+
     mouse.left = (e.buttons & 1) === 1
     mouse.right = (e.buttons & 2) === 2
-    if (invert) {
-      mouse.left = !mouse.left
-      mouse.right = !mouse.right
-    }
     mouse.click_count = e.detail || 0
   }
 
@@ -142,20 +143,22 @@ export class Input implements GameSystem {
 
   private mousedown(event: MouseEvent): void {
     this.handleModifiers(this.state.modifiers, event)
-    this.handleMouse(this.state.mouse, event, false)
+    this.handleMouse(this.state.mouse, event)
+    this.state.mouse.clickX = this.state.mouse.x
+    this.state.mouse.clickY = this.state.mouse.y
     this.state.mousePressed[0] = (event.buttons & 1) === 1
     this.state.mousePressed[1] = (event.buttons & 2) === 2
   }
 
   private mouseup(event: MouseEvent): void {
     this.handleModifiers(this.state.modifiers, event)
-    this.handleMouse(this.state.mouse, event, true)
+    this.handleMouse(this.state.mouse, event)
     this.state.mouseReleased[0] = (event.buttons & 1) !== 1
     this.state.mouseReleased[1] = (event.buttons & 2) !== 2
   }
 
   private mousemove(event: MouseEvent): void {
     this.handleModifiers(this.state.modifiers, event)
-    this.handleMouse(this.state.mouse, event, false)
+    this.handleMouse(this.state.mouse, event)
   }
 }

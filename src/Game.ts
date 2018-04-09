@@ -5,8 +5,8 @@ import { World } from "mogwai-ecs/lib"
 import { GameSystem } from "@/systems/GameSystem"
 import { gray } from "@/palettes"
 
-export const DEFAULT_WIDTH = 98
-export const DEFAULT_HEIGHT = 61
+export const DEFAULT_WIDTH = 80
+export const DEFAULT_HEIGHT = 50
 
 export interface GameSettings {
   framerate?: number
@@ -50,16 +50,6 @@ export class Game {
 
   public build(): void {
     document.body.appendChild(this.display.getContainer())
-    const btn = document.getElementById("goFS")
-    if (btn !== null) {
-      btn.addEventListener("click", () => {
-        if (document.body.requestFullscreen) {
-          document.body.requestFullscreen()
-        } else if (document.body.webkitRequestFullscreen) {
-          document.body.webkitRequestFullscreen()
-        }
-      }, false)
-    }
     this.systems.forEach(system =>
       system.build(this.world)
     )
