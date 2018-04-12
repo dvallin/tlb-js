@@ -52,4 +52,11 @@ export class Position {
   public normal(): Position {
     return new Position(-this.y, this.x)
   }
+
+  public round(): Position {
+    return new Position(
+      Math.round(this.x * 100) / 100,
+      Math.round(this.y * 100) / 100
+    )
+  }
 }

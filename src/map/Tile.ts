@@ -15,8 +15,8 @@ export function wallTile(): Tile {
     return new Tile("#", gray[3], undefined)
 }
 
-export function corridorTile(): Tile {
-    return new Tile(".", gray[0], undefined)
+export function corridorTile(room: number): Tile {
+    return new Tile(".", gray[0], room)
 }
 
 export function roomTile(room: number): Tile {

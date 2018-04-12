@@ -31,8 +31,11 @@ export class TunnelingBuilder {
     }
 
     public startAt(entrance: Position): TunnelingBuilder {
+        const room = this.world.entity()
+            .with("room")
+            .close()
         this.world.entity()
-            .with("tunneler", new Tunneler(10, Direction.South, 3, 14, this.map.rooms))
+            .with("tunneler", new Tunneler(10, Direction.South, 3, 14, room))
             .with("position", new Boxed<Position>(entrance))
             .close()
         return this
@@ -114,17 +117,28 @@ export class TunnelingBuilder {
         if (this.map.isFree(rasterizedRectangle)) {
             tunneler.roomsBuilt++
             this.map.buildDoor(doorPosition)
-            this.map.buildRoom(rectangle)
-            this.world.entity()
+
+            const room = this.map.buildRoom(this.world, rectangle)
+            this.world.relation().with("connected").from(tunneler.room).to(room).close()
+
+            const weapon = this.world.entity()
                 .with("position", new Boxed<Position>(rectangle.mid))
-                .with("drawable", randomWeapon()).close()
+                .with("drawable", randomWeapon())
+                .with("description", new Boxed("a weapon"))
+                .close()
+
+            this.world.relation()
+                .with("contains")
+                .from(room)
+                .to(weapon)
+                .close()
         }
     }
 
     private renderTunneler(tunneler: Tunneler, position: Position): void {
         const positions: Position[] = this.tunnelerMoves(tunneler.direction, tunneler.width, position)
         if (this.map.isFree(positions)) {
-            positions.forEach(p => this.map.set(p, corridorTile()))
+            positions.forEach(p => this.map.set(p, corridorTile(tunneler.room)))
         } else {
             tunneler.alive = false
         }
@@ -141,7 +155,7 @@ export class TunnelingBuilder {
         return positions
     }
 
-    private spawnTunnelers(world: World, tunneler: Tunneler, position: Position, offset: number): void {
+    private spawnTunnelers(tunneler: Tunneler, hub: number, position: Position, offset: number): void {
         const left: Position = Position.from(tunneler.direction).normal()
         const forward: Position = Position.from(tunneler.direction)
 
@@ -150,26 +164,31 @@ export class TunnelingBuilder {
 
         if (spawnLeft) {
             const spawnPosition = position.add(left.mult(-offset))
-            this.spawnTunneler(world, spawnPosition, leftOf(tunneler.direction), tunneler)
+            this.spawnTunneler(spawnPosition, hub, leftOf(tunneler.direction), tunneler)
         }
         if (spawnRight) {
             const spawnPosition = position.add(left.mult(offset))
-            this.spawnTunneler(world, spawnPosition, rightOf(tunneler.direction), tunneler)
+            this.spawnTunneler(spawnPosition, hub, rightOf(tunneler.direction), tunneler)
         }
         if (spawnForward) {
             const spawnPosition = position.add(forward.mult(offset))
-            this.spawnTunneler(world, spawnPosition, tunneler.direction, tunneler)
+            this.spawnTunneler(spawnPosition, hub, tunneler.direction, tunneler)
         }
     }
 
-    private spawnTunneler(world: World, position: Position, direction: Direction, tunneler: Tunneler): void {
+    private spawnTunneler(position: Position, hub: number, direction: Direction, tunneler: Tunneler): void {
         const newWidth = binomialNormed([0.1, 0.3, 0.5, 0.1]) + 1
         const newTurns = uniformInteger(10, 15)
-        const child = new Tunneler(newTurns, direction, newWidth, tunneler.generation - 1, this.map.rooms)
-        const positions: Position[] = this.tunnelerMoves(direction, child.width, position)
+        const positions: Position[] = this.tunnelerMoves(direction, newWidth, position)
         const isWalls = this.map.isWalls(positions)
         if (isWalls) {
-            world.entity()
+            const room = this.world.entity()
+                .with("room")
+                .close()
+            this.world.relation().with("connected").from(hub).to(room).close()
+
+            const child = new Tunneler(newTurns, direction, newWidth, tunneler.generation - 1, room)
+            this.world.entity()
                 .with("tunneler", child)
                 .with("position", new Boxed<Position>(position))
                 .close()
@@ -209,12 +228,15 @@ export class TunnelingBuilder {
         const width = 7
         const rectangle = Rectangle.from(position, new Size(width, width), tunneler.direction)
         const rasterizedRectangle = toArray(rasterizeRectangle(rectangle.grow(1), true))
-        if (this.map.isFree(rasterizedRectangle) && tunneler.generation > 0) {
+        if (this.map.isFree(rasterizedRectangle, tunneler.room) && tunneler.generation > 0) {
             tunneler.alive = false
-            this.map.buildHub(rectangle)
-            this.spawnTunnelers(this.world, tunneler, rectangle.mid, Math.ceil(width / 2))
 
-            const m = machine(this.map.rooms)
+            const room = this.map.buildHub(this.world, rectangle)
+            this.world.relation().with("connected").from(tunneler.room).to(room).close()
+
+            this.spawnTunnelers(tunneler, room, rectangle.mid, Math.ceil(width / 2))
+
+            const m = machine(room)
             this.map.buildAsset(rectangle.mid, m)
         }
     }

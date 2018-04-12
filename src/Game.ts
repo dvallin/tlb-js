@@ -5,8 +5,8 @@ import { World } from "mogwai-ecs/lib"
 import { GameSystem } from "@/systems/GameSystem"
 import { gray } from "@/palettes"
 
-export const DEFAULT_WIDTH = 80
-export const DEFAULT_HEIGHT = 50
+export const DEFAULT_WIDTH = 98
+export const DEFAULT_HEIGHT = 61
 
 export interface GameSettings {
   framerate?: number
