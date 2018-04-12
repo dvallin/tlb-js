@@ -73,6 +73,16 @@ export class Rectangle {
         return position.x >= this.left && position.x <= this.right && position.y >= this.top && position.y < this.bottom
     }
 
+    public focus(position: Position): Rectangle {
+        const extend = this.extend
+        return new Rectangle(
+            position.x - Math.floor(extend.width / 2),
+            position.x + Math.floor(extend.width / 2),
+            position.y - Math.floor(extend.height / 2),
+            position.y + Math.floor(extend.height / 2)
+        )
+    }
+
     public clamp(size: Size): Rectangle {
         let result = new Rectangle(this.left, this.right, this.top, this.bottom)
         if (this.left < 0) {

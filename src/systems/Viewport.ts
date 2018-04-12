@@ -2,13 +2,19 @@ import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from "@/Game"
 import { Position } from "@/geometry/Position"
 import { GameSystem, RenderLayer } from "@/systems/GameSystem"
 import { World } from "mogwai-ecs/lib"
-import { Display, VK_J, VK_H, VK_K, VK_L } from "rot-js"
+import { Display } from "rot-js"
 
 import { Rectangle } from "@/geometry/Rectangle"
 import { Size } from "@/geometry/Size"
 import { Input } from "@/systems/Input"
-import { Direction } from "@/geometry/Direction"
 import { Map } from "@/map/Map"
+import { Boxed } from "@/Boxed"
+import { Menu } from "@/systems/Menu"
+
+export enum MenuItems {
+    Player = "Player",
+    Map = "Map"
+}
 
 export class Viewport implements GameSystem {
 
@@ -31,32 +37,15 @@ export class Viewport implements GameSystem {
 
     public execute(world: World): void {
         const input: Input | undefined = world.systems.get(Input.NAME) as Input | undefined
-        if (input !== undefined) {
-            const left = input.isPressed(VK_H)
-            const down = input.isPressed(VK_J)
-            const up = input.isPressed(VK_K)
-            const right = input.isPressed(VK_L)
-            let delta = Position.from(Direction.Center)
-            if (up) {
-                delta = delta.add(Position.from(Direction.North))
-            }
-            if (right) {
-                delta = delta.add(Position.from(Direction.East))
-            }
-            if (down) {
-                delta = delta.add(Position.from(Direction.South))
-            }
-            if (left) {
-                delta = delta.add(Position.from(Direction.West))
-            }
-            this.viewport = this.viewport.add(delta.round())
-
-            if (input.mouse.left || input.mouse.right) {
-                const mouseDrag = new Position(
-                    (input.mouse.x - input.mouse.clickX!) * 0.2,
-                    (input.mouse.y - input.mouse.clickY!) * 0.2,
-                )
-                this.viewport = this.viewport.add(mouseDrag.round())
+        const menu: Menu | undefined = world.systems.get(Menu.NAME) as Menu | undefined
+        if (input !== undefined && menu !== undefined) {
+            switch (menu.activeMenuItem) {
+                case MenuItems.Map:
+                    this.moveMapViewport(input)
+                    break
+                case MenuItems.Player:
+                    this.focusOnPlayer(world)
+                    break
             }
         }
 
@@ -72,5 +61,29 @@ export class Viewport implements GameSystem {
 
     public get topLeft(): Position {
         return new Position(this.viewport.left, this.viewport.top)
+    }
+
+    private moveMapViewport(input: Input): void {
+        const delta = input.movementDelta()
+        this.viewport = this.viewport.add(delta.round())
+
+        if (input.mouse.left || input.mouse.right) {
+            const mouseDrag = new Position(
+                (input.mouse.x - input.mouse.clickX!) * 0.2,
+                (input.mouse.y - input.mouse.clickY!) * 0.2,
+            )
+            this.viewport = this.viewport.add(mouseDrag.round())
+        }
+    }
+
+    private focusOnPlayer(world: World): void {
+        const player: { position: Boxed<Position> } | undefined = world
+            .fetch()
+            .on(t => t.hasLabel("player").hasLabel("active"))
+            .withComponents("position")
+            .first()
+        if (player !== undefined) {
+            this.viewport = this.viewport.focus(player.position.value)
+        }
     }
 }

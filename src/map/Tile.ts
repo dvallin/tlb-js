@@ -7,32 +7,33 @@ export class Tile implements Drawable {
     public constructor(
         public character: string,
         public color: string,
-        public room: number | undefined
+        public room: number | undefined,
+        public blocking: boolean
     ) { }
 }
 
 export function wallTile(): Tile {
-    return new Tile("#", gray[3], undefined)
+    return new Tile("#", gray[3], undefined, true)
 }
 
 export function corridorTile(room: number): Tile {
-    return new Tile(".", gray[0], room)
+    return new Tile(".", gray[0], room, false)
 }
 
 export function roomTile(room: number): Tile {
-    return new Tile(".", primary[1], room)
+    return new Tile(".", primary[1], room, false)
 }
 
 export function hubTile(room: number): Tile {
-    return new Tile(".", primary[0], room)
+    return new Tile(".", primary[0], room, false)
 }
 
 export function doorTile(): Tile {
-    return new Tile("+", primary[2], undefined)
+    return new Tile("+", primary[2], undefined, true)
 }
 
 export function tunnelerTile(): Tile {
-    return new Tile("T", "red", -1)
+    return new Tile("T", "red", -1, false)
 }
 
 export function randomWeapon(): Drawable {
@@ -50,7 +51,7 @@ function asset(data: string[], colors: string[], palette: string[], room: number
                 result.push(undefined)
             } else {
                 const color = palette[Number.parseInt(colorLine[index])]
-                result.push(new Tile(character, color, room))
+                result.push(new Tile(character, color, room, true))
             }
         }
     }

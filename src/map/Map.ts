@@ -167,23 +167,27 @@ export class Map implements GameSystem {
     }
 
     public isFree(positions: Position[], roomFilter?: number): boolean {
-        return positions.find(p => !this.inside(p) || this.hasRoomPredicate(p, roomFilter)) === undefined
+        return positions.find(p => !this.inside(p) || this.isRoom(p, roomFilter)) === undefined
     }
 
     public isWalls(positions: Position[]): boolean {
-        return positions.find(p => !this.inside(p) || !this.isWallPredicate(p)) === undefined
+        return positions.find(p => !this.inside(p) || !this.isWall(p)) === undefined
     }
 
-    private hasRoomPredicate(p: Position, roomFilter?: number): boolean {
+    public isRoom(p: Position, roomFilter?: number): boolean {
         const tile: Tile | undefined = this.get(p)
         return tile !== undefined && tile.room !== undefined && tile.room !== roomFilter
     }
 
-    private isWallPredicate(p: Position): boolean {
+    public isWall(p: Position): boolean {
         const tile: Tile | undefined = this.get(p)
         return tile !== undefined && tile.character === "#"
     }
 
+    public isBlocking(position: Position): boolean {
+        const tile: Tile | undefined = this.get(position)
+        return tile === undefined || tile.blocking
+    }
 
     private renderTile(display: Display, position: Position, tile: Tile): void {
         if (tile.room !== undefined && tile.room === this.selectedRoom) {

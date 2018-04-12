@@ -1,7 +1,10 @@
 import { World } from "mogwai-ecs/lib"
-import ROT from "rot-js"
+import ROT, { VK_J, VK_H, VK_K, VK_L, VK_F1, VK_F2 } from "rot-js"
 
 import { GameSystem, RenderLayer } from "./GameSystem"
+import { Direction } from "@/geometry/Direction"
+import { Position } from "@/geometry/Position"
+import { MenuItems } from "@/systems/Viewport"
 
 export interface InputState {
   isPressed: Map<number, boolean>
@@ -33,6 +36,8 @@ export class Input implements GameSystem {
 
   public renderLayer: RenderLayer = RenderLayer.None
 
+  private keyMap: { [key: string]: number } = {}
+
   private state: InputState
 
   constructor(private eventToPosition: (e: UIEvent) => [number, number] | number) {
@@ -59,7 +64,12 @@ export class Input implements GameSystem {
   }
 
   public build({ }: World): void {
-    //
+    this.keyMap[Direction.West] = VK_H
+    this.keyMap[Direction.North] = VK_K
+    this.keyMap[Direction.East] = VK_L
+    this.keyMap[Direction.South] = VK_J
+    this.keyMap[MenuItems.Player] = VK_F1
+    this.keyMap[MenuItems.Map] = VK_F2
   }
 
   public render(): void {
@@ -98,6 +108,24 @@ export class Input implements GameSystem {
     return this.state.mouseReleased[left ? 0 : 1]
   }
 
+  public menuItem(menuItem: MenuItems): boolean {
+    return this.isPressed(this.keyMap[menuItem])
+  }
+
+  public direction(direction: Direction): boolean {
+    return this.isPressed(this.keyMap[direction])
+  }
+
+  public movementDelta(): Position {
+    let delta = Position.from(Direction.Center)
+    delta = this.move(delta, Direction.North)
+    delta = this.move(delta, Direction.West)
+    delta = this.move(delta, Direction.South)
+    delta = this.move(delta, Direction.East)
+    return delta
+  }
+
+
   get mouse(): Mouse {
     return this.state.mouse
   }
@@ -111,6 +139,13 @@ export class Input implements GameSystem {
       default:
         return this.state.isPressed.get(vkCode) || false
     }
+  }
+
+  private move(delta: Position, direction: Direction): Position {
+    if (this.direction(direction)) {
+      delta = delta.add(Position.from(direction))
+    }
+    return delta
   }
 
   private handleModifiers(modifiers: Modifiers, { altKey, ctrlKey }: KeyboardEvent | MouseEvent): void {

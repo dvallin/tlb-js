@@ -33,6 +33,10 @@ export class Position {
     this.y = position.y
   }
 
+  public get length(): number {
+    return Math.sqrt(this.x * this.x + this.y * this.y)
+  }
+
   public add(position: Position): Position {
     return new Position(this.x + position.x, this.y + position.y)
   }
@@ -53,10 +57,19 @@ export class Position {
     return new Position(-this.y, this.x)
   }
 
+  public normalize(): Position {
+    const length = this.length
+    if (length > 0) {
+      return new Position(this.x / length, this.y / length)
+    } else {
+      return new Position(NaN, NaN)
+    }
+  }
+
   public round(): Position {
     return new Position(
-      Math.round(this.x * 100) / 100,
-      Math.round(this.y * 100) / 100
+      Math.fround(this.x),
+      Math.fround(this.y)
     )
   }
 }
