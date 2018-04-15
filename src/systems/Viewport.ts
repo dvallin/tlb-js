@@ -1,14 +1,13 @@
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from "@/Game"
 import { Position } from "@/geometry/Position"
 import { GameSystem, RenderLayer } from "@/systems/GameSystem"
-import { World } from "mogwai-ecs/lib"
+import { World, Boxed } from "mogwai-ecs/lib"
 import { Display } from "rot-js"
 
 import { Rectangle } from "@/geometry/Rectangle"
 import { Size } from "@/geometry/Size"
 import { Input } from "@/systems/Input"
 import { Map } from "@/map/Map"
-import { Boxed } from "@/Boxed"
 import { Menu } from "@/systems/Menu"
 
 export enum MenuItems {

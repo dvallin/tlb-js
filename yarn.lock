@@ -3713,7 +3713,7 @@ lazy-cache@^2.0.2:
   dependencies:
     set-getter "^0.1.0"
 
-lazy.js@^0.5.0, lazy.js@^0.5.1:
+lazy.js@^0.5.1:
   version "0.5.1"
   resolved "https://registry.yarnpkg.com/lazy.js/-/lazy.js-0.5.1.tgz#9f05c27f42c66ae7f41814c9674d105efcbc432f"
 
@@ -4075,12 +4075,12 @@ mkdirp@0.5.x, "mkdirp@>=0.5 0", mkdirp@^0.5.1, mkdirp@~0.5.0, mkdirp@~0.5.1:
   dependencies:
     minimist "0.0.8"
 
-mogwai-ecs@^0.3.6:
-  version "0.3.6"
-  resolved "https://registry.yarnpkg.com/mogwai-ecs/-/mogwai-ecs-0.3.6.tgz#b5fcaed52dd80f39a2bebb1f5483120609fc4138"
+mogwai-ecs@^0.5.1:
+  version "0.5.1"
+  resolved "https://registry.yarnpkg.com/mogwai-ecs/-/mogwai-ecs-0.5.1.tgz#92d03a491bc6740bcafa56534abd0a72fecc06bf"
   dependencies:
     hibitset-js "^1.0.4"
-    lazy.js "^0.5.0"
+    lazy.js "^0.5.1"
 
 move-concurrently@^1.0.1:
   version "1.0.1"

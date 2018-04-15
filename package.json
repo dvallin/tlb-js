@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "lazy.js": "^0.5.1",
-    "mogwai-ecs": "^0.3.6",
+    "mogwai-ecs": "^0.5.1",
     "rot-js": "^0.6.5",
     "seedrandom": "^2.4.3"
   },

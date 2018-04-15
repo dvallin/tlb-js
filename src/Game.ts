@@ -3,7 +3,7 @@ import ROT, { Display } from "rot-js"
 import { World } from "mogwai-ecs/lib"
 
 import { GameSystem } from "@/systems/GameSystem"
-import { gray } from "@/palettes"
+import { gray } from "@/rendering/palettes"
 
 export const DEFAULT_WIDTH = 98
 export const DEFAULT_HEIGHT = 61
@@ -35,7 +35,7 @@ export class Game {
       forceSquareRatio: true,
       fontSize: 17,
       fontFamily: "Lucida Console, Monaco, monospace",
-      bg: gray[4]
+      bg: gray[4].hex
     }
     this.display = new ROT.Display(displayOptions)
     this.world = new World()

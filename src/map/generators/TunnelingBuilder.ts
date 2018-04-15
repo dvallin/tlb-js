@@ -4,10 +4,9 @@ import { Size } from "@/geometry/Size"
 import { Rectangle } from "@/geometry/Rectangle"
 import { bernoulli, binomialNormed, dualDecision, ternaryDecision, uniformInteger } from "@/random"
 import { toArray } from "@/rendering"
-import { MapStorage, World } from "mogwai-ecs/lib"
+import { MapStorage, World, Boxed } from "mogwai-ecs/lib"
 
 import { rasterize as rasterizeRectangle } from "@/rendering/rectangle"
-import { Boxed } from "@/Boxed"
 import { machine, tunnelerTile, wallTile, corridorTile, randomWeapon } from "@/map/Tile"
 import { Map } from "@/map/Map"
 
@@ -86,7 +85,7 @@ export class TunnelingBuilder {
             .stream().each((comp: { entity: number, position: Boxed<Position>, tunneler: Tunneler }) => {
                 updated = true
                 this.world.entity(comp.entity).with("active").close()
-                this.map.set(comp.position.value, wallTile())
+                this.map.setTile(comp.position.value, wallTile())
             })
         return updated
     }
@@ -138,7 +137,7 @@ export class TunnelingBuilder {
     private renderTunneler(tunneler: Tunneler, position: Position): void {
         const positions: Position[] = this.tunnelerMoves(tunneler.direction, tunneler.width, position)
         if (this.map.isFree(positions)) {
-            positions.forEach(p => this.map.set(p, corridorTile(tunneler.room)))
+            positions.forEach(p => this.map.setTile(p, corridorTile(tunneler.room)))
         } else {
             tunneler.alive = false
         }
@@ -192,7 +191,7 @@ export class TunnelingBuilder {
                 .with("tunneler", child)
                 .with("position", new Boxed<Position>(position))
                 .close()
-            this.map.set(position, tunnelerTile())
+            this.map.setTile(position, tunnelerTile())
         }
     }
 

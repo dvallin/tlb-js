@@ -1,21 +1,21 @@
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from "@/Game"
 import { Position } from "@/geometry/Position"
 import { GameSystem, RenderLayer } from "@/systems/GameSystem"
-import { MapStorage, VectorStorage, World } from "mogwai-ecs/lib"
-import { Display } from "rot-js"
-import { Boxed } from "@/Boxed"
+import { MapStorage, World, Boxed, PartitionedStorage, VectorStorage } from "mogwai-ecs/lib"
+import { Display, FOV, Lighting } from "rot-js"
 
-import { TunnelingBuilder } from "./generators/TunnelingBuilder"
 import { Tile, wallTile, doorTile, roomTile, hubTile } from "@/map/Tile"
-import { Drawable } from "@/Drawable"
+import { Drawable } from "@/rendering/Drawable"
 import { foreach } from "@/rendering"
 import { Rectangle } from "@/geometry/Rectangle"
 import { rasterize as rasterizeRectangle } from "@/rendering/rectangle"
 import { Size } from "@/geometry/Size"
 import { Input } from "@/systems/Input"
 import { gridSymbols } from "@/symbols"
-import { gray } from "@/palettes"
+import { gray } from "@/rendering/palettes"
 import { Viewport } from "@/systems/Viewport"
+import { Color } from "@/rendering/Color"
+import { TunnelingBuilder } from "@/map/generators/TunnelingBuilder"
 
 export class Map implements GameSystem {
 
@@ -25,14 +25,20 @@ export class Map implements GameSystem {
     public renderLayer: RenderLayer = RenderLayer.Layer1
 
     private map: Tile[] = []
+
+    private ambientLight: Color = gray[1]
+    private lighting: Lighting | undefined
     private selectedRoom: number | undefined
 
     public register(world: World): void {
         world.registerSystem(Map.NAME, this)
-        world.registerComponent("active", new MapStorage<Tile>())
+        world.registerComponent("tile", new MapStorage<Tile>())
         world.registerComponent("drawable", new MapStorage<Drawable>())
         world.registerComponent("description", new MapStorage<Boxed<string>>())
-        world.registerComponent("position", new VectorStorage<Boxed<Position>>())
+        world.registerComponent("position", new PartitionedStorage(
+            new VectorStorage<Boxed<Position>>(),
+            (value: Position) => this.index(value) || -1
+        ))
 
         world.registerComponent("room")
         world.registerRelation("contains")
@@ -42,7 +48,7 @@ export class Map implements GameSystem {
     public build(world: World): void {
         for (let y = 0; y < this.boundary.height; y++) {
             for (let x = 0; x < this.boundary.width; x++) {
-                this.set(new Position(x, y), wallTile())
+                this.setTile(new Position(x, y), wallTile())
             }
         }
 
@@ -50,6 +56,12 @@ export class Map implements GameSystem {
         new TunnelingBuilder(world, this)
             .startAt(entrance)
             .run()
+
+        this.lighting = new Lighting((x, y) => this.getReflectivity(new Position(x, y)), { passes: 1 })
+        const fov = new FOV.PreciseShadowcasting((x, y) => this.isTranslucent(new Position(x, y)), { topology: 8 })
+        this.lighting!.setFOV(fov)
+
+        this.lighting.setLight(DEFAULT_WIDTH / 2, 3, [255, 255, 255])
     }
 
     public execute(world: World): void {
@@ -58,11 +70,12 @@ export class Map implements GameSystem {
         if (input !== undefined && viewport !== undefined) {
             const mousePosition = new Position(input.mouse.x, input.mouse.y)
             const topLeft = viewport.topLeft
-            const tile = this.get(mousePosition.add(topLeft))
+            const tile = this.getTile(mousePosition.add(topLeft))
             if (tile !== undefined) {
                 this.selectedRoom = tile.room
             }
         }
+        this.updateLighting()
     }
 
     public render(world: World, display: Display): void {
@@ -70,7 +83,7 @@ export class Map implements GameSystem {
         if (viewport !== undefined) {
             const topLeft = viewport.topLeft
             foreach(rasterizeRectangle(viewport.viewport, true), position => {
-                const tile: Tile | undefined = this.get(position)
+                const tile: Tile | undefined = this.getTile(position)
                 if (tile !== undefined) {
                     const mapPosition = position.subtract(topLeft)
                     this.renderTile(display, mapPosition, tile)
@@ -105,19 +118,28 @@ export class Map implements GameSystem {
         }
     }
 
-    public set(position: Position, tile: Tile): void {
+    public setTile(position: Position, tile: Tile): void {
         const idx = this.index(position)
         if (idx !== undefined) {
             this.map[idx] = tile
         }
+        tile.computeColor(this.ambientLight)
     }
 
-    public get(position: Position): Tile | undefined {
-        const idx = this.index(position)
-        if (idx !== undefined) {
-            return this.map[idx]
+    public getTile(position: Position): Tile | undefined {
+        const index = this.index(position)
+        if (index !== undefined) {
+            return this.map[index]
         }
         return undefined
+    }
+
+    public getTileByIndex(index: number): Tile | undefined {
+        return this.map[index]
+    }
+
+    public position(index: number): Position {
+        return new Position(index % this.boundary.width, index / this.boundary.width)
     }
 
     public index(position: Position): number | undefined {
@@ -132,7 +154,7 @@ export class Map implements GameSystem {
     }
 
     public buildDoor(position: Position): void {
-        this.set(position, doorTile())
+        this.setTile(position, doorTile())
     }
 
     public buildRoom(world: World, rectangle: Rectangle): number {
@@ -140,7 +162,7 @@ export class Map implements GameSystem {
             .with("room")
             .close()
         foreach(rasterizeRectangle(rectangle, true), (p: Position) =>
-            this.set(p, roomTile(room))
+            this.setTile(p, roomTile(room))
         )
         return room
     }
@@ -150,7 +172,7 @@ export class Map implements GameSystem {
             .with("room")
             .close()
         foreach(rasterizeRectangle(rectangle, true), (p: Position) =>
-            this.set(p, hubTile(room))
+            this.setTile(p, hubTile(room))
         )
         return room
     }
@@ -160,7 +182,7 @@ export class Map implements GameSystem {
             for (let x = 0; x < 4; x++) {
                 const tile: Tile | undefined = asset[4 * y + x]
                 if (tile !== undefined) {
-                    this.set(new Position(position.x + x - 1, position.y + y - 1), tile)
+                    this.setTile(new Position(position.x + x - 1, position.y + y - 1), tile)
                 }
             }
         }
@@ -175,30 +197,72 @@ export class Map implements GameSystem {
     }
 
     public isRoom(p: Position, roomFilter?: number): boolean {
-        const tile: Tile | undefined = this.get(p)
+        const tile: Tile | undefined = this.getTile(p)
         return tile !== undefined && tile.room !== undefined && tile.room !== roomFilter
     }
 
     public isWall(p: Position): boolean {
-        const tile: Tile | undefined = this.get(p)
+        const tile: Tile | undefined = this.getTile(p)
         return tile !== undefined && tile.character === "#"
     }
 
     public isBlocking(position: Position): boolean {
-        const tile: Tile | undefined = this.get(position)
+        const tile: Tile | undefined = this.getTile(position)
         return tile === undefined || tile.blocking
+    }
+
+    public isTranslucent(position: Position): boolean {
+        return this.getReflectivity(position) !== 0
+    }
+
+    public getReflectivity(position: Position): number {
+        const tile: Tile | undefined = this.getTile(position)
+        if (tile === undefined) {
+            return 0
+        }
+        return tile.reflectivity
+    }
+
+    private updateLighting(): void {
+        const dirtyTiles: Set<number> = new Set<number>()
+        for (let y = 0; y < this.boundary.height; y++) {
+            for (let x = 0; x < this.boundary.width; x++) {
+                const p = new Position(x, y)
+                const tile: Tile | undefined = this.getTile(p)
+                if (tile !== undefined && tile.totalLight !== undefined) {
+                    dirtyTiles.add(this.index(p)!)
+                    tile.totalLight = undefined
+                }
+            }
+        }
+
+        this.lighting!.compute((x: number, y: number, color: [number, number, number]) => {
+            const p = new Position(x, y)
+            const tile: Tile | undefined = this.getTile(p)
+            if (tile !== undefined) {
+                dirtyTiles.add(this.index(p)!)
+                tile.totalLight = new Color(color)
+            }
+        })
+
+        dirtyTiles.forEach(index => {
+            const tile = this.getTileByIndex(index)
+            if (tile !== undefined) {
+                tile.computeColor(this.ambientLight, tile.totalLight)
+            }
+        })
     }
 
     private renderTile(display: Display, position: Position, tile: Tile): void {
         if (tile.room !== undefined && tile.room === this.selectedRoom) {
-            this.renderDrawable(display, position, tile, gray[3])
+            this.renderDrawable(display, position, tile, gray[3].hex)
         } else {
             this.renderDrawable(display, position, tile)
         }
     }
 
     private renderDrawable(display: Display, position: Position, drawable: Drawable, bg?: string): void {
-        display.draw(position.x, position.y, drawable.character, drawable.color, bg)
+        display.draw(position.x, position.y, drawable.character, drawable.color.hex, bg)
     }
 
     private tryToDrawDescription(display: Display, position: Position, description: string, alreadyDrawn: Set<number>): void {
@@ -209,7 +273,7 @@ export class Map implements GameSystem {
                 const index = this.index(p)
                 if (index !== undefined) {
                     alreadyDrawn.add(index)
-                    display.draw(p.x, p.y, description[offset], gray[0], gray[2])
+                    display.draw(p.x, p.y, description[offset], gray[0].hex, gray[2].hex)
                 }
             }
         }

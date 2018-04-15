@@ -1,12 +1,11 @@
 import { DEFAULT_WIDTH } from "@/Game"
 import { Position } from "@/geometry/Position"
 import { GameSystem, RenderLayer } from "@/systems/GameSystem"
-import { World, MapStorage } from "mogwai-ecs/lib"
+import { World, MapStorage, Boxed } from "mogwai-ecs/lib"
 import { Display } from "rot-js"
 
-import { Boxed } from "@/Boxed"
 import { Tile } from "@/map/Tile"
-import { Drawable } from "@/Drawable"
+import { Drawable } from "@/rendering/Drawable"
 import { Input } from "@/systems/Input"
 import { Menu, MenuItems } from "@/systems/Menu"
 import { Map } from "@/map/Map"
@@ -49,9 +48,10 @@ export class Player implements GameSystem {
                         .withComponents("position")
                         .first()
                     if (player !== undefined) {
-                        const newPosition = player.position.value.add(delta.normalize().mult(0.4).round())
+                        const scaledDelta = delta.normalize().mult(0.4).round()
+                        const newPosition = player.position.value.add(scaledDelta)
                         const midPosition = newPosition.add(new Position(0.5, 0.5))
-                        if (!map.isBlocking(midPosition)) {
+                        if (map.inside(newPosition) && !map.isBlocking(midPosition)) {
                             player.position.value = newPosition
                         }
                     }

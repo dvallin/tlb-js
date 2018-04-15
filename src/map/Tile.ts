@@ -1,46 +1,52 @@
-import { primary, gray } from "@/palettes"
+import { primary, gray } from "@/rendering/palettes"
 import { strangeSymbols } from "@/symbols"
 import { uniformInteger } from "@/random"
-import { Drawable } from "@/Drawable"
+import { Drawable } from "@/rendering/Drawable"
+import { Color } from "@/rendering/Color"
 
-export class Tile implements Drawable {
+export class Tile extends Drawable {
+    public totalLight: Color | undefined = undefined
+
     public constructor(
-        public character: string,
-        public color: string,
+        character: string,
+        ambient: Color,
         public room: number | undefined,
-        public blocking: boolean
-    ) { }
+        public blocking: boolean,
+        public reflectivity: number
+    ) {
+        super(character, ambient)
+    }
 }
 
 export function wallTile(): Tile {
-    return new Tile("#", gray[3], undefined, true)
+    return new Tile("#", gray[3], undefined, true, 0)
 }
 
 export function corridorTile(room: number): Tile {
-    return new Tile(".", gray[0], room, false)
+    return new Tile(".", gray[0], room, false, 0.3)
 }
 
 export function roomTile(room: number): Tile {
-    return new Tile(".", primary[1], room, false)
+    return new Tile(".", primary[1], room, false, 0.3)
 }
 
 export function hubTile(room: number): Tile {
-    return new Tile(".", primary[0], room, false)
+    return new Tile(".", primary[0], room, false, 0.3)
 }
 
 export function doorTile(): Tile {
-    return new Tile("+", primary[2], undefined, true)
+    return new Tile("+", primary[2], undefined, true, 0)
 }
 
 export function tunnelerTile(): Tile {
-    return new Tile("T", "red", -1, false)
+    return new Tile("T", Color.fromName("red"), -1, false, 0.3)
 }
 
 export function randomWeapon(): Drawable {
-    return { color: primary[3], character: strangeSymbols[uniformInteger(0, strangeSymbols.length)] }
+    return new Drawable(strangeSymbols[uniformInteger(0, strangeSymbols.length)], primary[3])
 }
 
-function asset(data: string[], colors: string[], palette: string[], room: number): (Tile | undefined)[] {
+function asset(data: string[], colors: string[], palette: Color[], room: number): (Tile | undefined)[] {
     const result: (Tile | undefined)[] = []
     for (let line = 0; line < data.length; line++) {
         const dataLine = data[line]
@@ -51,7 +57,7 @@ function asset(data: string[], colors: string[], palette: string[], room: number
                 result.push(undefined)
             } else {
                 const color = palette[Number.parseInt(colorLine[index])]
-                result.push(new Tile(character, color, room, true))
+                result.push(new Tile(character, color, room, true, 0.5))
             }
         }
     }
