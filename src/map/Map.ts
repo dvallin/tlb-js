@@ -4,7 +4,7 @@ import { GameSystem, RenderLayer } from "@/systems/GameSystem"
 import { MapStorage, World, Boxed, PartitionedStorage, VectorStorage } from "mogwai-ecs/lib"
 import { Display, FOV, Lighting } from "rot-js"
 
-import { Tile, wallTile, doorTile, roomTile, hubTile } from "@/map/Tile"
+import { Tile, wallTile, roomTile, hubTile, corridorTile } from "@/map/Tile"
 import { Drawable } from "@/rendering/Drawable"
 import { foreach } from "@/rendering"
 import { Rectangle } from "@/geometry/Rectangle"
@@ -12,7 +12,7 @@ import { rasterize as rasterizeRectangle } from "@/rendering/rectangle"
 import { Size } from "@/geometry/Size"
 import { Input } from "@/systems/Input"
 import { gridSymbols } from "@/symbols"
-import { gray } from "@/rendering/palettes"
+import { gray, primary } from "@/rendering/palettes"
 import { Viewport } from "@/systems/Viewport"
 import { Color } from "@/rendering/Color"
 import { TunnelingBuilder } from "@/map/generators/TunnelingBuilder"
@@ -25,6 +25,7 @@ export class Map implements GameSystem {
     public renderLayer: RenderLayer = RenderLayer.Layer1
 
     private map: Tile[] = []
+    private reflectivityMap: number[] = []
 
     private ambientLight: Color = gray[1]
     private lighting: Lighting | undefined
@@ -32,8 +33,8 @@ export class Map implements GameSystem {
 
     public register(world: World): void {
         world.registerSystem(Map.NAME, this)
-        world.registerComponent("tile", new MapStorage<Tile>())
         world.registerComponent("drawable", new MapStorage<Drawable>())
+        world.registerComponent("blocking")
         world.registerComponent("description", new MapStorage<Boxed<string>>())
         world.registerComponent("position", new PartitionedStorage(
             new VectorStorage<Boxed<Position>>(),
@@ -57,7 +58,7 @@ export class Map implements GameSystem {
             .startAt(entrance)
             .run()
 
-        this.lighting = new Lighting((x, y) => this.getReflectivity(new Position(x, y)), { passes: 1 })
+        this.lighting = new Lighting((x, y) => this.getReflectivity(new Position(x, y)), { passes: 2 })
         const fov = new FOV.PreciseShadowcasting((x, y) => this.isTranslucent(new Position(x, y)), { topology: 8 })
         this.lighting!.setFOV(fov)
 
@@ -75,7 +76,7 @@ export class Map implements GameSystem {
                 this.selectedRoom = tile.room
             }
         }
-        this.updateLighting()
+        this.updateLighting(world)
     }
 
     public render(world: World, display: Display): void {
@@ -153,8 +154,13 @@ export class Map implements GameSystem {
         return position.x >= 0 && position.y >= 0 && position.x < this.boundary.width && position.y < this.boundary.height
     }
 
-    public buildDoor(position: Position): void {
-        this.setTile(position, doorTile())
+    public buildDoor(world: World, position: Position, room: number): void {
+        this.setTile(position, corridorTile(room))
+        world.entity()
+            .with("position", new Boxed(position))
+            .with("drawable", { character: "+", color: primary[2] })
+            .with("blocking")
+            .close()
     }
 
     public buildRoom(world: World, rectangle: Rectangle): number {
@@ -206,9 +212,24 @@ export class Map implements GameSystem {
         return tile !== undefined && tile.character === "#"
     }
 
-    public isBlocking(position: Position): boolean {
+    public isBlocking(world: World, position: Position, entityFilter: number): boolean {
         const tile: Tile | undefined = this.getTile(position)
-        return tile === undefined || tile.blocking
+        const tileBlocking = tile === undefined || tile.blocking
+        if (tileBlocking) {
+            return true
+        }
+        const entityBlocking = !world.fetch()
+            .on(t => t
+                .ofPartition("position", new Boxed(position))
+                .hasLabel("blocking")
+            )
+            .stream()
+            .filter(e => e.entity !== entityFilter)
+            .isEmpty()
+        if (entityBlocking) {
+            return true
+        }
+        return false
     }
 
     public isTranslucent(position: Position): boolean {
@@ -216,14 +237,38 @@ export class Map implements GameSystem {
     }
 
     public getReflectivity(position: Position): number {
-        const tile: Tile | undefined = this.getTile(position)
-        if (tile === undefined) {
+        const idx = this.index(position)
+        if (idx === undefined) {
             return 0
         }
-        return tile.reflectivity
+
+        let reflectivity = 0
+        const tile: Tile | undefined = this.getTileByIndex(idx)
+        if (tile !== undefined) {
+            reflectivity = tile.reflectivity
+        }
+        const dynamicReflectivity: number | undefined = this.reflectivityMap[idx]
+        if (dynamicReflectivity !== undefined) {
+            return Math.min(dynamicReflectivity, reflectivity)
+        }
+        return reflectivity
     }
 
-    private updateLighting(): void {
+    private updateLighting(world: World): void {
+        this.reflectivityMap = []
+        world.fetch()
+            .on(t => t.hasLabel("blocking").hasLabel("position"))
+            .withComponents("position")
+            .stream()
+            .each((v: { position: Boxed<Position> }) => {
+                const idx = this.index(v.position.value)
+                if (idx !== undefined) {
+                    this.reflectivityMap[idx] = 0.0
+                }
+            })
+
+        this.lighting!.reset()
+
         const dirtyTiles: Set<number> = new Set<number>()
         for (let y = 0; y < this.boundary.height; y++) {
             for (let x = 0; x < this.boundary.width; x++) {

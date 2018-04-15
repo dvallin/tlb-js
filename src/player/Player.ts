@@ -19,6 +19,7 @@ export class Player implements GameSystem {
     public register(world: World): void {
         world.registerSystem(Player.NAME, this)
         world.registerComponent("player")
+        world.registerComponent("blocking")
         world.registerComponent("active", new MapStorage<Tile>())
         world.registerComponent("drawable", new MapStorage<Drawable>())
         world.registerComponent("description", new MapStorage<Boxed<string>>())
@@ -29,6 +30,7 @@ export class Player implements GameSystem {
         world.entity()
             .with("player")
             .with("position", new Boxed<Position>(startPosition))
+            .with("blocking")
             .with("drawable", { character: "@", color: "white" })
             .with("active")
             .close()
@@ -42,7 +44,7 @@ export class Player implements GameSystem {
             if (menu.activeMenuItem === MenuItems.Player) {
                 const delta = input.movementDelta()
                 if (delta.x !== 0 || delta.y !== 0) {
-                    const player: { position: Boxed<Position> } | undefined = world
+                    const player: { entity: number, position: Boxed<Position> } | undefined = world
                         .fetch()
                         .on(t => t.hasLabel("player").hasLabel("active"))
                         .withComponents("position")
@@ -51,7 +53,7 @@ export class Player implements GameSystem {
                         const scaledDelta = delta.normalize().mult(0.4).round()
                         const newPosition = player.position.value.add(scaledDelta)
                         const midPosition = newPosition.add(new Position(0.5, 0.5))
-                        if (map.inside(newPosition) && !map.isBlocking(midPosition)) {
+                        if (map.inside(newPosition) && !map.isBlocking(world, midPosition, player.entity)) {
                             player.position.value = newPosition
                         }
                     }

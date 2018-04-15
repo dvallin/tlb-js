@@ -115,7 +115,7 @@ export class TunnelingBuilder {
         const rasterizedRectangle = toArray(rasterizeRectangle(rectangle.grow(1), true))
         if (this.map.isFree(rasterizedRectangle)) {
             tunneler.roomsBuilt++
-            this.map.buildDoor(doorPosition)
+            this.map.buildDoor(this.world, doorPosition, tunneler.room)
 
             const room = this.map.buildRoom(this.world, rectangle)
             this.world.relation().with("connected").from(tunneler.room).to(room).close()

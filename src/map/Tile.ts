@@ -34,10 +34,6 @@ export function hubTile(room: number): Tile {
     return new Tile(".", primary[0], room, false, 0.3)
 }
 
-export function doorTile(): Tile {
-    return new Tile("+", primary[2], undefined, true, 0)
-}
-
 export function tunnelerTile(): Tile {
     return new Tile("T", Color.fromName("red"), -1, false, 0.3)
 }
