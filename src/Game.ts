@@ -14,7 +14,7 @@ export interface GameSettings {
 
 export function defaultSettings(): GameSettings {
   return {
-    framerate: 100
+    framerate: 30
   }
 }
 
@@ -35,7 +35,7 @@ export class Game {
       forceSquareRatio: true,
       fontSize: 17,
       fontFamily: "Lucida Console, Monaco, monospace",
-      bg: gray[4].hex
+      bg: gray[4].rgb
     }
     this.display = new ROT.Display(displayOptions)
     this.world = new World()

@@ -5,8 +5,6 @@ import { Drawable } from "@/rendering/Drawable"
 import { Color } from "@/rendering/Color"
 
 export class Tile extends Drawable {
-    public totalLight: Color | undefined = undefined
-
     public constructor(
         character: string,
         ambient: Color,

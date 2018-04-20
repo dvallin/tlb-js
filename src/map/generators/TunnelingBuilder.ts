@@ -19,7 +19,8 @@ class Tunneler {
         public direction: Direction,
         public width: number,
         public generation: number,
-        public room: number
+        public room: number,
+        public startPosition: Position
     ) { }
 }
 
@@ -30,11 +31,9 @@ export class TunnelingBuilder {
     }
 
     public startAt(entrance: Position): TunnelingBuilder {
-        const room = this.world.entity()
-            .with("room")
-            .close()
+        const room = this.map.openCorridor(this.world)
         this.world.entity()
-            .with("tunneler", new Tunneler(10, Direction.South, 3, 14, room))
+            .with("tunneler", new Tunneler(10, Direction.South, 3, 14, room, entrance))
             .with("position", new Boxed<Position>(entrance))
             .close()
         return this
@@ -71,6 +70,7 @@ export class TunnelingBuilder {
                 }
 
                 if (!comp.tunneler.alive) {
+                    this.closeTunneler(comp.tunneler, comp.position.value)
                     this.world.entity(comp.entity).delete()
                 }
             })
@@ -109,6 +109,19 @@ export class TunnelingBuilder {
             const rectangle = Rectangle.from(roomPosition, size, direction)
             this.buildRoom(tunneler, rectangle, doorPosition)
         }
+    }
+
+    private closeTunneler(tunneler: Tunneler, position: Position): void {
+        const dx = Math.abs(tunneler.startPosition.x - position.x)
+        const dy = Math.abs(tunneler.startPosition.y - position.y)
+        let size: Size
+        if (dx === 0) {
+            size = new Size(tunneler.width, dy)
+        } else {
+            size = new Size(dx, tunneler.width)
+        }
+        const rectangle = Rectangle.from(tunneler.startPosition, size, tunneler.direction)
+        this.map.closeCorridor(this.world, tunneler.room, rectangle)
     }
 
     private buildRoom(tunneler: Tunneler, rectangle: Rectangle, doorPosition: Position): void {
@@ -181,12 +194,10 @@ export class TunnelingBuilder {
         const positions: Position[] = this.tunnelerMoves(direction, newWidth, position)
         const isWalls = this.map.isWalls(positions)
         if (isWalls) {
-            const room = this.world.entity()
-                .with("room")
-                .close()
+            const room = this.map.openCorridor(this.world)
             this.world.relation().with("connected").from(hub).to(room).close()
 
-            const child = new Tunneler(newTurns, direction, newWidth, tunneler.generation - 1, room)
+            const child = new Tunneler(newTurns, direction, newWidth, tunneler.generation - 1, room, position)
             this.world.entity()
                 .with("tunneler", child)
                 .with("position", new Boxed<Position>(position))

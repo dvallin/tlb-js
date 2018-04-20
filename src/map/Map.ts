@@ -13,9 +13,18 @@ import { Size } from "@/geometry/Size"
 import { Input } from "@/systems/Input"
 import { gridSymbols } from "@/symbols"
 import { gray, primary } from "@/rendering/palettes"
-import { Viewport } from "@/systems/Viewport"
+import { ViewportSystem, Viewport } from "@/systems/Viewport"
 import { Color } from "@/rendering/Color"
 import { TunnelingBuilder } from "@/map/generators/TunnelingBuilder"
+import { Menu, MenuItems } from "@/systems/Menu"
+
+interface DrawableWithData {
+    position: Boxed<Position>, description: Boxed<string> | undefined, drawable: Drawable
+}
+
+interface Room {
+    shape: Rectangle
+}
 
 export class Map implements GameSystem {
 
@@ -26,9 +35,11 @@ export class Map implements GameSystem {
 
     private map: Tile[] = []
     private reflectivityMap: number[] = []
+    private fov: FOV | undefined = undefined
+    private lighting: Lighting | undefined = undefined
 
     private ambientLight: Color = gray[1]
-    private lighting: Lighting | undefined
+    private lightingEnabled: boolean = true
     private selectedRoom: number | undefined
 
     public register(world: World): void {
@@ -41,12 +52,17 @@ export class Map implements GameSystem {
             (value: Position) => this.index(value) || -1
         ))
 
-        world.registerComponent("room")
+        world.registerComponent("light")
+        world.registerComponent("room", new MapStorage<Room>())
         world.registerRelation("contains")
         world.registerRelation("connected")
     }
 
     public build(world: World): void {
+        this.fov = new FOV.RecursiveShadowcasting((x, y) => this.isTranslucent(new Position(x, y)), { topology: 8 })
+        this.lighting = new Lighting((x, y) => this.getReflectivity(new Position(x, y)), { passes: 1 })
+        this.lighting.setFOV(this.fov)
+
         for (let y = 0; y < this.boundary.height; y++) {
             for (let x = 0; x < this.boundary.width; x++) {
                 this.setTile(new Position(x, y), wallTile())
@@ -58,32 +74,73 @@ export class Map implements GameSystem {
             .startAt(entrance)
             .run()
 
-        this.lighting = new Lighting((x, y) => this.getReflectivity(new Position(x, y)), { passes: 2 })
-        const fov = new FOV.PreciseShadowcasting((x, y) => this.isTranslucent(new Position(x, y)), { topology: 8 })
-        this.lighting!.setFOV(fov)
-
-        this.lighting.setLight(DEFAULT_WIDTH / 2, 3, [255, 255, 255])
+        const lights: { entity: number, position: Boxed<Position> }[] = world
+            .fetch()
+            .on(t => t.hasLabel("light")).withComponents("position")
+            .collect()
+        this.updateLighting(lights, [Rectangle.from(new Position(0, 0), this.boundary)])
     }
 
     public execute(world: World): void {
         const input: Input | undefined = world.systems.get(Input.NAME) as Input | undefined
-        const viewport: Viewport | undefined = world.systems.get(Viewport.NAME) as Viewport | undefined
+        const viewport: ViewportSystem | undefined = world.systems.get(ViewportSystem.NAME) as ViewportSystem | undefined
         if (input !== undefined && viewport !== undefined) {
             const mousePosition = new Position(input.mouse.x, input.mouse.y)
-            const topLeft = viewport.topLeft
+            const topLeft = viewport.mapViewport.topLeft
             const tile = this.getTile(mousePosition.add(topLeft))
             if (tile !== undefined) {
                 this.selectedRoom = tile.room
             }
         }
-        this.updateLighting(world)
+
+
+        const menu: Menu | undefined = world.systems.get(Menu.NAME) as Menu | undefined
+        this.lightingEnabled = true
+        if (menu !== undefined && menu.activeMenuItem === MenuItems.Map) {
+            this.lightingEnabled = false
+        }
+        if (this.lightingEnabled) {
+            this.reflectivityMap = []
+            world.fetch()
+                .on(t => t.hasLabel("blocking").hasLabel("position"))
+                .withComponents("position")
+                .stream()
+                .each((v: { position: Boxed<Position> }) => {
+                    const idx = this.index(v.position.value)
+                    if (idx !== undefined) {
+                        this.reflectivityMap[idx] = 0.0
+                    }
+                })
+
+            const playerPosition: Boxed<Position> = world.fetch()
+                .on(t => t.hasLabel("player").hasLabel("active"))
+                .withComponents("position")
+                .first()
+                .position
+
+            const playerTile = this.getTile(playerPosition.value)
+            if (playerTile !== undefined && playerTile.room !== undefined) {
+                const lights: { entity: number, position: Boxed<Position> }[] = world
+                    .fetch(playerTile.room)
+                    .on(t => t.both("contains").hasLabel("light"))
+                    .withComponents("position")
+                    .collect()
+                const dirtyTiles: Rectangle[] = world
+                    .fetch(playerTile.room)
+                    .withComponents("room")
+                    .stream()
+                    .map(p => p.room.shape.grow(1))
+                    .toArray()
+                this.updateLighting(lights, dirtyTiles)
+            }
+        }
     }
 
     public render(world: World, display: Display): void {
-        const viewport: Viewport | undefined = world.systems.get(Viewport.NAME) as Viewport | undefined
+        const viewport: ViewportSystem | undefined = world.systems.get(ViewportSystem.NAME) as ViewportSystem | undefined
         if (viewport !== undefined) {
-            const topLeft = viewport.topLeft
-            foreach(rasterizeRectangle(viewport.viewport, true), position => {
+            const topLeft = viewport.mapViewport.topLeft
+            foreach(rasterizeRectangle(viewport.mapViewport.rectangle, true), position => {
                 const tile: Tile | undefined = this.getTile(position)
                 if (tile !== undefined) {
                     const mapPosition = position.subtract(topLeft)
@@ -91,31 +148,7 @@ export class Map implements GameSystem {
                 }
             })
 
-            interface DrawableWithData {
-                position: Boxed<Position>, description: Boxed<string> | undefined, drawable: Drawable
-            }
-            const allDrawables: DrawableWithData[] = world
-                .fetch()
-                .on(v => v.hasLabel("drawable").hasLabel("position")
-                    .matchesValue("position", (p: Boxed<Position>) => viewport.viewport.isInside(p.value))
-                )
-                .withComponents("position", "drawable", "description")
-                .collect()
-
-            const alreadyDrawn = new Set<number>()
-            allDrawables.forEach((comp: DrawableWithData) => {
-                const p = comp.position.value.subtract(topLeft)
-                this.renderDrawable(display, p, comp.drawable)
-                const idx = this.index(p)
-                if (idx !== undefined) {
-                    alreadyDrawn.add(idx)
-                }
-            })
-            allDrawables.forEach((comp: DrawableWithData) => {
-                if (comp.description !== undefined) {
-                    this.tryToDrawDescription(display, comp.position.value.subtract(topLeft), comp.description.value, alreadyDrawn)
-                }
-            })
+            this.drawDrawables(world, display, viewport.mapViewport)
         }
     }
 
@@ -158,14 +191,19 @@ export class Map implements GameSystem {
         this.setTile(position, corridorTile(room))
         world.entity()
             .with("position", new Boxed(position))
-            .with("drawable", { character: "+", color: primary[2] })
+            .with("drawable", new Drawable("+", primary[2]))
             .with("blocking")
             .close()
     }
 
     public buildRoom(world: World, rectangle: Rectangle): number {
+        const light = world.entity()
+            .with("light")
+            .with("position", new Boxed(rectangle.mid))
+            .close()
         const room = world.entity()
-            .with("room")
+            .with("room", { shape: rectangle })
+            .rel(r => r.with("contains").to(light).close())
             .close()
         foreach(rasterizeRectangle(rectangle, true), (p: Position) =>
             this.setTile(p, roomTile(room))
@@ -174,13 +212,33 @@ export class Map implements GameSystem {
     }
 
     public buildHub(world: World, rectangle: Rectangle): number {
+        const light = world.entity()
+            .with("light")
+            .with("position", new Boxed(rectangle.mid))
+            .close()
         const room = world.entity()
-            .with("room")
+            .with("room", { shape: rectangle })
+            .rel(r => r.with("contains").to(light).close())
             .close()
         foreach(rasterizeRectangle(rectangle, true), (p: Position) =>
             this.setTile(p, hubTile(room))
         )
         return room
+    }
+
+    public openCorridor(world: World): number {
+        return world.entity().close()
+    }
+
+    public closeCorridor(world: World, room: number, rectangle: Rectangle): number {
+        const light = world.entity()
+            .with("light")
+            .with("position", new Boxed(rectangle.mid))
+            .close()
+        return world.entity(room)
+            .with("room", { shape: rectangle })
+            .rel(r => r.with("contains").to(light).close())
+            .close()
     }
 
     public buildAsset(position: Position, asset: (Tile | undefined)[]): void {
@@ -254,60 +312,94 @@ export class Map implements GameSystem {
         return reflectivity
     }
 
-    private updateLighting(world: World): void {
-        this.reflectivityMap = []
-        world.fetch()
-            .on(t => t.hasLabel("blocking").hasLabel("position"))
-            .withComponents("position")
-            .stream()
-            .each((v: { position: Boxed<Position> }) => {
-                const idx = this.index(v.position.value)
-                if (idx !== undefined) {
-                    this.reflectivityMap[idx] = 0.0
+    private updateLighting(lights: { entity: number, position: Boxed<Position> }[], dirtyAreas: Rectangle[]): void {
+        const dirtyTiles: Set<number> = new Set<number>()
+
+        for (const area of dirtyAreas) {
+            foreach(rasterizeRectangle(area, true), (p) => {
+                const tile: Tile | undefined = this.getTile(p)
+                if (tile !== undefined) {
+                    for (const light of lights) {
+                        if (tile.hasLight(light.entity)) {
+                            tile.removeLight(light.entity)
+                            dirtyTiles.add(this.index(p)!)
+                        }
+                    }
                 }
             })
-
-        this.lighting!.reset()
-
-        const dirtyTiles: Set<number> = new Set<number>()
-        for (let y = 0; y < this.boundary.height; y++) {
-            for (let x = 0; x < this.boundary.width; x++) {
-                const p = new Position(x, y)
-                const tile: Tile | undefined = this.getTile(p)
-                if (tile !== undefined && tile.totalLight !== undefined) {
-                    dirtyTiles.add(this.index(p)!)
-                    tile.totalLight = undefined
-                }
-            }
         }
 
-        this.lighting!.compute((x: number, y: number, color: [number, number, number]) => {
-            const p = new Position(x, y)
-            const tile: Tile | undefined = this.getTile(p)
-            if (tile !== undefined) {
-                dirtyTiles.add(this.index(p)!)
-                tile.totalLight = new Color(color)
-            }
-        })
+        for (const light of lights) {
+            this.lighting!.clearLights()
+            this.lighting!.setLight(light.position.value.x, light.position.value.y, [255, 255, 255])
+            this.lighting!.setFOV(this.fov!)
+            this.lighting!.compute((x: number, y: number, color: [number, number, number]) => {
+                const p = new Position(x, y)
+                const tile: Tile | undefined = this.getTile(p)
+                if (tile !== undefined) {
+                    dirtyTiles.add(this.index(p)!)
+                    tile.setLight(light.entity, new Color(color))
+                }
+            })
+        }
 
         dirtyTiles.forEach(index => {
             const tile = this.getTileByIndex(index)
             if (tile !== undefined) {
-                tile.computeColor(this.ambientLight, tile.totalLight)
+                tile.computeColor(this.ambientLight)
+            }
+        })
+    }
+
+
+    private drawDrawables(world: World, display: Display, viewport: Viewport): void {
+        const topLeft = viewport.topLeft
+        const allDrawables: DrawableWithData[] = world
+            .fetch()
+            .on(v => v.hasLabel("drawable").hasLabel("position")
+                .matchesValue("position", (p: Boxed<Position>) => viewport.rectangle.isInside(p.value))
+            )
+            .withComponents("position", "drawable", "description")
+            .collect()
+
+        const alreadyDrawn = new Set<number>()
+        allDrawables.forEach((comp: DrawableWithData) => {
+            const p = comp.position.value.subtract(topLeft)
+            this.renderDrawable(display, p, comp.drawable)
+            const idx = this.index(p)
+            if (idx !== undefined) {
+                alreadyDrawn.add(idx)
+            }
+        })
+
+        const menu: Menu | undefined = world.systems.get(Menu.NAME) as Menu | undefined
+        if (menu !== undefined && menu.activeMenuItem === MenuItems.Map) {
+            this.drawDescriptions(allDrawables, alreadyDrawn, topLeft, display)
+        }
+    }
+
+    private drawDescriptions(drawables: DrawableWithData[], alreadyDrawn: Set<number>, topLeft: Position, display: Display): void {
+        drawables.forEach((comp: DrawableWithData) => {
+            if (comp.description !== undefined) {
+                this.tryToDrawDescription(display, comp.position.value.subtract(topLeft), comp.description.value, alreadyDrawn)
             }
         })
     }
 
     private renderTile(display: Display, position: Position, tile: Tile): void {
         if (tile.room !== undefined && tile.room === this.selectedRoom) {
-            this.renderDrawable(display, position, tile, gray[3].hex)
+            this.renderDrawable(display, position, tile, gray[3].rgb)
         } else {
             this.renderDrawable(display, position, tile)
         }
     }
 
     private renderDrawable(display: Display, position: Position, drawable: Drawable, bg?: string): void {
-        display.draw(position.x, position.y, drawable.character, drawable.color.hex, bg)
+        if (!this.lightingEnabled) {
+            display.draw(position.x, position.y, drawable.character, drawable.diffuse.rgb, bg)
+        } else {
+            display.draw(position.x, position.y, drawable.character, drawable.color.rgb, bg)
+        }
     }
 
     private tryToDrawDescription(display: Display, position: Position, description: string, alreadyDrawn: Set<number>): void {
@@ -318,7 +410,7 @@ export class Map implements GameSystem {
                 const index = this.index(p)
                 if (index !== undefined) {
                     alreadyDrawn.add(index)
-                    display.draw(p.x, p.y, description[offset], gray[0].hex, gray[2].hex)
+                    display.draw(p.x, p.y, description[offset], gray[0].rgb, gray[2].rgb)
                 }
             }
         }

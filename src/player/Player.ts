@@ -9,6 +9,7 @@ import { Drawable } from "@/rendering/Drawable"
 import { Input } from "@/systems/Input"
 import { Menu, MenuItems } from "@/systems/Menu"
 import { Map } from "@/map/Map"
+import { Color } from "@/rendering/Color"
 
 export class Player implements GameSystem {
 
@@ -31,7 +32,7 @@ export class Player implements GameSystem {
             .with("player")
             .with("position", new Boxed<Position>(startPosition))
             .with("blocking")
-            .with("drawable", { character: "@", color: "white" })
+            .with("drawable", new Drawable("@", new Color([255, 255, 255])))
             .with("active")
             .close()
     }

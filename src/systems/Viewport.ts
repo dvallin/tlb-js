@@ -15,19 +15,41 @@ export enum MenuItems {
     Map = "Map"
 }
 
-export class Viewport implements GameSystem {
+export class Viewport {
+    public constructor(
+        public offset: Position,
+        public rectangle: Rectangle
+    ) { }
+
+    public get topLeft(): Position {
+        return new Position(this.rectangle.left, this.rectangle.top).subtract(this.offset)
+    }
+}
+
+export class ViewportSystem implements GameSystem {
 
     public static NAME: string = "viewport"
 
     public renderLayer: RenderLayer = RenderLayer.None
 
-    public viewport: Rectangle = Rectangle.from(
+    public menuViewport: Viewport = new Viewport(
         new Position(0, 0),
-        new Size(DEFAULT_WIDTH, DEFAULT_HEIGHT)
+        Rectangle.from(
+            new Position(0, 0),
+            new Size(DEFAULT_WIDTH, 1)
+        )
+    )
+
+    public mapViewport: Viewport = new Viewport(
+        new Position(0, 1),
+        Rectangle.from(
+            new Position(0, 0),
+            new Size(DEFAULT_WIDTH, DEFAULT_HEIGHT - 1)
+        )
     )
 
     public register(world: World): void {
-        world.registerSystem(Viewport.NAME, this)
+        world.registerSystem(ViewportSystem.NAME, this)
     }
 
     public build({ }: World): void {
@@ -50,7 +72,7 @@ export class Viewport implements GameSystem {
 
         const map: Map | undefined = world.systems.get(Map.NAME) as Map | undefined
         if (map !== undefined) {
-            this.viewport = this.viewport.clamp(map.boundary)
+            this.mapViewport.rectangle = this.mapViewport.rectangle.clamp(map.boundary)
         }
     }
 
@@ -58,20 +80,16 @@ export class Viewport implements GameSystem {
         //
     }
 
-    public get topLeft(): Position {
-        return new Position(this.viewport.left, this.viewport.top)
-    }
-
     private moveMapViewport(input: Input): void {
         const delta = input.movementDelta()
-        this.viewport = this.viewport.add(delta.round())
+        this.mapViewport.rectangle = this.mapViewport.rectangle.add(delta.round())
 
         if (input.mouse.left || input.mouse.right) {
             const mouseDrag = new Position(
                 (input.mouse.x - input.mouse.clickX!) * 0.2,
                 (input.mouse.y - input.mouse.clickY!) * 0.2,
             )
-            this.viewport = this.viewport.add(mouseDrag.round())
+            this.mapViewport.rectangle = this.mapViewport.rectangle.add(mouseDrag.round())
         }
     }
 
@@ -82,7 +100,7 @@ export class Viewport implements GameSystem {
             .withComponents("position")
             .first()
         if (player !== undefined) {
-            this.viewport = this.viewport.focus(player.position.value)
+            this.mapViewport.rectangle = this.mapViewport.rectangle.focus(player.position.value)
         }
     }
 }

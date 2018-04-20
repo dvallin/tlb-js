@@ -9,12 +9,12 @@ export class Color {
         return new Color(rot.Color.fromString(name))
     }
 
-    public hex: string
+    public rgb: string
 
     public constructor(
         public color: [number, number, number]
     ) {
-        this.hex = rot.Color.toHex(this.color)
+        this.rgb = rot.Color.toRGB(this.color)
     }
 
     public add(other: Color): Color {
