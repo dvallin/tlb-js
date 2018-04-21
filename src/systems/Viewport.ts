@@ -7,7 +7,7 @@ import { Display } from "rot-js"
 import { Rectangle } from "@/geometry/Rectangle"
 import { Size } from "@/geometry/Size"
 import { Input } from "@/systems/Input"
-import { Map } from "@/map/Map"
+import { MapSystem } from "@/map/Map"
 import { Menu } from "@/systems/Menu"
 
 export enum MenuItems {
@@ -70,7 +70,7 @@ export class ViewportSystem implements GameSystem {
             }
         }
 
-        const map: Map | undefined = world.systems.get(Map.NAME) as Map | undefined
+        const map: MapSystem | undefined = world.systems.get(MapSystem.NAME) as MapSystem | undefined
         if (map !== undefined) {
             this.mapViewport.rectangle = this.mapViewport.rectangle.clamp(map.boundary)
         }

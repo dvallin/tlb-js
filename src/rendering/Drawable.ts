@@ -2,11 +2,13 @@ import { Color } from "@/rendering/Color"
 
 export class Drawable {
     public color: Color
+    public noLightColor: Color
     private lights: Map<number, Color>
 
     public constructor(public character: string, public diffuse: Color) {
         this.color = diffuse
         this.lights = new Map()
+        this.noLightColor = this.color
     }
 
     public computeColor(ambientLight: Color): void {
@@ -14,6 +16,7 @@ export class Drawable {
         this.lights.forEach(diffuseLight =>
             totalLight = totalLight.add(diffuseLight)
         )
+        this.noLightColor = this.diffuse.multiply(ambientLight)
         this.color = this.diffuse.multiply(totalLight)
     }
 

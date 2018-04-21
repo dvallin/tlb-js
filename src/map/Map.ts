@@ -26,7 +26,7 @@ interface Room {
     shape: Rectangle
 }
 
-export class Map implements GameSystem {
+export class MapSystem implements GameSystem {
 
     public static NAME: string = "map"
 
@@ -35,15 +35,16 @@ export class Map implements GameSystem {
 
     private map: Tile[] = []
     private reflectivityMap: number[] = []
-    private fov: FOV | undefined = undefined
     private lighting: Lighting | undefined = undefined
+    private visible: Set<number> = new Set()
+    private discovered: Set<number> = new Set()
 
-    private ambientLight: Color = gray[1]
+    private ambientLight: Color = gray[3]
     private lightingEnabled: boolean = true
     private selectedRoom: number | undefined
 
     public register(world: World): void {
-        world.registerSystem(Map.NAME, this)
+        world.registerSystem(MapSystem.NAME, this)
         world.registerComponent("drawable", new MapStorage<Drawable>())
         world.registerComponent("blocking")
         world.registerComponent("description", new MapStorage<Boxed<string>>())
@@ -59,9 +60,7 @@ export class Map implements GameSystem {
     }
 
     public build(world: World): void {
-        this.fov = new FOV.RecursiveShadowcasting((x, y) => this.isTranslucent(new Position(x, y)), { topology: 8 })
         this.lighting = new Lighting((x, y) => this.getReflectivity(new Position(x, y)), { passes: 1 })
-        this.lighting.setFOV(this.fov)
 
         for (let y = 0; y < this.boundary.height; y++) {
             for (let x = 0; x < this.boundary.width; x++) {
@@ -132,6 +131,16 @@ export class Map implements GameSystem {
                     .map(p => p.room.shape.grow(1))
                     .toArray()
                 this.updateLighting(lights, dirtyTiles)
+
+                this.visible.clear()
+                const fov = new FOV.RecursiveShadowcasting((x, y) => this.isTranslucent(new Position(x, y)), { topology: 8 })
+                fov.compute(playerPosition.value.x, playerPosition.value.y, 20, (x, y) => {
+                    const index = this.index(new Position(x, y))
+                    if (index !== undefined) {
+                        this.discovered.add(index)
+                        this.visible.add(index)
+                    }
+                })
             }
         }
     }
@@ -141,10 +150,11 @@ export class Map implements GameSystem {
         if (viewport !== undefined) {
             const topLeft = viewport.mapViewport.topLeft
             foreach(rasterizeRectangle(viewport.mapViewport.rectangle, true), position => {
-                const tile: Tile | undefined = this.getTile(position)
-                if (tile !== undefined) {
+                const index: number | undefined = this.index(position)
+                if (index !== undefined && this.discovered.has(index)) {
+                    const tile: Tile = this.getTileByIndex(index)!
                     const mapPosition = position.subtract(topLeft)
-                    this.renderTile(display, mapPosition, tile)
+                    this.renderTile(display, mapPosition, tile, this.visible.has(index))
                 }
             })
 
@@ -180,7 +190,7 @@ export class Map implements GameSystem {
         if (!this.inside(position)) {
             return undefined
         }
-        return Math.floor(position.x) + Math.floor(position.y) * this.boundary.width
+        return Math.round(position.x) + Math.round(position.y) * this.boundary.width
     }
 
     public inside(position: Position): boolean {
@@ -329,10 +339,11 @@ export class Map implements GameSystem {
             })
         }
 
+        const fov = new FOV.PreciseShadowcasting((x, y) => this.isTranslucent(new Position(x, y)), { topology: 8 })
         for (const light of lights) {
             this.lighting!.clearLights()
             this.lighting!.setLight(light.position.value.x, light.position.value.y, [255, 255, 255])
-            this.lighting!.setFOV(this.fov!)
+            this.lighting!.setFOV(fov)
             this.lighting!.compute((x: number, y: number, color: [number, number, number]) => {
                 const p = new Position(x, y)
                 const tile: Tile | undefined = this.getTile(p)
@@ -357,7 +368,14 @@ export class Map implements GameSystem {
         const allDrawables: DrawableWithData[] = world
             .fetch()
             .on(v => v.hasLabel("drawable").hasLabel("position")
-                .matchesValue("position", (p: Boxed<Position>) => viewport.rectangle.isInside(p.value))
+                .matchesValue("position", (p: Boxed<Position>) => {
+                    const index: number | undefined = this.index(p.value)
+                    if (index !== undefined && this.discovered.has(index)) {
+                        return viewport.rectangle.isInside(p.value)
+                    } else {
+                        return false
+                    }
+                })
             )
             .withComponents("position", "drawable", "description")
             .collect()
@@ -365,11 +383,9 @@ export class Map implements GameSystem {
         const alreadyDrawn = new Set<number>()
         allDrawables.forEach((comp: DrawableWithData) => {
             const p = comp.position.value.subtract(topLeft)
-            this.renderDrawable(display, p, comp.drawable)
-            const idx = this.index(p)
-            if (idx !== undefined) {
-                alreadyDrawn.add(idx)
-            }
+            const index: number = this.index(p)!
+            this.renderDrawable(display, p, comp.drawable, true)
+            alreadyDrawn.add(index)
         })
 
         const menu: Menu | undefined = world.systems.get(Menu.NAME) as Menu | undefined
@@ -386,19 +402,21 @@ export class Map implements GameSystem {
         })
     }
 
-    private renderTile(display: Display, position: Position, tile: Tile): void {
+    private renderTile(display: Display, position: Position, tile: Tile, visible: boolean): void {
         if (tile.room !== undefined && tile.room === this.selectedRoom) {
-            this.renderDrawable(display, position, tile, gray[3].rgb)
+            this.renderDrawable(display, position, tile, visible, gray[3].rgb)
         } else {
-            this.renderDrawable(display, position, tile)
+            this.renderDrawable(display, position, tile, visible)
         }
     }
 
-    private renderDrawable(display: Display, position: Position, drawable: Drawable, bg?: string): void {
+    private renderDrawable(display: Display, position: Position, drawable: Drawable, visible: boolean, bg?: string): void {
         if (!this.lightingEnabled) {
             display.draw(position.x, position.y, drawable.character, drawable.diffuse.rgb, bg)
-        } else {
+        } else if (visible) {
             display.draw(position.x, position.y, drawable.character, drawable.color.rgb, bg)
+        } else {
+            display.draw(position.x, position.y, drawable.character, drawable.noLightColor.rgb, bg)
         }
     }
 

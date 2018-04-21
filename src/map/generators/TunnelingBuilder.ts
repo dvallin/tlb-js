@@ -8,7 +8,7 @@ import { MapStorage, World, Boxed } from "mogwai-ecs/lib"
 
 import { rasterize as rasterizeRectangle } from "@/rendering/rectangle"
 import { machine, tunnelerTile, wallTile, corridorTile, randomWeapon } from "@/map/Tile"
-import { Map } from "@/map/Map"
+import { MapSystem } from "@/map/Map"
 
 class Tunneler {
     public alive: boolean = true
@@ -26,7 +26,7 @@ class Tunneler {
 
 export class TunnelingBuilder {
 
-    public constructor(private world: World, private map: Map) {
+    public constructor(private world: World, private map: MapSystem) {
         this.world.registerComponent("tunneler", new MapStorage<Tunneler>())
     }
 
