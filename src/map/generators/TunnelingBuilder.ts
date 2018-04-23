@@ -85,7 +85,7 @@ export class TunnelingBuilder {
             .stream().each((comp: { entity: number, position: Boxed<Position>, tunneler: Tunneler }) => {
                 updated = true
                 this.world.entity(comp.entity).with("active").close()
-                this.map.setTile(comp.position.value, wallTile())
+                this.map.setTile(this.world, comp.position.value, wallTile())
             })
         return updated
     }
@@ -150,7 +150,7 @@ export class TunnelingBuilder {
     private renderTunneler(tunneler: Tunneler, position: Position): void {
         const positions: Position[] = this.tunnelerMoves(tunneler.direction, tunneler.width, position)
         if (this.map.isFree(positions)) {
-            positions.forEach(p => this.map.setTile(p, corridorTile(tunneler.room)))
+            positions.forEach(p => this.map.setTile(this.world, p, corridorTile(tunneler.room)))
         } else {
             tunneler.alive = false
         }
@@ -202,7 +202,7 @@ export class TunnelingBuilder {
                 .with("tunneler", child)
                 .with("position", new Boxed<Position>(position))
                 .close()
-            this.map.setTile(position, tunnelerTile())
+            this.map.setTile(this.world, position, tunnelerTile())
         }
     }
 
@@ -247,7 +247,7 @@ export class TunnelingBuilder {
             this.spawnTunnelers(tunneler, room, rectangle.mid, Math.ceil(width / 2))
 
             const m = machine(room)
-            this.map.buildAsset(rectangle.mid, m)
+            this.map.buildAsset(this.world, rectangle.mid, m)
         }
     }
 

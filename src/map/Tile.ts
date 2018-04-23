@@ -10,30 +10,30 @@ export class Tile extends Drawable {
         ambient: Color,
         public room: number | undefined,
         public blocking: boolean,
-        public reflectivity: number
+        public lightBlocking: boolean
     ) {
         super(character, ambient)
     }
 }
 
 export function wallTile(): Tile {
-    return new Tile("#", gray[3], undefined, true, 0)
+    return new Tile("#", gray[3], undefined, true, true)
 }
 
 export function corridorTile(room: number): Tile {
-    return new Tile(".", gray[0], room, false, 0.3)
+    return new Tile(".", gray[0], room, false, false)
 }
 
 export function roomTile(room: number): Tile {
-    return new Tile(".", primary[1], room, false, 0.3)
+    return new Tile(".", primary[1], room, false, false)
 }
 
 export function hubTile(room: number): Tile {
-    return new Tile(".", primary[0], room, false, 0.3)
+    return new Tile(".", primary[0], room, false, false)
 }
 
 export function tunnelerTile(): Tile {
-    return new Tile("T", Color.fromName("red"), -1, false, 0.3)
+    return new Tile("T", Color.fromName("red"), -1, false, false)
 }
 
 export function randomWeapon(): Drawable {
@@ -51,7 +51,7 @@ function asset(data: string[], colors: string[], palette: Color[], room: number)
                 result.push(undefined)
             } else {
                 const color = palette[Number.parseInt(colorLine[index])]
-                result.push(new Tile(character, color, room, true, 0.5))
+                result.push(new Tile(character, color, room, true, false))
             }
         }
     }

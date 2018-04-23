@@ -32,6 +32,7 @@ export class Player implements GameSystem {
             .with("player")
             .with("position", new Boxed<Position>(startPosition))
             .with("blocking")
+            .with("lightBlocking")
             .with("drawable", new Drawable("@", new Color([255, 255, 255])))
             .with("active")
             .close()
