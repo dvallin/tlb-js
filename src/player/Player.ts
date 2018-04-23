@@ -7,18 +7,18 @@ import { Display } from "rot-js"
 import { Tile } from "@/map/Tile"
 import { Drawable } from "@/rendering/Drawable"
 import { Input } from "@/systems/Input"
-import { Menu, MenuItems } from "@/systems/Menu"
+import { MenuSystem, MenuItems } from "@/menu/Menu"
 import { MapSystem } from "@/map/Map"
 import { Color } from "@/rendering/Color"
 
-export class Player implements GameSystem {
+export class PlayerSystem implements GameSystem {
 
     public static NAME: string = "player"
 
     public renderLayer: RenderLayer = RenderLayer.None
 
     public register(world: World): void {
-        world.registerSystem(Player.NAME, this)
+        world.registerSystem(PlayerSystem.NAME, this)
         world.registerComponent("player")
         world.registerComponent("blocking")
         world.registerComponent("active", new MapStorage<Tile>())
@@ -40,7 +40,7 @@ export class Player implements GameSystem {
 
     public execute(world: World): void {
         const input: Input | undefined = world.systems.get(Input.NAME) as Input | undefined
-        const menu: Menu | undefined = world.systems.get(Menu.NAME) as Menu | undefined
+        const menu: MenuSystem | undefined = world.systems.get(MenuSystem.NAME) as MenuSystem | undefined
         const map: MapSystem | undefined = world.systems.get(MapSystem.NAME) as MapSystem | undefined
         if (input !== undefined && menu !== undefined && map !== undefined) {
             if (menu.activeMenuItem === MenuItems.Player) {

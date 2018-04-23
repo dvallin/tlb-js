@@ -13,10 +13,10 @@ import { Size } from "@/geometry/Size"
 import { Input } from "@/systems/Input"
 import { gridSymbols } from "@/symbols"
 import { gray, primary } from "@/rendering/palettes"
-import { ViewportSystem, Viewport } from "@/systems/Viewport"
+import { ViewportSystem, Viewport } from "@/rendering/Viewport"
 import { Color } from "@/rendering/Color"
 import { TunnelingBuilder } from "@/map/generators/TunnelingBuilder"
-import { Menu, MenuItems } from "@/systems/Menu"
+import { MenuSystem, MenuItems } from "@/menu/Menu"
 import { LightingSystem } from "@/lighting/Lighting"
 
 interface DrawableWithData {
@@ -292,7 +292,7 @@ export class MapSystem implements GameSystem {
             alreadyDrawn.add(index)
         })
 
-        const menu: Menu | undefined = world.systems.get(Menu.NAME) as Menu | undefined
+        const menu: MenuSystem | undefined = world.systems.get(MenuSystem.NAME) as MenuSystem | undefined
         if (menu !== undefined && menu.activeMenuItem === MenuItems.Map) {
             this.drawDescriptions(allDrawables, alreadyDrawn, topLeft, display)
         }

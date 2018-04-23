@@ -8,12 +8,7 @@ import { Rectangle } from "@/geometry/Rectangle"
 import { Size } from "@/geometry/Size"
 import { Input } from "@/systems/Input"
 import { MapSystem } from "@/map/Map"
-import { Menu } from "@/systems/Menu"
-
-export enum MenuItems {
-    Player = "Player",
-    Map = "Map"
-}
+import { MenuSystem, MenuItems } from "@/menu/Menu"
 
 export class Viewport {
     public constructor(
@@ -58,7 +53,7 @@ export class ViewportSystem implements GameSystem {
 
     public execute(world: World): void {
         const input: Input | undefined = world.systems.get(Input.NAME) as Input | undefined
-        const menu: Menu | undefined = world.systems.get(Menu.NAME) as Menu | undefined
+        const menu: MenuSystem | undefined = world.systems.get(MenuSystem.NAME) as MenuSystem | undefined
         if (input !== undefined && menu !== undefined) {
             switch (menu.activeMenuItem) {
                 case MenuItems.Map:

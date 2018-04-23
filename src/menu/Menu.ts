@@ -3,7 +3,7 @@ import { World } from "mogwai-ecs/lib"
 import { Display } from "rot-js"
 
 import { Input } from "@/systems/Input"
-import { ViewportSystem } from "@/systems/Viewport"
+import { ViewportSystem } from "@/rendering/Viewport"
 import { primary } from "@/rendering/palettes"
 import { Position } from "@/geometry/Position"
 
@@ -12,7 +12,7 @@ export enum MenuItems {
     Map = "Map"
 }
 
-export class Menu implements GameSystem {
+export class MenuSystem implements GameSystem {
 
     public static NAME: string = "menu"
 
@@ -21,7 +21,7 @@ export class Menu implements GameSystem {
     public activeMenuItem: MenuItems = MenuItems.Player
 
     public register(world: World): void {
-        world.registerSystem(Menu.NAME, this)
+        world.registerSystem(MenuSystem.NAME, this)
     }
 
     public build({ }: World): void {

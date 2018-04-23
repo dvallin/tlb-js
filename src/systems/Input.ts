@@ -4,7 +4,7 @@ import ROT, { VK_J, VK_H, VK_K, VK_L, VK_F1, VK_F2 } from "rot-js"
 import { GameSystem, RenderLayer } from "./GameSystem"
 import { Direction } from "@/geometry/Direction"
 import { Position } from "@/geometry/Position"
-import { MenuItems } from "@/systems/Viewport"
+import { MenuItems } from "@/menu/Menu"
 
 export interface InputState {
   isPressed: Map<number, boolean>

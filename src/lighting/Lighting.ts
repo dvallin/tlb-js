@@ -11,7 +11,7 @@ import { rasterize as rasterizeRectangle } from "@/rendering/rectangle"
 import { Size } from "@/geometry/Size"
 import { gray } from "@/rendering/palettes"
 import { Color } from "@/rendering/Color"
-import { Menu, MenuItems } from "@/systems/Menu"
+import { MenuSystem, MenuItems } from "@/menu/Menu"
 import { MapSystem } from "@/map/Map"
 import { Drawable } from "@/rendering/Drawable"
 
@@ -56,7 +56,7 @@ export class LightingSystem implements GameSystem {
     }
 
     public execute(world: World): void {
-        const menu: Menu | undefined = world.systems.get(Menu.NAME) as Menu | undefined
+        const menu: MenuSystem | undefined = world.systems.get(MenuSystem.NAME) as MenuSystem | undefined
         const map: MapSystem | undefined = world.systems.get(MapSystem.NAME) as MapSystem | undefined
         this.lightingEnabled = true
         if (menu !== undefined && menu.activeMenuItem === MenuItems.Map) {
