@@ -9,73 +9,78 @@ export const DEFAULT_WIDTH = 98
 export const DEFAULT_HEIGHT = 61
 
 export interface GameSettings {
-  framerate?: number
+    framerate?: number
 }
 
 export function defaultSettings(): GameSettings {
-  return {
-    framerate: 30
-  }
+    return {
+        framerate: 30
+    }
 }
 
 export class Game {
-  public display: Display
-  public world: World
+    public display: Display
+    public world: World
 
-  private systems: GameSystem[]
+    private systems: GameSystem[]
 
-  private settings: GameSettings
+    private settings: GameSettings
 
-  constructor(settings?: GameSettings) {
-    this.settings = Object.assign(defaultSettings(), settings)
+    constructor(settings?: GameSettings) {
+        this.settings = Object.assign(defaultSettings(), settings)
 
-    const displayOptions: ROT.DisplayOptions = {
-      width: DEFAULT_WIDTH,
-      height: DEFAULT_HEIGHT,
-      forceSquareRatio: true,
-      fontSize: 17,
-      fontFamily: "Lucida Console, Monaco, monospace",
-      bg: gray[4].rgb
+        const displayOptions: ROT.DisplayOptions = {
+            width: DEFAULT_WIDTH,
+            height: DEFAULT_HEIGHT,
+            forceSquareRatio: true,
+            fontSize: 17,
+            fontFamily: "Lucida Console, Monaco, monospace",
+            bg: gray[4].rgb
+        }
+        this.display = new ROT.Display(displayOptions)
+        this.world = new World()
+
+        this.systems = []
     }
-    this.display = new ROT.Display(displayOptions)
-    this.world = new World()
 
-    this.systems = []
-  }
+    public addGameSystem(system: GameSystem): void {
+        system.register(this.world)
+        this.systems.push(system)
+    }
 
-  public addGameSystem(system: GameSystem): void {
-    system.register(this.world)
-    this.systems.push(system)
-  }
+    public build(): void {
+        document.body.appendChild(this.display.getContainer())
+        this.systems.forEach(system =>
+            system.build(this.world)
+        )
+    }
 
-  public build(): void {
-    document.body.appendChild(this.display.getContainer())
-    this.systems.forEach(system =>
-      system.build(this.world)
-    )
-  }
+    public run(): void {
+        const next = Date.now() + (1000 / this.settings.framerate!)
+        this.tick()
+        const untilNextFrame = next - Date.now()
+        setTimeout(() => this.run(), untilNextFrame)
+    }
 
-  public run(): void {
-    const next = Date.now() + (1000 / this.settings.framerate!)
-    this.tick()
-    const untilNextFrame = next - Date.now()
-    setTimeout(() => this.run(), untilNextFrame)
-  }
+    public tick(): void {
+        this.world.run()
+        this.display.clear()
 
-  public tick(): void {
-    this.world.run()
-    this.display.clear()
-
-    const systemsByLayer: GameSystem[][] = []
-    this.systems.forEach(system => {
-      const layer = systemsByLayer[system.renderLayer] || []
-      layer.push(system)
-      systemsByLayer[system.renderLayer] = layer
-    })
-    systemsByLayer.forEach(layer => {
-      layer.forEach(system =>
-        system.render(this.world, this.display)
-      )
-    })
-  }
+        const systemsByLayer: GameSystem[][] = []
+        this.systems.forEach(system => {
+            const layer = systemsByLayer[system.renderLayer] || []
+            layer.push(system)
+            systemsByLayer[system.renderLayer] = layer
+        })
+        systemsByLayer.forEach(layer => {
+            layer.forEach(system =>
+                system.render(this.world, this.display)
+            )
+        })
+        systemsByLayer.forEach(layer => {
+            layer.forEach(system =>
+                system.afterRender(this.world)
+            )
+        })
+    }
 }

@@ -6,6 +6,7 @@ import { MapSystem } from "@/map/Map"
 import { PlayerSystem } from "@/player/Player"
 import { MenuSystem } from "@/menu/Menu"
 import { LightingSystem } from "@/lighting/Lighting"
+import { TriggerSystem } from "@/triggers/TriggerSystem"
 
 const game = new Game()
 
@@ -14,6 +15,7 @@ game.addGameSystem(new ViewportSystem())
 game.addGameSystem(new MenuSystem())
 game.addGameSystem(new PlayerSystem())
 game.addGameSystem(new LightingSystem())
+game.addGameSystem(new TriggerSystem())
 game.addGameSystem(new MapSystem())
 
 game.build()

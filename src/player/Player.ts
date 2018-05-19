@@ -23,7 +23,6 @@ export class PlayerSystem implements GameSystem {
         world.registerComponent("blocking")
         world.registerComponent("active", new MapStorage<Tile>())
         world.registerComponent("drawable", new MapStorage<Drawable>())
-        world.registerComponent("description", new MapStorage<Boxed<string>>())
     }
 
     public build(world: World): void {
@@ -64,6 +63,10 @@ export class PlayerSystem implements GameSystem {
     }
 
     public render({ }: World, { }: Display): void {
+        //
+    }
+
+    public afterRender({ }: World): void {
         //
     }
 }

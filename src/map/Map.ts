@@ -18,6 +18,7 @@ import { Color } from "@/rendering/Color"
 import { TunnelingBuilder } from "@/map/generators/TunnelingBuilder"
 import { MenuSystem, MenuItems } from "@/menu/Menu"
 import { LightingSystem } from "@/lighting/Lighting"
+import { doorTrigger } from "@/triggers/TriggerSystem"
 
 interface DrawableWithData {
     position: Boxed<Position>, description: Boxed<string> | undefined, drawable: Drawable
@@ -109,12 +110,16 @@ export class MapSystem implements GameSystem {
                 if (index !== undefined && lighting.isDiscovered(index)) {
                     const tile: Tile = this.getTileByIndex(index)!
                     const mapPosition = position.subtract(topLeft)
-                    this.renderTile(display, mapPosition, tile, lighting.getColor(tile, index))
+                    this.renderTile(display, mapPosition, tile, lighting.getColor(tile))
                 }
             })
 
             this.drawDrawables(world, display, viewport.mapViewport)
         }
+    }
+
+    public afterRender({ }: World): void {
+        //
     }
 
     public setTile(world: World, position: Position, tile: Tile): void {
@@ -165,8 +170,10 @@ export class MapSystem implements GameSystem {
         world.entity()
             .with("position", new Boxed(position))
             .with("drawable", new Drawable("+", primary[2]))
+            .with("description", new Boxed("a door"))
             .with("lightBlocking")
             .with("blocking")
+            .with("trigger", doorTrigger)
             .close()
     }
 
@@ -288,7 +295,7 @@ export class MapSystem implements GameSystem {
         allDrawables.forEach((comp: DrawableWithData) => {
             const p = comp.position.value.subtract(topLeft)
             const index: number = this.index(p)!
-            this.renderCharacter(display, p, comp.drawable.character, lighting.getColor(comp.drawable, index))
+            this.renderCharacter(display, p, comp.drawable.character, lighting.getColor(comp.drawable))
             alreadyDrawn.add(index)
         })
 

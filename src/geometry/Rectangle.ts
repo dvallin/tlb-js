@@ -46,6 +46,16 @@ export class Rectangle {
         return new Rectangle(left!, right!, top!, bottom!)
     }
 
+    public static centerAt(position: Position, size: Size): Rectangle {
+        const halfWidth = Math.floor(size.width / 2)
+        const halfHeight = Math.floor(size.height / 2)
+        const left = position.x - halfWidth
+        const right = position.x + halfWidth
+        const top = position.y - halfHeight
+        const bottom = position.y + halfHeight
+        return new Rectangle(left!, right!, top!, bottom!)
+    }
+
     public get mid(): Position {
         return new Position(Math.floor((this.left + this.right) / 2), Math.floor((this.top + this.bottom) / 2))
     }

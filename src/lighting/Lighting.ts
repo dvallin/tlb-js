@@ -71,33 +71,43 @@ export class LightingSystem implements GameSystem {
 
             const playerTile = map!.getTile(playerPosition.value)
             if (playerTile !== undefined && playerTile.room !== undefined) {
-                const lights: { entity: number, position: Boxed<Position> }[] = world
-                    .fetch(playerTile.room)
-                    .on(t => t.both("contains").hasLabel("light"))
-                    .withComponents("position")
-                    .collect()
-                const dirtyTiles: Rectangle[] = world
-                    .fetch(playerTile.room)
-                    .withComponents("room")
-                    .stream()
-                    .map(p => p.room.shape.grow(1))
-                    .toArray()
-                this.updateLighting(world, lights, dirtyTiles)
-
                 this.visible.clear()
+                const roomIds: Set<number> = new Set()
                 const fov = new FOV.RecursiveShadowcasting((x, y) => this.isLightPassing(map!, new Position(x, y)), { topology: 8 })
                 fov.compute(playerPosition.value.x, playerPosition.value.y, 20, (x, y) => {
                     const index = map!.index(new Position(x, y))
                     if (index !== undefined) {
                         this.discovered.add(index)
                         this.visible.add(index)
+                        const room = map!.getTileByIndex(index)!.room
+                        if (room !== undefined) {
+                            roomIds.add(room)
+                        }
                     }
                 })
+
+                const lights: { entity: number, position: Boxed<Position> }[] = world
+                    .fetch(...Array.from(roomIds))
+                    .on(t => t.out("contains").hasLabel("light"))
+                    .withComponents("position")
+                    .collect()
+                const dirtyTiles: Rectangle[] = world
+                    .fetch(...Array.from(roomIds))
+                    .withComponents("room")
+                    .stream()
+                    .map(p => p.room.shape.grow(1))
+                    .toArray()
+                this.updateLighting(world, lights, dirtyTiles)
+
             }
         }
     }
 
     public render({ }: World, { }: Display): void {
+        //
+    }
+
+    public afterRender({ }: World): void {
         //
     }
 
@@ -138,14 +148,11 @@ export class LightingSystem implements GameSystem {
         return true
     }
 
-    public getColor(drawable: Drawable, index: number): Color {
+    public getColor(drawable: Drawable): Color {
         if (!this.lightingEnabled) {
             return drawable.diffuse
-        } else if (this.isVisible(index)) {
-            return drawable.color
-        } else {
-            return drawable.noLightColor
         }
+        return drawable.color
     }
 
     private updateLighting(world: World, lights: { entity: number, position: Boxed<Position> }[], dirtyAreas: Rectangle[]): void {
@@ -154,7 +161,6 @@ export class LightingSystem implements GameSystem {
             return
         }
 
-        this.entityMap.clear()
         this.lightBlocking.clear()
         world.fetch()
             .on(t => t.hasLabel("lightBlocking").hasLabel("position"))
@@ -166,6 +172,8 @@ export class LightingSystem implements GameSystem {
                     this.lightBlocking.add(idx)
                 }
             })
+
+        this.entityMap.clear()
         world.fetch()
             .on(t => t.hasLabel("drawable").hasLabel("position"))
             .withComponents("position", "drawable")
@@ -183,7 +191,6 @@ export class LightingSystem implements GameSystem {
             })
 
         const dirtyTiles: Set<number> = new Set<number>()
-
         for (const area of dirtyAreas) {
             foreach(rasterizeRectangle(area, true), (p) => {
                 const tile: Tile | undefined = map.getTile(p)

@@ -31,15 +31,15 @@ export class ViewportSystem implements GameSystem {
         new Position(0, 0),
         Rectangle.from(
             new Position(0, 0),
-            new Size(DEFAULT_WIDTH, 1)
+            new Size(DEFAULT_WIDTH, 5)
         )
     )
 
     public mapViewport: Viewport = new Viewport(
-        new Position(0, 1),
+        new Position(0, 6),
         Rectangle.from(
             new Position(0, 0),
-            new Size(DEFAULT_WIDTH, DEFAULT_HEIGHT - 1)
+            new Size(DEFAULT_WIDTH, DEFAULT_HEIGHT - 5)
         )
     )
 
@@ -72,6 +72,10 @@ export class ViewportSystem implements GameSystem {
     }
 
     public render({ }: World, { }: Display): void {
+        //
+    }
+
+    public afterRender({ }: World): void {
         //
     }
 
