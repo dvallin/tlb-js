@@ -1,5 +1,5 @@
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from "@/Game"
-import { Position } from "@/geometry/Position"
+import { Position, Domain } from "@/geometry/Position"
 import { GameSystem, RenderLayer } from "@/systems/GameSystem"
 import { World, Boxed } from "mogwai-ecs/lib"
 import { Display, FOV, Lighting } from "rot-js"
@@ -14,6 +14,7 @@ import { Color } from "@/rendering/Color"
 import { MenuSystem, MenuItems } from "@/menu/Menu"
 import { MapSystem } from "@/map/Map"
 import { Drawable } from "@/rendering/Drawable"
+import { Vector2D } from "@/geometry/Vector2D"
 
 export class LightingSystem implements GameSystem {
 
@@ -22,11 +23,10 @@ export class LightingSystem implements GameSystem {
     public readonly boundary: Size = new Size(2 * DEFAULT_WIDTH, 2 * DEFAULT_HEIGHT)
     public renderLayer: RenderLayer = RenderLayer.Layer3
 
-    private lighting: Lighting | undefined = undefined
-    private lightBlocking: Set<number> = new Set()
-    private entityMap: Map<number, Drawable[]> = new Map()
-    private visible: Set<number> = new Set()
-    private discovered: Set<number> = new Set()
+    private lightBlocking: Set<string> = new Set()
+    private entityMap: Map<string, Drawable[]> = new Map()
+    private visible: Set<string> = new Set()
+    private discovered: Set<string> = new Set()
 
     private ambientLight: Color = gray[3]
     private lightingEnabled: boolean = true
@@ -46,12 +46,19 @@ export class LightingSystem implements GameSystem {
                 map.build(world)
             }
 
-            this.lighting = new Lighting((x, y) => this.isLightPassing(map, new Position(x, y)) ? 1.0 : 0.0, { passes: 1 })
             const lights: { entity: number, position: Boxed<Position> }[] = world
                 .fetch()
                 .on(t => t.hasLabel("light")).withComponents("position")
                 .collect()
-            this.updateLighting(world, lights, [Rectangle.from(new Position(0, 0), this.boundary)])
+            const domains = new Map<Domain, { entity: number, position: Boxed<Position> }[]>()
+            lights.forEach(light => {
+                const domain = domains.get(light.position.value.domain) || []
+                domain.push(light)
+                domains.set(light.position.value.domain, domain)
+            })
+            domains.forEach((value, key) => {
+                this.updateLighting(world, key, value, [Rectangle.from(new Vector2D(0, 0), this.boundary)])
+            })
         }
     }
 
@@ -68,14 +75,18 @@ export class LightingSystem implements GameSystem {
                 .withComponents("position")
                 .first()
                 .position
+            const domain = playerPosition.value.domain
 
             const playerTile = map!.getTile(playerPosition.value)
             if (playerTile !== undefined && playerTile.room !== undefined) {
                 this.visible.clear()
                 const roomIds: Set<number> = new Set()
-                const fov = new FOV.RecursiveShadowcasting((x, y) => this.isLightPassing(map!, new Position(x, y)), { topology: 8 })
+                const fov = new FOV.RecursiveShadowcasting(
+                    (x, y) => this.isLightPassing(map!, new Position(domain, new Vector2D(x, y))),
+                    { topology: 8 }
+                )
                 fov.compute(playerPosition.value.x, playerPosition.value.y, 20, (x, y) => {
-                    const index = map!.index(new Position(x, y))
+                    const index = map!.getIndex(new Position(domain, new Vector2D(x, y)))
                     if (index !== undefined) {
                         this.discovered.add(index)
                         this.visible.add(index)
@@ -97,7 +108,7 @@ export class LightingSystem implements GameSystem {
                     .stream()
                     .map(p => p.room.shape.grow(1))
                     .toArray()
-                this.updateLighting(world, lights, dirtyTiles)
+                this.updateLighting(world, domain, lights, dirtyTiles)
 
             }
         }
@@ -118,26 +129,26 @@ export class LightingSystem implements GameSystem {
             .close()
     }
 
-    public isVisible(index: number): boolean {
+    public isVisible(index: string): boolean {
         return this.visible.has(index)
     }
 
-    public isDiscovered(index: number): boolean {
+    public isDiscovered(index: string): boolean {
         return this.discovered.has(index)
     }
 
-    public setDrawable(drawable: Drawable, { }: number): void {
+    public setDrawable(drawable: Drawable): void {
         drawable.computeColor(this.ambientLight)
     }
 
     public isLightPassing(map: MapSystem, position: Position): boolean {
-        const index: number | undefined = map.index(position)
+        const index: string | undefined = map.getIndex(position)
         if (index === undefined) {
             return false
         }
 
         const tile: Tile | undefined = map.getTileByIndex(index)
-        if (tile !== undefined && tile.lightBlocking) {
+        if (tile === undefined || tile.lightBlocking) {
             return false
         }
 
@@ -155,7 +166,10 @@ export class LightingSystem implements GameSystem {
         return drawable.color
     }
 
-    private updateLighting(world: World, lights: { entity: number, position: Boxed<Position> }[], dirtyAreas: Rectangle[]): void {
+    private updateLighting(world: World, domain: Domain,
+        lights: { entity: number, position: Boxed<Position> }[],
+        dirtyAreas: Rectangle[]
+    ): void {
         const map: MapSystem | undefined = world.systems.get(MapSystem.NAME) as MapSystem | undefined
         if (map === undefined) {
             return
@@ -167,7 +181,7 @@ export class LightingSystem implements GameSystem {
             .withComponents("position")
             .stream()
             .each((v: { position: Boxed<Position> }) => {
-                const idx = map!.index(v.position.value)
+                const idx = map!.getIndex(v.position.value)
                 if (idx !== undefined) {
                     this.lightBlocking.add(idx)
                 }
@@ -179,7 +193,7 @@ export class LightingSystem implements GameSystem {
             .withComponents("position", "drawable")
             .stream()
             .each((v: { position: Boxed<Position>, drawable: Drawable }) => {
-                const idx = map!.index(v.position.value)
+                const idx = map!.getIndex(v.position.value)
                 v.drawable.clearLight()
                 if (idx !== undefined) {
                     if (this.entityMap.has(idx)) {
@@ -190,34 +204,41 @@ export class LightingSystem implements GameSystem {
                 }
             })
 
-        const dirtyTiles: Set<number> = new Set<number>()
+        const dirtyTiles: Set<string> = new Set<string>()
         for (const area of dirtyAreas) {
-            foreach(rasterizeRectangle(area, true), (p) => {
+            foreach(rasterizeRectangle(area, true), (v) => {
+                const p: Position = new Position(domain, v)
                 const tile: Tile | undefined = map.getTile(p)
                 if (tile !== undefined) {
                     for (const light of lights) {
                         if (tile.hasLight(light.entity)) {
                             tile.removeLight(light.entity)
-                            dirtyTiles.add(map.index(p)!)
+                            dirtyTiles.add(map.getIndex(p)!)
                         }
                     }
                 }
             })
         }
 
-        const fov = new FOV.PreciseShadowcasting((x, y) => this.isLightPassing(map, new Position(x, y)), { topology: 8 })
         for (const light of lights) {
-            this.lighting!.clearLights()
-            this.lighting!.setLight(light.position.value.x, light.position.value.y, [255, 255, 255])
-            this.lighting!.setFOV(fov)
-            this.lighting!.compute((x: number, y: number, c: [number, number, number]) => {
-                const p = new Position(x, y)
-                const index = map.index(p)
+            const fov = new FOV.PreciseShadowcasting(
+                (x, y) => this.isLightPassing(map, new Position(domain, new Vector2D(x, y))),
+                { topology: 8 }
+            )
+            const lighting = new Lighting(
+                (x, y) => this.isLightPassing(map, new Position(domain, new Vector2D(x, y))) ? 1.0 : 0.0,
+                { passes: 1 }
+            )
+            lighting.setLight(light.position.value.x, light.position.value.y, [255, 255, 255])
+            lighting.setFOV(fov)
+            lighting.compute((x: number, y: number, c: [number, number, number]) => {
+                const p = new Position(domain, new Vector2D(x, y))
+                const index = map.getIndex(p)
                 if (index !== undefined) {
                     const tile: Tile | undefined = map.getTileByIndex(index)
                     const color = new Color(c)
                     if (tile !== undefined) {
-                        dirtyTiles.add(map.index(p)!)
+                        dirtyTiles.add(map.getIndex(p)!)
                         tile.setLight(light.entity, color)
                     }
                     if (this.entityMap.has(index)) {

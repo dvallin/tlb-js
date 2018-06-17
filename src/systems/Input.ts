@@ -3,8 +3,8 @@ import ROT, { VK_J, VK_H, VK_K, VK_L, VK_F1, VK_F2 } from "rot-js"
 
 import { GameSystem, RenderLayer } from "./GameSystem"
 import { Direction } from "@/geometry/Direction"
-import { Position } from "@/geometry/Position"
 import { MenuItems } from "@/menu/Menu"
+import { Vector2D } from "@/geometry/Vector2D"
 
 export interface InputState {
     isPressed: Map<number, boolean>
@@ -120,8 +120,8 @@ export class Input implements GameSystem {
         return this.isPressed(this.keyMap[direction])
     }
 
-    public movementDelta(): Position {
-        let delta = Position.from(Direction.Center)
+    public movementDelta(): Vector2D {
+        let delta = Vector2D.from(Direction.Center)
         delta = this.move(delta, Direction.North)
         delta = this.move(delta, Direction.West)
         delta = this.move(delta, Direction.South)
@@ -145,9 +145,9 @@ export class Input implements GameSystem {
         }
     }
 
-    private move(delta: Position, direction: Direction): Position {
+    private move(delta: Vector2D, direction: Direction): Vector2D {
         if (this.direction(direction)) {
-            delta = delta.add(Position.from(direction))
+            delta = delta.add(Vector2D.from(direction))
         }
         return delta
     }

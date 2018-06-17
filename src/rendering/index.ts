@@ -1,31 +1,31 @@
-import { Position } from "@/geometry/Position"
+import { Vector2D } from "@/geometry/Vector2D"
 import LazyJS from "lazy.js"
 
-export type RenderIterator = () => Position | undefined
+export type RenderIterator = () => Vector2D | undefined
 
-export function toStream(iter: RenderIterator): LazyJS.Sequence<Position> {
-  return LazyJS.generate(iter)
-    .takeWhile((p: Position | undefined) => p !== undefined)
-    .map(p => p as Position)
+export function toStream(iter: RenderIterator): LazyJS.Sequence<Vector2D> {
+    return LazyJS.generate(iter)
+        .takeWhile((p: Vector2D | undefined) => p !== undefined)
+        .map(p => p as Vector2D)
 }
 
-export function toArray(iter: RenderIterator): Position[] {
-  const array = []
-  while (true) {
-    const p: Position | undefined = iter()
-    if (p === undefined) {
-      return array
+export function toArray(iter: RenderIterator): Vector2D[] {
+    const array = []
+    while (true) {
+        const p: Vector2D | undefined = iter()
+        if (p === undefined) {
+            return array
+        }
+        array.push(p)
     }
-    array.push(p)
-  }
 }
 
-export function foreach(iter: RenderIterator, callback: (p: Position) => void): void {
-  while (true) {
-    const p: Position | undefined = iter()
-    if (p === undefined) {
-      return
+export function foreach(iter: RenderIterator, callback: (p: Vector2D) => void): void {
+    while (true) {
+        const p: Vector2D | undefined = iter()
+        if (p === undefined) {
+            return
+        }
+        callback(p)
     }
-    callback(p)
-  }
 }

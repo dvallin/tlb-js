@@ -1,6 +1,6 @@
 import { Rectangle } from "@/geometry/Rectangle"
-import { Position } from "@/geometry/Position"
 import { RenderIterator } from "@/rendering"
+import { Vector2D } from "@/geometry/Vector2D"
 
 export function rasterize(rectangle: Rectangle, fill: boolean = false): RenderIterator {
     let y = rectangle.top
@@ -11,7 +11,7 @@ export function rasterize(rectangle: Rectangle, fill: boolean = false): RenderIt
         if (done) {
             return undefined
         }
-        const result = new Position(Math.floor(x), Math.floor(y))
+        const result = new Vector2D(Math.floor(x), Math.floor(y))
         x++
         if (x > rectangle.right) {
             x = rectangle.left

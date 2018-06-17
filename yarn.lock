@@ -4075,9 +4075,9 @@ mkdirp@0.5.x, "mkdirp@>=0.5 0", mkdirp@^0.5.1, mkdirp@~0.5.0, mkdirp@~0.5.1:
   dependencies:
     minimist "0.0.8"
 
-mogwai-ecs@^0.5.3:
-  version "0.5.3"
-  resolved "https://registry.yarnpkg.com/mogwai-ecs/-/mogwai-ecs-0.5.3.tgz#ffbd1685c81a3b12f9f7129e27371f79e38ccfe2"
+mogwai-ecs@^0.5.4:
+  version "0.5.4"
+  resolved "https://registry.yarnpkg.com/mogwai-ecs/-/mogwai-ecs-0.5.4.tgz#59064a92e75e0cf6a466e0aebe18e85e6708372e"
   dependencies:
     hibitset-js "^1.0.4"
     lazy.js "^0.5.1"

@@ -9,6 +9,7 @@ import { MapStorage, World, Boxed } from "mogwai-ecs/lib"
 import { rasterize as rasterizeRectangle } from "@/rendering/rectangle"
 import { machine, tunnelerTile, wallTile, corridorTile, randomWeapon } from "@/map/Tile"
 import { MapSystem } from "@/map/Map"
+import { Vector2D } from "@/geometry/Vector2D"
 
 class Tunneler {
     public alive: boolean = true
@@ -91,14 +92,14 @@ export class TunnelingBuilder {
     }
 
     private buildRooms(tunneler: Tunneler, position: Position, size: Size): void {
-        const delta: Position = Position.from(tunneler.direction).normal()
+        const delta: Vector2D = Vector2D.from(tunneler.direction).normal()
         const [buildLeft, buildRight]: [boolean, boolean] = dualDecision(0.1, [0.4, 0.4], 0.2)
         if (buildLeft) {
             const length = -Math.ceil(tunneler.width / 2)
             const doorPosition = position.add(delta.mult(length))
             const roomPosition = doorPosition.add(delta.mult(-1))
             const direction = leftOf(tunneler.direction)
-            const rectangle = Rectangle.from(roomPosition, size, direction)
+            const rectangle = Rectangle.from(roomPosition.toVector2D(), size, direction)
             this.buildRoom(tunneler, rectangle, doorPosition)
         }
         if (buildRight) {
@@ -106,7 +107,7 @@ export class TunnelingBuilder {
             const doorPosition = position.add(delta.mult(length))
             const roomPosition = doorPosition.add(delta)
             const direction = rightOf(tunneler.direction)
-            const rectangle = Rectangle.from(roomPosition, size, direction)
+            const rectangle = Rectangle.from(roomPosition.toVector2D(), size, direction)
             this.buildRoom(tunneler, rectangle, doorPosition)
         }
     }
@@ -120,13 +121,16 @@ export class TunnelingBuilder {
         } else {
             size = new Size(dx, tunneler.width)
         }
-        const rectangle = Rectangle.from(tunneler.startPosition, size, tunneler.direction)
+        const rectangle = Rectangle.from(tunneler.startPosition.toVector2D(), size, tunneler.direction)
         this.map.closeCorridor(this.world, tunneler.room, rectangle)
     }
 
     private buildRoom(tunneler: Tunneler, rectangle: Rectangle, doorPosition: Position): void {
         const rasterizedRectangle = toArray(rasterizeRectangle(rectangle.grow(1), true))
+            .map(v => new Position(doorPosition.domain, v))
         if (this.map.isFree(rasterizedRectangle)) {
+            const middlePosition = new Position(doorPosition.domain, rectangle.mid)
+
             tunneler.roomsBuilt++
             this.map.buildDoor(this.world, doorPosition, tunneler.room)
 
@@ -134,7 +138,7 @@ export class TunnelingBuilder {
             this.world.relation().with("connected").from(tunneler.room).to(room).close()
 
             const weapon = this.world.entity()
-                .with("position", new Boxed<Position>(rectangle.mid))
+                .with("position", new Boxed<Position>(middlePosition))
                 .with("drawable", randomWeapon())
                 .with("description", new Boxed("a weapon"))
                 .close()
@@ -157,7 +161,7 @@ export class TunnelingBuilder {
     }
 
     private tunnelerMoves(direction: Direction, width: number, position: Position): Position[] {
-        const delta: Position = Position.from(direction).normal()
+        const delta: Vector2D = Vector2D.from(direction).normal()
         const positions: Position[] = []
         for (let i = 0; i < width; i++) {
             const length = Math.ceil(i / 2)
@@ -168,8 +172,8 @@ export class TunnelingBuilder {
     }
 
     private spawnTunnelers(tunneler: Tunneler, hub: number, position: Position, offset: number): void {
-        const left: Position = Position.from(tunneler.direction).normal()
-        const forward: Position = Position.from(tunneler.direction)
+        const left: Vector2D = Vector2D.from(tunneler.direction).normal()
+        const forward: Vector2D = Vector2D.from(tunneler.direction)
 
         const [spawnLeft, spawnForward, spawnRight]: [boolean, boolean, boolean] =
             ternaryDecision(0, [0.1, 0, 0.1], [0.2, 0.1, 0.2], 0.3)
@@ -207,8 +211,8 @@ export class TunnelingBuilder {
     }
 
     private moveTunneler(tunneler: Tunneler, position: Boxed<Position>): void {
-        const newPosition = position.value.add(Position.from(tunneler.direction))
-        if (this.map.inside(newPosition)) {
+        const newPosition = position.value.add(Vector2D.from(tunneler.direction))
+        if (this.map.isInside(newPosition)) {
             position.value = newPosition
         } else {
             tunneler.alive = false
@@ -219,7 +223,7 @@ export class TunnelingBuilder {
         const forward = this.freeCells(position.value, tunneler.direction, tunneler.width)
 
         const length = -Math.floor(tunneler.width / 2)
-        const savePosition = position.value.add(Position.from(tunneler.direction).mult(length))
+        const savePosition = position.value.add(Vector2D.from(tunneler.direction).mult(length))
         const left = this.freeCells(savePosition, leftOf(tunneler.direction), tunneler.width)
         const right = this.freeCells(savePosition, rightOf(tunneler.direction), tunneler.width)
 
@@ -236,23 +240,26 @@ export class TunnelingBuilder {
 
     private spawnHub(tunneler: Tunneler, position: Position): void {
         const width = 7
-        const rectangle = Rectangle.from(position, new Size(width, width), tunneler.direction)
+        const rectangle = Rectangle.from(position.toVector2D(), new Size(width, width), tunneler.direction)
         const rasterizedRectangle = toArray(rasterizeRectangle(rectangle.grow(1), true))
+            .map(v => new Position(position.domain, v))
         if (this.map.isFree(rasterizedRectangle, tunneler.room) && tunneler.generation > 0) {
+            const middlePosition = new Position(position.domain, rectangle.mid)
+
             tunneler.alive = false
 
             const room = this.map.buildHub(this.world, rectangle)
             this.world.relation().with("connected").from(tunneler.room).to(room).close()
 
-            this.spawnTunnelers(tunneler, room, rectangle.mid, Math.ceil(width / 2))
+            this.spawnTunnelers(tunneler, room, middlePosition, Math.ceil(width / 2))
 
             const m = machine(room)
-            this.map.buildAsset(this.world, rectangle.mid, m)
+            this.map.buildAsset(this.world, middlePosition, m)
         }
     }
 
     private freeCells(position: Position, direction: Direction, width: number, maxSteps: number = 10): number {
-        const delta = Position.from(direction)
+        const delta = Vector2D.from(direction)
         let steps = 0
         let currentPosition = position.add(delta)
         let positions = this.tunnelerMoves(direction, width + 2, currentPosition)

@@ -1,5 +1,5 @@
 import { DEFAULT_WIDTH } from "@/Game"
-import { Position } from "@/geometry/Position"
+import { Position, Domain } from "@/geometry/Position"
 import { GameSystem, RenderLayer } from "@/systems/GameSystem"
 import { World, MapStorage, Boxed } from "mogwai-ecs/lib"
 import { Display } from "rot-js"
@@ -10,6 +10,7 @@ import { Input } from "@/systems/Input"
 import { MenuSystem, MenuItems } from "@/menu/Menu"
 import { MapSystem } from "@/map/Map"
 import { Color } from "@/rendering/Color"
+import { Vector2D } from "@/geometry/Vector2D"
 
 export class PlayerSystem implements GameSystem {
 
@@ -26,7 +27,7 @@ export class PlayerSystem implements GameSystem {
     }
 
     public build(world: World): void {
-        const startPosition = new Position(Math.floor(DEFAULT_WIDTH / 2), 0)
+        const startPosition = new Position(Domain.Tower, new Vector2D(Math.floor(DEFAULT_WIDTH / 2), 0))
         world.entity()
             .with("player")
             .with("position", new Boxed<Position>(startPosition))
@@ -53,7 +54,7 @@ export class PlayerSystem implements GameSystem {
                     if (player !== undefined) {
                         const scaledDelta = delta.normalize().mult(0.4).round()
                         const newPosition = player.position.value.add(scaledDelta)
-                        if (map.inside(newPosition) && !map.isBlocking(world, newPosition, player.entity)) {
+                        if (map.isInside(newPosition) && !map.isBlocking(world, newPosition, player.entity)) {
                             player.position.value = newPosition
                         }
                     }

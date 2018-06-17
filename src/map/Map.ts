@@ -1,12 +1,12 @@
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from "@/Game"
-import { Position } from "@/geometry/Position"
+import { Position, Domain } from "@/geometry/Position"
 import { GameSystem, RenderLayer } from "@/systems/GameSystem"
 import { MapStorage, World, Boxed, PartitionedStorage, VectorStorage } from "mogwai-ecs/lib"
 import { Display } from "rot-js"
 
 import { Tile, wallTile, roomTile, hubTile, corridorTile } from "@/map/Tile"
 import { Drawable } from "@/rendering/Drawable"
-import { foreach } from "@/rendering"
+import { foreach, toArray } from "@/rendering"
 import { Rectangle } from "@/geometry/Rectangle"
 import { rasterize as rasterizeRectangle } from "@/rendering/rectangle"
 import { Size } from "@/geometry/Size"
@@ -19,6 +19,8 @@ import { TunnelingBuilder } from "@/map/generators/TunnelingBuilder"
 import { MenuSystem, MenuItems } from "@/menu/Menu"
 import { LightingSystem } from "@/lighting/Lighting"
 import { doorTrigger } from "@/triggers/TriggerSystem"
+import { Vector } from "@/geometry/Vector"
+import { Vector2D } from "@/geometry/Vector2D"
 
 interface DrawableWithData {
     position: Boxed<Position>, description: Boxed<string> | undefined, drawable: Drawable
@@ -26,6 +28,46 @@ interface DrawableWithData {
 
 interface Room {
     shape: Rectangle
+}
+
+export class SparseMap<T> {
+    private map: { [index: string]: T } = {}
+
+    public constructor(
+        private boundary: Vector
+    ) { }
+
+    public set(position: Position, value: T): boolean {
+        const index = this.index(position)
+        if (index === undefined) {
+            return false
+        }
+        this.map[index] = value
+        return true
+    }
+
+    public get(position: Position): T | undefined {
+        const index = this.index(position)
+        if (index === undefined) {
+            return undefined
+        }
+        return this.getByIndex(index)
+    }
+
+    public getByIndex(index: string): T | undefined {
+        return this.map[index]
+    }
+
+    public index(position: Position): string | undefined {
+        if (!this.inside(position)) {
+            return undefined
+        }
+        return position.index()
+    }
+
+    public inside(position: Position): boolean {
+        return position.inside(this.boundary)
+    }
 }
 
 export class MapSystem implements GameSystem {
@@ -36,9 +78,10 @@ export class MapSystem implements GameSystem {
     public readonly boundary: Size = new Size(2 * DEFAULT_WIDTH, 2 * DEFAULT_HEIGHT)
     public renderLayer: RenderLayer = RenderLayer.Layer2
 
-    private map: Tile[] = []
-    private drawables: Map<number, Drawable[]> = new Map()
+    private map: SparseMap<Tile> = new SparseMap(this.boundary)
+    private drawables: Map<string, Drawable[]> = new Map()
     private selectedRoom: number | undefined
+    private activeDomain: Domain | undefined
 
     public register(world: World): void {
         world.registerSystem(MapSystem.NAME, this)
@@ -47,7 +90,7 @@ export class MapSystem implements GameSystem {
         world.registerComponent("description", new MapStorage<Boxed<string>>())
         world.registerComponent("position", new PartitionedStorage(
             new VectorStorage<Boxed<Position>>(),
-            (value: Position) => this.index(value) || -1
+            (value: Position) => this.map.index(value) || ""
         ))
 
         world.registerComponent("room", new MapStorage<Room>())
@@ -57,17 +100,12 @@ export class MapSystem implements GameSystem {
 
     public build(world: World): void {
         if (!this.built) {
-            for (let y = 0; y < this.boundary.height; y++) {
-                for (let x = 0; x < this.boundary.width; x++) {
-                    this.setTile(world, new Position(x, y), wallTile())
-                }
-            }
-
-            const entrance = new Position(Math.floor(DEFAULT_WIDTH / 2), 0)
+            this.activeDomain = Domain.Tower
+            const entrance = new Position(this.activeDomain, new Vector2D(Math.floor(DEFAULT_WIDTH / 2), 0))
             new TunnelingBuilder(world, this)
                 .startAt(entrance)
                 .run()
-
+            this.fillWalls(this.activeDomain!)
             this.built = true
         }
     }
@@ -75,10 +113,18 @@ export class MapSystem implements GameSystem {
     public execute(world: World): void {
         const input: Input | undefined = world.systems.get(Input.NAME) as Input | undefined
         const viewport: ViewportSystem | undefined = world.systems.get(ViewportSystem.NAME) as ViewportSystem | undefined
+
+        const playerPosition: Boxed<Position> = world.fetch()
+            .on(t => t.hasLabel("player").hasLabel("active"))
+            .withComponents("position")
+            .first()
+            .position
+        this.activeDomain = playerPosition.value.domain
+
         if (input !== undefined && viewport !== undefined) {
-            const mousePosition = new Position(input.mouse.x, input.mouse.y)
+            const mousePosition = new Vector2D(input.mouse.x, input.mouse.y)
             const topLeft = viewport.mapViewport.topLeft
-            const tile = this.getTile(mousePosition.add(topLeft))
+            const tile = this.getTile(new Position(this.activeDomain, mousePosition.add(topLeft)))
             if (tile !== undefined) {
                 this.selectedRoom = tile.room
             }
@@ -89,7 +135,7 @@ export class MapSystem implements GameSystem {
             .withComponents("drawable", "position")
             .stream()
             .each((v: { position: Boxed<Position>, drawable: Drawable }) => {
-                const index = this.index(v.position.value)
+                const index = this.map.index(v.position.value)
                 if (index !== undefined) {
                     if (!this.drawables.has(index)) {
                         this.drawables.set(index, [v.drawable])
@@ -105,8 +151,9 @@ export class MapSystem implements GameSystem {
         const lighting: LightingSystem | undefined = world.systems.get(LightingSystem.NAME) as LightingSystem | undefined
         if (viewport !== undefined && lighting !== undefined) {
             const topLeft = viewport.mapViewport.topLeft
-            foreach(rasterizeRectangle(viewport.mapViewport.rectangle, true), position => {
-                const index: number | undefined = this.index(position)
+            foreach(rasterizeRectangle(viewport.mapViewport.rectangle, true), v => {
+                const position = new Position(this.activeDomain!, v)
+                const index: string | undefined = this.map.index(position)
                 if (index !== undefined && lighting.isDiscovered(index)) {
                     const tile: Tile = this.getTileByIndex(index)!
                     const mapPosition = position.subtract(topLeft)
@@ -123,46 +170,33 @@ export class MapSystem implements GameSystem {
     }
 
     public setTile(world: World, position: Position, tile: Tile): void {
-        const idx = this.index(position)
-        if (idx !== undefined) {
-            this.map[idx] = tile
-
+        const valid = this.map.set(position, tile)
+        if (valid) {
             const lighting: LightingSystem | undefined = world.systems.get(LightingSystem.NAME) as LightingSystem | undefined
             if (lighting !== undefined) {
-                lighting.setDrawable(tile, idx)
+                lighting.setDrawable(tile)
             }
         }
     }
 
     public getTile(position: Position): Tile | undefined {
-        const index = this.index(position)
-        if (index !== undefined) {
-            return this.map[index]
-        }
-        return undefined
+        return this.map.get(position)
     }
 
-    public getTileByIndex(index: number): Tile | undefined {
-        return this.map[index]
+    public getIndex(position: Position): string | undefined {
+        return this.map.index(position)
     }
 
-    public getDrawablesByIndex(index: number): Drawable[] {
+    public isInside(position: Position): boolean {
+        return this.map.inside(position)
+    }
+
+    public getTileByIndex(index: string): Tile | undefined {
+        return this.map.getByIndex(index)
+    }
+
+    public getDrawablesByIndex(index: string): Drawable[] {
         return this.drawables.get(index) || []
-    }
-
-    public position(index: number): Position {
-        return new Position(index % this.boundary.width, index / this.boundary.width)
-    }
-
-    public index(position: Position): number | undefined {
-        if (!this.inside(position)) {
-            return undefined
-        }
-        return Math.round(position.x) + Math.round(position.y) * this.boundary.width
-    }
-
-    public inside(position: Position): boolean {
-        return position.x >= 0 && position.y >= 0 && position.x < this.boundary.width && position.y < this.boundary.height
     }
 
     public buildDoor(world: World, position: Position, room: number): void {
@@ -181,8 +215,8 @@ export class MapSystem implements GameSystem {
         const room = world.entity()
             .with("room", { shape: rectangle })
             .close()
-        foreach(rasterizeRectangle(rectangle, true), (p: Position) =>
-            this.setTile(world, p, roomTile(room))
+        foreach(rasterizeRectangle(rectangle, true), (p: Vector2D) =>
+            this.setTile(world, new Position(this.activeDomain!, p), roomTile(room))
         )
         this.addLightToRoom(world, room, rectangle)
         return room
@@ -192,8 +226,8 @@ export class MapSystem implements GameSystem {
         const room = world.entity()
             .with("room", { shape: rectangle })
             .close()
-        foreach(rasterizeRectangle(rectangle, true), (p: Position) =>
-            this.setTile(world, p, hubTile(room))
+        foreach(rasterizeRectangle(rectangle, true), (p: Vector2D) =>
+            this.setTile(world, new Position(this.activeDomain!, p), hubTile(room))
         )
         this.addLightToRoom(world, room, rectangle)
         return room
@@ -202,7 +236,7 @@ export class MapSystem implements GameSystem {
     public addLightToRoom(world: World, room: number, rectangle: Rectangle): void {
         const lighting: LightingSystem | undefined = world.systems.get(LightingSystem.NAME) as LightingSystem | undefined
         if (lighting !== undefined) {
-            const light = lighting.buildLight(world, rectangle.mid)
+            const light = lighting.buildLight(world, new Position(this.activeDomain!, rectangle.mid))
             world.entity(room).rel(r => r.with("contains").to(light).close()).close()
         }
     }
@@ -225,18 +259,18 @@ export class MapSystem implements GameSystem {
             for (let x = 0; x < 4; x++) {
                 const tile: Tile | undefined = asset[4 * y + x]
                 if (tile !== undefined) {
-                    this.setTile(world, new Position(position.x + x - 1, position.y + y - 1), tile)
+                    this.setTile(world, new Position(this.activeDomain!, new Vector2D(position.x + x - 1, position.y + y - 1)), tile)
                 }
             }
         }
     }
 
     public isFree(positions: Position[], roomFilter?: number): boolean {
-        return positions.find(p => !this.inside(p) || this.isRoom(p, roomFilter)) === undefined
+        return positions.find(p => !this.isInside(p) || this.isRoom(p, roomFilter)) === undefined
     }
 
     public isWalls(positions: Position[]): boolean {
-        return positions.find(p => !this.inside(p) || !this.isWall(p)) === undefined
+        return positions.find(p => !this.isInside(p) || !this.isWall(p)) === undefined
     }
 
     public isRoom(p: Position, roomFilter?: number): boolean {
@@ -269,6 +303,22 @@ export class MapSystem implements GameSystem {
         return false
     }
 
+    private fillWalls(domain: Domain): void {
+        const neighbours = toArray(rasterizeRectangle(Rectangle.from(new Vector2D(-1, -1), new Size(3, 3)), true))
+        const newWallPositions: Vector2D[] = []
+        foreach(rasterizeRectangle(Rectangle.from(new Vector2D(0, 0), this.boundary), true), (p: Vector2D) => {
+            if (this.map.get(new Position(domain, p)) === undefined) {
+                const firstDefinedTile = neighbours.find(offset =>
+                    this.map.get(new Position(domain, p.add(offset))) !== undefined
+                )
+                if (firstDefinedTile !== undefined) {
+                    newWallPositions.push(p)
+                }
+            }
+        })
+        newWallPositions.forEach(p => this.map.set(new Position(domain, p), wallTile()))
+    }
+
     private drawDrawables(world: World, display: Display, viewport: Viewport): void {
         const lighting: LightingSystem | undefined = world.systems.get(LightingSystem.NAME) as LightingSystem | undefined
         if (lighting === undefined) {
@@ -280,9 +330,9 @@ export class MapSystem implements GameSystem {
             .fetch()
             .on(v => v.hasLabel("drawable").hasLabel("position")
                 .matchesValue("position", (p: Boxed<Position>) => {
-                    const index: number | undefined = this.index(p.value)
+                    const index: string | undefined = this.getIndex(p.value)
                     if (index !== undefined && lighting.isDiscovered(index)) {
-                        return viewport.rectangle.isInside(p.value)
+                        return viewport.rectangle.isInside(p.value.toVector2D())
                     } else {
                         return false
                     }
@@ -291,10 +341,10 @@ export class MapSystem implements GameSystem {
             .withComponents("position", "drawable", "description")
             .collect()
 
-        const alreadyDrawn = new Set<number>()
+        const alreadyDrawn = new Set<string>()
         allDrawables.forEach((comp: DrawableWithData) => {
             const p = comp.position.value.subtract(topLeft)
-            const index: number = this.index(p)!
+            const index: string = this.getIndex(p)!
             this.renderCharacter(display, p, comp.drawable.character, lighting.getColor(comp.drawable))
             alreadyDrawn.add(index)
         })
@@ -305,10 +355,14 @@ export class MapSystem implements GameSystem {
         }
     }
 
-    private drawDescriptions(drawables: DrawableWithData[], alreadyDrawn: Set<number>, topLeft: Position, display: Display): void {
+    private drawDescriptions(drawables: DrawableWithData[], alreadyDrawn: Set<string>, topLeft: Vector2D, display: Display): void {
         drawables.forEach((comp: DrawableWithData) => {
             if (comp.description !== undefined) {
-                this.tryToDrawDescription(display, comp.position.value.subtract(topLeft), comp.description.value, alreadyDrawn)
+                this.tryToDrawDescription(display,
+                    comp.position.value.toVector2D().subtract(topLeft),
+                    comp.description.value,
+                    alreadyDrawn
+                )
             }
         })
     }
@@ -325,12 +379,12 @@ export class MapSystem implements GameSystem {
         display.draw(position.x, position.y, character, color.rgb, bg)
     }
 
-    private tryToDrawDescription(display: Display, position: Position, description: string, alreadyDrawn: Set<number>): void {
+    private tryToDrawDescription(display: Display, position: Vector2D, description: string, alreadyDrawn: Set<string>): void {
         if (this.canDraw(position, description, alreadyDrawn)) {
             display.draw(position.x + 1, position.y, gridSymbols[0])
             for (let offset = 0; offset < description.length; offset++) {
-                const p = new Position(position.x + 2 + offset, position.y)
-                const index = this.index(p)
+                const p = new Position(this.activeDomain!, new Vector2D(position.x + 2 + offset, position.y))
+                const index = this.getIndex(p)
                 if (index !== undefined) {
                     alreadyDrawn.add(index)
                     display.draw(p.x, p.y, description[offset], gray[0].rgb, gray[2].rgb)
@@ -339,10 +393,10 @@ export class MapSystem implements GameSystem {
         }
     }
 
-    private canDraw(position: Position, text: string, alreadyDrawn: Set<number>): boolean {
+    private canDraw(position: Vector2D, text: string, alreadyDrawn: Set<string>): boolean {
         for (let offset = 0; offset < text.length; offset++) {
-            const p = new Position(position.x + 2 + offset, position.y)
-            const index = this.index(p)
+            const p = new Position(this.activeDomain!, new Vector2D(position.x + 2 + offset, position.y))
+            const index = this.getIndex(p)
             if (index === undefined || alreadyDrawn.has(index)) {
                 return false
             }

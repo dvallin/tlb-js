@@ -1,4 +1,5 @@
 import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from "@/Game"
+import { Vector2D } from "@/geometry/Vector2D"
 import { Position } from "@/geometry/Position"
 import { GameSystem, RenderLayer } from "@/systems/GameSystem"
 import { World, Boxed } from "mogwai-ecs/lib"
@@ -12,12 +13,12 @@ import { MenuSystem, MenuItems } from "@/menu/Menu"
 
 export class Viewport {
     public constructor(
-        public offset: Position,
+        public offset: Vector2D,
         public rectangle: Rectangle
     ) { }
 
-    public get topLeft(): Position {
-        return new Position(this.rectangle.left, this.rectangle.top).subtract(this.offset)
+    public get topLeft(): Vector2D {
+        return this.offset.mult(-1).add(new Vector2D(this.rectangle.left, this.rectangle.top))
     }
 }
 
@@ -28,17 +29,17 @@ export class ViewportSystem implements GameSystem {
     public renderLayer: RenderLayer = RenderLayer.None
 
     public menuViewport: Viewport = new Viewport(
-        new Position(0, 0),
+        new Vector2D(0, 0),
         Rectangle.from(
-            new Position(0, 0),
+            new Vector2D(0, 0),
             new Size(DEFAULT_WIDTH, 5)
         )
     )
 
     public mapViewport: Viewport = new Viewport(
-        new Position(0, 6),
+        new Vector2D(0, 6),
         Rectangle.from(
-            new Position(0, 0),
+            new Vector2D(0, 0),
             new Size(DEFAULT_WIDTH, DEFAULT_HEIGHT - 5)
         )
     )
@@ -84,7 +85,7 @@ export class ViewportSystem implements GameSystem {
         this.mapViewport.rectangle = this.mapViewport.rectangle.add(delta.round())
 
         if (input.mouse.left || input.mouse.right) {
-            const mouseDrag = new Position(
+            const mouseDrag = new Vector2D(
                 (input.mouse.x - input.mouse.clickX!) * 0.2,
                 (input.mouse.y - input.mouse.clickY!) * 0.2,
             )
@@ -99,7 +100,7 @@ export class ViewportSystem implements GameSystem {
             .withComponents("position")
             .first()
         if (player !== undefined) {
-            this.mapViewport.rectangle = this.mapViewport.rectangle.focus(player.position.value)
+            this.mapViewport.rectangle = this.mapViewport.rectangle.focus(player.position.value.toVector2D())
         }
     }
 }
