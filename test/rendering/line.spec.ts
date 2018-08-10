@@ -1,6 +1,6 @@
-import { Vector2D } from "@/geometry/Vector2D"
-import { toStream } from "@/rendering"
-import { rasterize } from "@/rendering/line"
+import { Vector2D } from "../../src/geometry/Vector2D"
+import { toStream } from "../../src/rendering"
+import { rasterize } from "../../src/rendering/line"
 
 describe("line", () => {
     it("renders a single pixel if from equals to", () => {

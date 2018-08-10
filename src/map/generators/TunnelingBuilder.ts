@@ -196,8 +196,8 @@ export class TunnelingBuilder {
         const newWidth = binomialNormed([0.1, 0.3, 0.5, 0.1]) + 1
         const newTurns = uniformInteger(10, 15)
         const positions: Position[] = this.tunnelerMoves(direction, newWidth, position)
-        const isWalls = this.map.isWalls(positions)
-        if (isWalls) {
+        const isFree = this.map.isFree(positions)
+        if (isFree) {
             const room = this.map.openCorridor(this.world)
             this.world.relation().with("connected").from(hub).to(room).close()
 

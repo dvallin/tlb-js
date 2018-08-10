@@ -1,5 +1,5 @@
 import { Vector2D } from "@/geometry/Vector2D"
-import LazyJS from "lazy.js"
+import * as LazyJS from "lazy.js"
 
 export type RenderIterator = () => Vector2D | undefined
 

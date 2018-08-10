@@ -1,8 +1,8 @@
-import { Vector2D } from "@/geometry/Vector2D"
-import { Size } from "@/geometry/Size"
-import { Rectangle } from "@/geometry/Rectangle"
-import { toStream } from "@/rendering"
-import { rasterize } from "@/rendering/rectangle"
+import { Vector2D } from "../../src/geometry/Vector2D"
+import { Size } from "../../src/geometry/Size"
+import { Rectangle } from "../../src/geometry/Rectangle"
+import { toStream } from "../../src/rendering"
+import { rasterize } from "../../src/rendering/rectangle"
 
 describe("rectangle", () => {
     it("renders a single pixel if empty", () => {

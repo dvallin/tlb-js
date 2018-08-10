@@ -1,4 +1,4 @@
-import { DEFAULT_WIDTH } from "@/Game"
+import { GameSettings } from "@/Game"
 import { Position, Domain } from "@/geometry/Position"
 import { GameSystem, RenderLayer } from "@/systems/GameSystem"
 import { World, MapStorage, Boxed } from "mogwai-ecs/lib"
@@ -16,7 +16,17 @@ export class PlayerSystem implements GameSystem {
 
     public static NAME: string = "player"
 
+    public static fromSettings(settings: GameSettings): PlayerSystem {
+        return new PlayerSystem(settings.map_width)
+    }
+
     public renderLayer: RenderLayer = RenderLayer.None
+
+    public readonly playerSpawn: Position
+
+    private constructor(width: number) {
+        this.playerSpawn = new Position(Domain.Tower, new Vector2D(Math.floor(width / 2), 0))
+    }
 
     public register(world: World): void {
         world.registerSystem(PlayerSystem.NAME, this)
@@ -27,12 +37,10 @@ export class PlayerSystem implements GameSystem {
     }
 
     public build(world: World): void {
-        const startPosition = new Position(Domain.Tower, new Vector2D(Math.floor(DEFAULT_WIDTH / 2), 0))
         world.entity()
             .with("player")
-            .with("position", new Boxed<Position>(startPosition))
+            .with("position", new Boxed<Position>(this.playerSpawn))
             .with("blocking")
-            .with("lightBlocking")
             .with("drawable", new Drawable("@", new Color([255, 255, 255])))
             .with("active")
             .close()
@@ -52,7 +60,7 @@ export class PlayerSystem implements GameSystem {
                         .withComponents("position")
                         .first()
                     if (player !== undefined) {
-                        const scaledDelta = delta.normalize().mult(0.4).round()
+                        const scaledDelta = delta.normalize().mult(0.4).fround()
                         const newPosition = player.position.value.add(scaledDelta)
                         if (map.isInside(newPosition) && !map.isBlocking(world, newPosition, player.entity)) {
                             player.position.value = newPosition

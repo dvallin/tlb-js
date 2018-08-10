@@ -1,4 +1,3 @@
-import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from "@/Game"
 import { Vector2D } from "@/geometry/Vector2D"
 import { Position } from "@/geometry/Position"
 import { GameSystem, RenderLayer } from "@/systems/GameSystem"
@@ -10,6 +9,7 @@ import { Size } from "@/geometry/Size"
 import { Input } from "@/systems/Input"
 import { MapSystem } from "@/map/Map"
 import { MenuSystem, MenuItems } from "@/menu/Menu"
+import { GameSettings } from "@/Game"
 
 export class Viewport {
     public constructor(
@@ -26,23 +26,31 @@ export class ViewportSystem implements GameSystem {
 
     public static NAME: string = "viewport"
 
+    public static fromSettings(settings: GameSettings): ViewportSystem {
+        return new ViewportSystem(settings.screen_width, settings.screen_height)
+    }
+
     public renderLayer: RenderLayer = RenderLayer.None
 
-    public menuViewport: Viewport = new Viewport(
-        new Vector2D(0, 0),
-        Rectangle.from(
-            new Vector2D(0, 0),
-            new Size(DEFAULT_WIDTH, 5)
-        )
-    )
+    public readonly menuViewport: Viewport
+    public readonly mapViewport: Viewport
 
-    public mapViewport: Viewport = new Viewport(
-        new Vector2D(0, 6),
-        Rectangle.from(
+    private constructor(width: number, height: number) {
+        this.menuViewport = new Viewport(
             new Vector2D(0, 0),
-            new Size(DEFAULT_WIDTH, DEFAULT_HEIGHT - 5)
+            Rectangle.from(
+                new Vector2D(0, 0),
+                new Size(width, 5)
+            )
         )
-    )
+        this.mapViewport = new Viewport(
+            new Vector2D(0, 6),
+            Rectangle.from(
+                new Vector2D(0, 0),
+                new Size(width, height - 5)
+            )
+        )
+    }
 
     public register(world: World): void {
         world.registerSystem(ViewportSystem.NAME, this)
@@ -82,14 +90,14 @@ export class ViewportSystem implements GameSystem {
 
     private moveMapViewport(input: Input): void {
         const delta = input.movementDelta()
-        this.mapViewport.rectangle = this.mapViewport.rectangle.add(delta.round())
+        this.mapViewport.rectangle = this.mapViewport.rectangle.add(delta.fround())
 
         if (input.mouse.left || input.mouse.right) {
             const mouseDrag = new Vector2D(
                 (input.mouse.x - input.mouse.clickX!) * 0.2,
                 (input.mouse.y - input.mouse.clickY!) * 0.2,
             )
-            this.mapViewport.rectangle = this.mapViewport.rectangle.add(mouseDrag.round())
+            this.mapViewport.rectangle = this.mapViewport.rectangle.add(mouseDrag.fround())
         }
     }
 

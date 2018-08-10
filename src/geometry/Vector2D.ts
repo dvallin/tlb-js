@@ -78,7 +78,7 @@ export class Vector2D extends Vector {
         }
     }
 
-    public round(): Vector2D {
+    public fround(): Vector2D {
         return new Vector2D(
             Math.fround(this.x),
             Math.fround(this.y)

@@ -1,6 +1,10 @@
 import * as seedrandom from "seedrandom"
 
-const rng = seedrandom()
+let rng: seedrandom.prng
+
+export function init(seed?: string): void {
+    rng = seedrandom(seed)
+}
 
 export function uniformInteger(min: number = 0, max: number = 1): number {
     return (Math.abs(rng.int32()) % (max - min)) + min

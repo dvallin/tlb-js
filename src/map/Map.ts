@@ -1,4 +1,3 @@
-import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from "@/Game"
 import { Position, Domain } from "@/geometry/Position"
 import { GameSystem, RenderLayer } from "@/systems/GameSystem"
 import { MapStorage, World, Boxed, PartitionedStorage, VectorStorage } from "mogwai-ecs/lib"
@@ -18,9 +17,10 @@ import { Color } from "@/rendering/Color"
 import { TunnelingBuilder } from "@/map/generators/TunnelingBuilder"
 import { MenuSystem, MenuItems } from "@/menu/Menu"
 import { LightingSystem } from "@/lighting/Lighting"
-import { doorTrigger } from "@/triggers/TriggerSystem"
+import { doorTrigger, Trigger } from "@/triggers/TriggerSystem"
 import { Vector } from "@/geometry/Vector"
 import { Vector2D } from "@/geometry/Vector2D"
+import { GameSettings } from "@/Game";
 
 interface DrawableWithData {
     position: Boxed<Position>, description: Boxed<string> | undefined, drawable: Drawable
@@ -73,21 +73,35 @@ export class SparseMap<T> {
 export class MapSystem implements GameSystem {
 
     public static NAME: string = "map"
+
+    public static fromSettings(settings: GameSettings): MapSystem {
+        return new MapSystem(settings.map_width, settings.map_height)
+    }
+
     public built: boolean = false
 
-    public readonly boundary: Size = new Size(2 * DEFAULT_WIDTH, 2 * DEFAULT_HEIGHT)
-    public renderLayer: RenderLayer = RenderLayer.Layer2
+    public readonly boundary: Size
+    public renderLayer: RenderLayer
 
-    private map: SparseMap<Tile> = new SparseMap(this.boundary)
-    private drawables: Map<string, Drawable[]> = new Map()
+    private map: SparseMap<Tile>
+    private drawables: Map<string, Drawable[]>
     private selectedRoom: number | undefined
     private activeDomain: Domain | undefined
+
+    private constructor(width: number, height: number) {
+        this.boundary = new Size(width, height)
+        this.map = new SparseMap(this.boundary)
+        this.renderLayer = RenderLayer.Layer2
+        this.drawables = new Map()
+    }
 
     public register(world: World): void {
         world.registerSystem(MapSystem.NAME, this)
         world.registerComponent("drawable", new MapStorage<Drawable>())
         world.registerComponent("blocking")
+        world.registerComponent("active", new MapStorage<Tile>())
         world.registerComponent("description", new MapStorage<Boxed<string>>())
+        world.registerComponent("trigger", new MapStorage<Trigger>())
         world.registerComponent("position", new PartitionedStorage(
             new VectorStorage<Boxed<Position>>(),
             (value: Position) => this.map.index(value) || ""
@@ -96,12 +110,14 @@ export class MapSystem implements GameSystem {
         world.registerComponent("room", new MapStorage<Room>())
         world.registerRelation("contains")
         world.registerRelation("connected")
+        world.registerComponent("light")
+        world.registerComponent("lightBlocking")
     }
 
     public build(world: World): void {
         if (!this.built) {
             this.activeDomain = Domain.Tower
-            const entrance = new Position(this.activeDomain, new Vector2D(Math.floor(DEFAULT_WIDTH / 2), 0))
+            const entrance = new Position(this.activeDomain, new Vector2D(Math.floor(this.boundary.width / 2), 0))
             new TunnelingBuilder(world, this)
                 .startAt(entrance)
                 .run()
@@ -155,9 +171,12 @@ export class MapSystem implements GameSystem {
                 const position = new Position(this.activeDomain!, v)
                 const index: string | undefined = this.map.index(position)
                 if (index !== undefined && lighting.isDiscovered(index)) {
-                    const tile: Tile = this.getTileByIndex(index)!
-                    const mapPosition = position.subtract(topLeft)
-                    this.renderTile(display, mapPosition, tile, lighting.getColor(tile))
+                    const tile: Tile | undefined = this.getTileByIndex(index)
+                    if (tile !== undefined) {
+                        const mapPosition = position.subtract(topLeft)
+                        const color = lighting.getColor(tile, index)
+                        this.renderTile(display, mapPosition, tile, color)
+                    }
                 }
             })
 
@@ -304,7 +323,7 @@ export class MapSystem implements GameSystem {
     }
 
     private fillWalls(domain: Domain): void {
-        const neighbours = toArray(rasterizeRectangle(Rectangle.from(new Vector2D(-1, -1), new Size(3, 3)), true))
+        const neighbours = toArray(rasterizeRectangle(Rectangle.from(new Vector2D(-1, -1), new Size(2, 2)), true))
         const newWallPositions: Vector2D[] = []
         foreach(rasterizeRectangle(Rectangle.from(new Vector2D(0, 0), this.boundary), true), (p: Vector2D) => {
             if (this.map.get(new Position(domain, p)) === undefined) {
@@ -345,7 +364,8 @@ export class MapSystem implements GameSystem {
         allDrawables.forEach((comp: DrawableWithData) => {
             const p = comp.position.value.subtract(topLeft)
             const index: string = this.getIndex(p)!
-            this.renderCharacter(display, p, comp.drawable.character, lighting.getColor(comp.drawable))
+            const color = lighting.getColor(comp.drawable)
+            this.renderCharacter(display, p, comp.drawable.character, color)
             alreadyDrawn.add(index)
         })
 

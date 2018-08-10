@@ -1,5 +1,6 @@
 import { World } from "mogwai-ecs/lib"
-import ROT, { VK_J, VK_H, VK_K, VK_L, VK_F1, VK_F2 } from "rot-js"
+import { VK_J, VK_H, VK_K, VK_L, VK_F1, VK_F2 } from "rot-js"
+import * as ROT from "rot-js"
 
 import { GameSystem, RenderLayer } from "./GameSystem"
 import { Direction } from "@/geometry/Direction"
@@ -158,13 +159,17 @@ export class Input implements GameSystem {
     }
 
 
-    private handleMouse(mouse: Mouse, e: MouseEvent): void {
+    private handleMouse(mouse: Mouse, e: MouseEvent, invert: boolean): void {
         const pos = this.eventToPosition(e) as [number, number]
         mouse.x = pos[0]
         mouse.y = pos[1]
-
-        mouse.left = (e.buttons & 1) === 1
-        mouse.right = (e.buttons & 2) === 2
+        if (invert) {
+            mouse.left = (e.buttons & 1) !== 1
+            mouse.right = (e.buttons & 2) !== 2
+        } else {
+            mouse.left = (e.buttons & 1) === 1
+            mouse.right = (e.buttons & 2) === 2
+        }
         mouse.click_count = e.detail || 0
     }
 
@@ -182,7 +187,7 @@ export class Input implements GameSystem {
 
     private mousedown(event: MouseEvent): void {
         this.handleModifiers(this.state.modifiers, event)
-        this.handleMouse(this.state.mouse, event)
+        this.handleMouse(this.state.mouse, event, false)
         this.state.mouse.clickX = this.state.mouse.x
         this.state.mouse.clickY = this.state.mouse.y
         this.state.mousePressed[0] = (event.buttons & 1) === 1
@@ -191,13 +196,13 @@ export class Input implements GameSystem {
 
     private mouseup(event: MouseEvent): void {
         this.handleModifiers(this.state.modifiers, event)
-        this.handleMouse(this.state.mouse, event)
+        this.handleMouse(this.state.mouse, event, true)
         this.state.mouseReleased[0] = (event.buttons & 1) !== 1
         this.state.mouseReleased[1] = (event.buttons & 2) !== 2
     }
 
     private mousemove(event: MouseEvent): void {
         this.handleModifiers(this.state.modifiers, event)
-        this.handleMouse(this.state.mouse, event)
+        this.handleMouse(this.state.mouse, event, false)
     }
 }

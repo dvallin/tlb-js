@@ -36,7 +36,7 @@ export class Position {
     public index(): string {
         let index = this.domain.toString()
         for (const coordinate of this.pos.coordinates) {
-            index += "," + Math.round(coordinate).toFixed(0)
+            index += "," + Math.floor(coordinate).toFixed(0)
         }
         return index
     }

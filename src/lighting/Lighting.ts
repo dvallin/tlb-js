@@ -1,4 +1,3 @@
-import { DEFAULT_HEIGHT, DEFAULT_WIDTH } from "@/Game"
 import { Position, Domain } from "@/geometry/Position"
 import { GameSystem, RenderLayer } from "@/systems/GameSystem"
 import { World, Boxed } from "mogwai-ecs/lib"
@@ -15,12 +14,17 @@ import { MenuSystem, MenuItems } from "@/menu/Menu"
 import { MapSystem } from "@/map/Map"
 import { Drawable } from "@/rendering/Drawable"
 import { Vector2D } from "@/geometry/Vector2D"
+import { GameSettings } from "@/Game"
 
 export class LightingSystem implements GameSystem {
 
     public static NAME: string = "lighting"
 
-    public readonly boundary: Size = new Size(2 * DEFAULT_WIDTH, 2 * DEFAULT_HEIGHT)
+    public static fromSettings(settings: GameSettings): LightingSystem {
+        return new LightingSystem(settings.map_width, settings.map_height)
+    }
+
+    public readonly boundary: Size
     public renderLayer: RenderLayer = RenderLayer.Layer3
 
     private lightBlocking: Set<string> = new Set()
@@ -28,8 +32,12 @@ export class LightingSystem implements GameSystem {
     private visible: Set<string> = new Set()
     private discovered: Set<string> = new Set()
 
-    private ambientLight: Color = gray[3]
+    private ambientLight: Color = gray[1]
     private lightingEnabled: boolean = true
+
+    private constructor(width: number, height: number) {
+        this.boundary = new Size(width, height)
+    }
 
     public register(world: World): void {
         world.registerSystem(LightingSystem.NAME, this)
@@ -159,9 +167,11 @@ export class LightingSystem implements GameSystem {
         return true
     }
 
-    public getColor(drawable: Drawable): Color {
+    public getColor(drawable: Drawable, index?: string): Color {
         if (!this.lightingEnabled) {
             return drawable.diffuse
+        } else if (index !== undefined && !this.isVisible(index)) {
+            return drawable.noLightColor
         }
         return drawable.color
     }

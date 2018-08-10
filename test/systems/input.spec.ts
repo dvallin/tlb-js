@@ -1,4 +1,4 @@
-import ROT from "rot-js"
+import * as ROT from "rot-js"
 
 import { Input } from "@/systems/Input"
 import { World } from "mogwai-ecs/lib"
@@ -69,7 +69,8 @@ describe("input", () => {
                 document.dispatchEvent(new MouseEvent("mousedown", {
                     buttons, clientX: 0, clientY: 0,
                 }))
-                expect(input.mouse).toEqual({ click_count: 0, left, right, x: 0, y: 0 })
+                expect(input.mouse.left).toEqual(left)
+                expect(input.mouse.right).toEqual(right)
             })
         })
     })
@@ -83,7 +84,8 @@ describe("input", () => {
                 document.dispatchEvent(new MouseEvent("mouseup", {
                     buttons, clientX: 0, clientY: 0,
                 }))
-                expect(input.mouse).toEqual({ click_count: 0, left: !left, right: !right, x: 0, y: 0 })
+                expect(input.mouse.left).toEqual(!left)
+                expect(input.mouse.right).toEqual(!right)
             })
         })
     })
@@ -93,7 +95,8 @@ describe("input", () => {
             document.dispatchEvent(new MouseEvent("mousemove", {
                 clientX: 42, clientY: 42,
             }))
-            expect(input.mouse).toEqual({ click_count: 0, left: false, right: false, x: 42, y: 42 })
+            expect(input.mouse.x).toEqual(42)
+            expect(input.mouse.y).toEqual(42)
         })
     })
 
@@ -110,10 +113,10 @@ describe("input", () => {
             expect(input.released(ROT.VK_A)).toBeTruthy()
         })
 
-        it("should reset released and pressed on draw", () => {
+        it("should reset released and pressed on afterRender", () => {
             document.dispatchEvent(Object.assign(new Event("keydown"), { keyCode: ROT.VK_A }))
             document.dispatchEvent(Object.assign(new Event("keyup"), { keyCode: ROT.VK_A }))
-            input.render()
+            input.afterRender()
             expect(input.pressed(ROT.VK_A)).toBeFalsy()
             expect(input.released(ROT.VK_A)).toBeFalsy()
         })

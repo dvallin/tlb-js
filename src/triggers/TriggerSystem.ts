@@ -20,6 +20,7 @@ export const doorTrigger: Trigger = new Trigger((world, entity) => {
             .with("drawable", new Drawable("+", primary[2]))
             .with("lightBlocking")
             .with("blocking")
+            .close()
     }
 })
 
