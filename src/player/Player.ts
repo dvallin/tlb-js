@@ -10,7 +10,7 @@ import { Input } from "@/systems/Input"
 import { MenuSystem, MenuItems } from "@/menu/Menu"
 import { MapSystem } from "@/map/Map"
 import { Color } from "@/rendering/Color"
-import { Vector2D } from "@/geometry/Vector2D"
+import { Vector } from "@/geometry/Vector"
 
 export class PlayerSystem implements GameSystem {
 
@@ -25,7 +25,7 @@ export class PlayerSystem implements GameSystem {
     public readonly playerSpawn: Position
 
     private constructor(width: number) {
-        this.playerSpawn = new Position(Domain.Tower, new Vector2D(Math.floor(width / 2), 0))
+        this.playerSpawn = new Position(Domain.Tower, new Vector([Math.floor(width / 2), 0]))
     }
 
     public register(world: World): void {
@@ -59,8 +59,9 @@ export class PlayerSystem implements GameSystem {
                         .on(t => t.hasLabel("player").hasLabel("active"))
                         .withComponents("position")
                         .first()
-                    if (player !== undefined) {
-                        const scaledDelta = delta.normalize().mult(0.4).fround()
+                    const normalized = delta.normalize()
+                    if (player !== undefined && normalized !== undefined) {
+                        const scaledDelta = normalized.mult(0.4).fround()
                         const newPosition = player.position.value.add(scaledDelta)
                         if (map.isInside(newPosition) && !map.isBlocking(world, newPosition, player.entity)) {
                             player.position.value = newPosition

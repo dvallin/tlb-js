@@ -7,13 +7,12 @@ import { Tile } from "@/map/Tile"
 import { foreach } from "@/rendering"
 import { Rectangle } from "@/geometry/Rectangle"
 import { rasterize as rasterizeRectangle } from "@/rendering/rectangle"
-import { Size } from "@/geometry/Size"
 import { gray } from "@/rendering/palettes"
 import { Color } from "@/rendering/Color"
 import { MenuSystem, MenuItems } from "@/menu/Menu"
 import { MapSystem } from "@/map/Map"
 import { Drawable } from "@/rendering/Drawable"
-import { Vector2D } from "@/geometry/Vector2D"
+import { Vector } from "@/geometry/Vector"
 import { GameSettings } from "@/Game"
 
 export class LightingSystem implements GameSystem {
@@ -24,7 +23,7 @@ export class LightingSystem implements GameSystem {
         return new LightingSystem(settings.map_width, settings.map_height)
     }
 
-    public readonly boundary: Size
+    public readonly boundary: Vector
     public renderLayer: RenderLayer = RenderLayer.Layer3
 
     private lightBlocking: Set<string> = new Set()
@@ -36,7 +35,7 @@ export class LightingSystem implements GameSystem {
     private lightingEnabled: boolean = true
 
     private constructor(width: number, height: number) {
-        this.boundary = new Size(width, height)
+        this.boundary = new Vector([width, height])
     }
 
     public register(world: World): void {
@@ -65,7 +64,7 @@ export class LightingSystem implements GameSystem {
                 domains.set(light.position.value.domain, domain)
             })
             domains.forEach((value, key) => {
-                this.updateLighting(world, key, value, [Rectangle.from(new Vector2D(0, 0), this.boundary)])
+                this.updateLighting(world, key, value, [Rectangle.from(new Vector([0, 0]), this.boundary)])
             })
         }
     }
@@ -90,11 +89,11 @@ export class LightingSystem implements GameSystem {
                 this.visible.clear()
                 const roomIds: Set<number> = new Set()
                 const fov = new FOV.RecursiveShadowcasting(
-                    (x, y) => this.isLightPassing(map!, new Position(domain, new Vector2D(x, y))),
+                    (x, y) => this.isLightPassing(map!, new Position(domain, new Vector([x, y]))),
                     { topology: 8 }
                 )
                 fov.compute(playerPosition.value.x, playerPosition.value.y, 20, (x, y) => {
-                    const index = map!.getIndex(new Position(domain, new Vector2D(x, y)))
+                    const index = map!.getIndex(new Position(domain, new Vector([x, y])))
                     if (index !== undefined) {
                         this.discovered.add(index)
                         this.visible.add(index)
@@ -232,17 +231,17 @@ export class LightingSystem implements GameSystem {
 
         for (const light of lights) {
             const fov = new FOV.PreciseShadowcasting(
-                (x, y) => this.isLightPassing(map, new Position(domain, new Vector2D(x, y))),
+                (x, y) => this.isLightPassing(map, new Position(domain, new Vector([x, y]))),
                 { topology: 8 }
             )
             const lighting = new Lighting(
-                (x, y) => this.isLightPassing(map, new Position(domain, new Vector2D(x, y))) ? 1.0 : 0.0,
+                (x, y) => this.isLightPassing(map, new Position(domain, new Vector([x, y]))) ? 1.0 : 0.0,
                 { passes: 1 }
             )
             lighting.setLight(light.position.value.x, light.position.value.y, [255, 255, 255])
             lighting.setFOV(fov)
             lighting.compute((x: number, y: number, c: [number, number, number]) => {
-                const p = new Position(domain, new Vector2D(x, y))
+                const p = new Position(domain, new Vector([x, y]))
                 const index = map.getIndex(p)
                 if (index !== undefined) {
                     const tile: Tile | undefined = map.getTileByIndex(index)

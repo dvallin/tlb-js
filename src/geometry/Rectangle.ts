@@ -1,9 +1,9 @@
-import { Size } from "@/geometry/Size"
 import { Direction } from "@/geometry/Direction"
-import { Vector2D } from "@/geometry/Vector2D"
+import { Vector } from "@/geometry/Vector"
 
 export class Rectangle {
-    public static from(position: Vector2D, size: Size, facing?: Direction): Rectangle {
+
+    public static from(position: Vector, size: Vector, facing?: Direction): Rectangle {
         if (facing === undefined) {
             return new Rectangle(position.x, position.x + size.width, position.y, position.y + size.height)
         }
@@ -46,7 +46,7 @@ export class Rectangle {
         return new Rectangle(left!, right!, top!, bottom!)
     }
 
-    public static centerAt(position: Vector2D, size: Size): Rectangle {
+    public static centerAt(position: Vector, size: Vector): Rectangle {
         const halfWidth = Math.floor(size.width / 2)
         const halfHeight = Math.floor(size.height / 2)
         const left = position.x - halfWidth
@@ -56,12 +56,15 @@ export class Rectangle {
         return new Rectangle(left!, right!, top!, bottom!)
     }
 
-    public get mid(): Vector2D {
-        return new Vector2D(Math.floor((this.left + this.right) / 2), Math.floor((this.top + this.bottom) / 2))
+    public get mid(): Vector {
+        return new Vector([
+            Math.floor((this.left + this.right) / 2),
+            Math.floor((this.top + this.bottom) / 2)
+        ])
     }
 
-    public get extend(): Size {
-        return new Size(this.right - this.left, this.bottom - this.top)
+    public get extend(): Vector {
+        return new Vector([this.right - this.left, this.bottom - this.top])
     }
 
     private constructor(
@@ -75,15 +78,15 @@ export class Rectangle {
         return new Rectangle(this.left - size, this.right + size, this.top - size, this.bottom + size)
     }
 
-    public add(position: Vector2D): Rectangle {
+    public add(position: Vector): Rectangle {
         return new Rectangle(this.left + position.x, this.right + position.x, this.top + position.y, this.bottom + position.y)
     }
 
-    public isInside(position: Vector2D): boolean {
+    public isInside(position: Vector): boolean {
         return position.x >= this.left && position.x <= this.right && position.y >= this.top && position.y < this.bottom
     }
 
-    public focus(position: Vector2D): Rectangle {
+    public focus(position: Vector): Rectangle {
         const extend = this.extend
         return new Rectangle(
             position.x - Math.floor(extend.width / 2),
@@ -93,19 +96,19 @@ export class Rectangle {
         )
     }
 
-    public clamp(size: Size): Rectangle {
+    public clamp(size: Vector): Rectangle {
         let result = new Rectangle(this.left, this.right, this.top, this.bottom)
         if (this.left < 0) {
-            result = result.add(new Vector2D(-this.left, 0))
+            result = result.add(new Vector([-this.left, 0]))
         }
         if (this.right > size.width - 1) {
-            result = result.add(new Vector2D(size.width - this.right, 0))
+            result = result.add(new Vector([size.width - this.right, 0]))
         }
         if (this.top < 0) {
-            result = result.add(new Vector2D(0, -this.top))
+            result = result.add(new Vector([0, -this.top]))
         }
         if (this.bottom > size.height - 1) {
-            result = result.add(new Vector2D(0, size.height - 1 - this.bottom))
+            result = result.add(new Vector([0, size.height - 1 - this.bottom]))
         }
         return result
     }

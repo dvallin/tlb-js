@@ -1,11 +1,10 @@
-import { Vector2D } from "@/geometry/Vector2D"
 import { Position } from "@/geometry/Position"
 import { GameSystem, RenderLayer } from "@/systems/GameSystem"
 import { World, Boxed } from "mogwai-ecs/lib"
 import { Display } from "rot-js"
 
 import { Rectangle } from "@/geometry/Rectangle"
-import { Size } from "@/geometry/Size"
+import { Vector } from "@/geometry/Vector"
 import { Input } from "@/systems/Input"
 import { MapSystem } from "@/map/Map"
 import { MenuSystem, MenuItems } from "@/menu/Menu"
@@ -13,12 +12,12 @@ import { GameSettings } from "@/Game"
 
 export class Viewport {
     public constructor(
-        public offset: Vector2D,
+        public offset: Vector,
         public rectangle: Rectangle
     ) { }
 
-    public get topLeft(): Vector2D {
-        return this.offset.mult(-1).add(new Vector2D(this.rectangle.left, this.rectangle.top))
+    public get topLeft(): Vector {
+        return this.offset.mult(-1).add(new Vector([this.rectangle.left, this.rectangle.top]))
     }
 }
 
@@ -37,17 +36,17 @@ export class ViewportSystem implements GameSystem {
 
     private constructor(width: number, height: number) {
         this.menuViewport = new Viewport(
-            new Vector2D(0, 0),
+            new Vector([0, 0]),
             Rectangle.from(
-                new Vector2D(0, 0),
-                new Size(width, 5)
+                new Vector([0, 0]),
+                new Vector([width, 5])
             )
         )
         this.mapViewport = new Viewport(
-            new Vector2D(0, 6),
+            new Vector([0, 6]),
             Rectangle.from(
-                new Vector2D(0, 0),
-                new Size(width, height - 5)
+                new Vector([0, 0]),
+                new Vector([width, height - 5])
             )
         )
     }
@@ -93,10 +92,10 @@ export class ViewportSystem implements GameSystem {
         this.mapViewport.rectangle = this.mapViewport.rectangle.add(delta.fround())
 
         if (input.mouse.left || input.mouse.right) {
-            const mouseDrag = new Vector2D(
+            const mouseDrag = new Vector([
                 (input.mouse.x - input.mouse.clickX!) * 0.2,
                 (input.mouse.y - input.mouse.clickY!) * 0.2,
-            )
+            ])
             this.mapViewport.rectangle = this.mapViewport.rectangle.add(mouseDrag.fround())
         }
     }
@@ -108,7 +107,7 @@ export class ViewportSystem implements GameSystem {
             .withComponents("position")
             .first()
         if (player !== undefined) {
-            this.mapViewport.rectangle = this.mapViewport.rectangle.focus(player.position.value.toVector2D())
+            this.mapViewport.rectangle = this.mapViewport.rectangle.focus(player.position.value.pos)
         }
     }
 }

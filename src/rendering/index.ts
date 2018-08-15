@@ -1,18 +1,18 @@
-import { Vector2D } from "@/geometry/Vector2D"
+import { Vector } from "@/geometry/Vector"
 import * as LazyJS from "lazy.js"
 
-export type RenderIterator = () => Vector2D | undefined
+export type RenderIterator = () => Vector | undefined
 
-export function toStream(iter: RenderIterator): LazyJS.Sequence<Vector2D> {
+export function toStream(iter: RenderIterator): LazyJS.Sequence<Vector> {
     return LazyJS.generate(iter)
-        .takeWhile((p: Vector2D | undefined) => p !== undefined)
-        .map(p => p as Vector2D)
+        .takeWhile((p: Vector | undefined) => p !== undefined)
+        .map(p => p as Vector)
 }
 
-export function toArray(iter: RenderIterator): Vector2D[] {
+export function toArray(iter: RenderIterator): Vector[] {
     const array = []
     while (true) {
-        const p: Vector2D | undefined = iter()
+        const p: Vector | undefined = iter()
         if (p === undefined) {
             return array
         }
@@ -20,9 +20,9 @@ export function toArray(iter: RenderIterator): Vector2D[] {
     }
 }
 
-export function foreach(iter: RenderIterator, callback: (p: Vector2D) => void): void {
+export function foreach(iter: RenderIterator, callback: (p: Vector) => void): void {
     while (true) {
-        const p: Vector2D | undefined = iter()
+        const p: Vector | undefined = iter()
         if (p === undefined) {
             return
         }

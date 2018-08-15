@@ -8,7 +8,6 @@ import { Drawable } from "@/rendering/Drawable"
 import { foreach, toArray } from "@/rendering"
 import { Rectangle } from "@/geometry/Rectangle"
 import { rasterize as rasterizeRectangle } from "@/rendering/rectangle"
-import { Size } from "@/geometry/Size"
 import { Input } from "@/systems/Input"
 import { gridSymbols } from "@/symbols"
 import { gray, primary } from "@/rendering/palettes"
@@ -19,8 +18,7 @@ import { MenuSystem, MenuItems } from "@/menu/Menu"
 import { LightingSystem } from "@/lighting/Lighting"
 import { doorTrigger, Trigger } from "@/triggers/TriggerSystem"
 import { Vector } from "@/geometry/Vector"
-import { Vector2D } from "@/geometry/Vector2D"
-import { GameSettings } from "@/Game";
+import { GameSettings } from "@/Game"
 
 interface DrawableWithData {
     position: Boxed<Position>, description: Boxed<string> | undefined, drawable: Drawable
@@ -80,7 +78,7 @@ export class MapSystem implements GameSystem {
 
     public built: boolean = false
 
-    public readonly boundary: Size
+    public readonly boundary: Vector
     public renderLayer: RenderLayer
 
     private map: SparseMap<Tile>
@@ -89,7 +87,7 @@ export class MapSystem implements GameSystem {
     private activeDomain: Domain | undefined
 
     private constructor(width: number, height: number) {
-        this.boundary = new Size(width, height)
+        this.boundary = new Vector([width, height])
         this.map = new SparseMap(this.boundary)
         this.renderLayer = RenderLayer.Layer2
         this.drawables = new Map()
@@ -117,7 +115,7 @@ export class MapSystem implements GameSystem {
     public build(world: World): void {
         if (!this.built) {
             this.activeDomain = Domain.Tower
-            const entrance = new Position(this.activeDomain, new Vector2D(Math.floor(this.boundary.width / 2), 0))
+            const entrance = new Position(this.activeDomain, new Vector([Math.floor(this.boundary.width / 2), 0]))
             new TunnelingBuilder(world, this)
                 .startAt(entrance)
                 .run()
@@ -138,7 +136,7 @@ export class MapSystem implements GameSystem {
         this.activeDomain = playerPosition.value.domain
 
         if (input !== undefined && viewport !== undefined) {
-            const mousePosition = new Vector2D(input.mouse.x, input.mouse.y)
+            const mousePosition = new Vector([input.mouse.x, input.mouse.y])
             const topLeft = viewport.mapViewport.topLeft
             const tile = this.getTile(new Position(this.activeDomain, mousePosition.add(topLeft)))
             if (tile !== undefined) {
@@ -234,7 +232,7 @@ export class MapSystem implements GameSystem {
         const room = world.entity()
             .with("room", { shape: rectangle })
             .close()
-        foreach(rasterizeRectangle(rectangle, true), (p: Vector2D) =>
+        foreach(rasterizeRectangle(rectangle, true), (p: Vector) =>
             this.setTile(world, new Position(this.activeDomain!, p), roomTile(room))
         )
         this.addLightToRoom(world, room, rectangle)
@@ -245,7 +243,7 @@ export class MapSystem implements GameSystem {
         const room = world.entity()
             .with("room", { shape: rectangle })
             .close()
-        foreach(rasterizeRectangle(rectangle, true), (p: Vector2D) =>
+        foreach(rasterizeRectangle(rectangle, true), (p: Vector) =>
             this.setTile(world, new Position(this.activeDomain!, p), hubTile(room))
         )
         this.addLightToRoom(world, room, rectangle)
@@ -278,7 +276,7 @@ export class MapSystem implements GameSystem {
             for (let x = 0; x < 4; x++) {
                 const tile: Tile | undefined = asset[4 * y + x]
                 if (tile !== undefined) {
-                    this.setTile(world, new Position(this.activeDomain!, new Vector2D(position.x + x - 1, position.y + y - 1)), tile)
+                    this.setTile(world, new Position(this.activeDomain!, new Vector([position.x + x - 1, position.y + y - 1])), tile)
                 }
             }
         }
@@ -323,9 +321,9 @@ export class MapSystem implements GameSystem {
     }
 
     private fillWalls(domain: Domain): void {
-        const neighbours = toArray(rasterizeRectangle(Rectangle.from(new Vector2D(-1, -1), new Size(2, 2)), true))
-        const newWallPositions: Vector2D[] = []
-        foreach(rasterizeRectangle(Rectangle.from(new Vector2D(0, 0), this.boundary), true), (p: Vector2D) => {
+        const neighbours = toArray(rasterizeRectangle(Rectangle.from(new Vector([-1, -1]), new Vector([2, 2])), true))
+        const newWallPositions: Vector[] = []
+        foreach(rasterizeRectangle(Rectangle.from(new Vector([0, 0]), this.boundary), true), (p: Vector) => {
             if (this.map.get(new Position(domain, p)) === undefined) {
                 const firstDefinedTile = neighbours.find(offset =>
                     this.map.get(new Position(domain, p.add(offset))) !== undefined
@@ -351,7 +349,7 @@ export class MapSystem implements GameSystem {
                 .matchesValue("position", (p: Boxed<Position>) => {
                     const index: string | undefined = this.getIndex(p.value)
                     if (index !== undefined && lighting.isDiscovered(index)) {
-                        return viewport.rectangle.isInside(p.value.toVector2D())
+                        return viewport.rectangle.isInside(p.value.pos)
                     } else {
                         return false
                     }
@@ -375,11 +373,11 @@ export class MapSystem implements GameSystem {
         }
     }
 
-    private drawDescriptions(drawables: DrawableWithData[], alreadyDrawn: Set<string>, topLeft: Vector2D, display: Display): void {
+    private drawDescriptions(drawables: DrawableWithData[], alreadyDrawn: Set<string>, topLeft: Vector, display: Display): void {
         drawables.forEach((comp: DrawableWithData) => {
             if (comp.description !== undefined) {
                 this.tryToDrawDescription(display,
-                    comp.position.value.toVector2D().subtract(topLeft),
+                    comp.position.value.subtract(topLeft).pos,
                     comp.description.value,
                     alreadyDrawn
                 )
@@ -399,11 +397,11 @@ export class MapSystem implements GameSystem {
         display.draw(position.x, position.y, character, color.rgb, bg)
     }
 
-    private tryToDrawDescription(display: Display, position: Vector2D, description: string, alreadyDrawn: Set<string>): void {
+    private tryToDrawDescription(display: Display, position: Vector, description: string, alreadyDrawn: Set<string>): void {
         if (this.canDraw(position, description, alreadyDrawn)) {
             display.draw(position.x + 1, position.y, gridSymbols[0])
             for (let offset = 0; offset < description.length; offset++) {
-                const p = new Position(this.activeDomain!, new Vector2D(position.x + 2 + offset, position.y))
+                const p = new Position(this.activeDomain!, new Vector([position.x + 2 + offset, position.y]))
                 const index = this.getIndex(p)
                 if (index !== undefined) {
                     alreadyDrawn.add(index)
@@ -413,9 +411,9 @@ export class MapSystem implements GameSystem {
         }
     }
 
-    private canDraw(position: Vector2D, text: string, alreadyDrawn: Set<string>): boolean {
+    private canDraw(position: Vector, text: string, alreadyDrawn: Set<string>): boolean {
         for (let offset = 0; offset < text.length; offset++) {
-            const p = new Position(this.activeDomain!, new Vector2D(position.x + 2 + offset, position.y))
+            const p = new Position(this.activeDomain!, new Vector([position.x + 2 + offset, position.y]))
             const index = this.getIndex(p)
             if (index === undefined || alreadyDrawn.has(index)) {
                 return false

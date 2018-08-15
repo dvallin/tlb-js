@@ -5,7 +5,7 @@ import * as ROT from "rot-js"
 import { GameSystem, RenderLayer } from "./GameSystem"
 import { Direction } from "@/geometry/Direction"
 import { MenuItems } from "@/menu/Menu"
-import { Vector2D } from "@/geometry/Vector2D"
+import { Vector } from "@/geometry/Vector"
 
 export interface InputState {
     isPressed: Map<number, boolean>
@@ -121,15 +121,14 @@ export class Input implements GameSystem {
         return this.isPressed(this.keyMap[direction])
     }
 
-    public movementDelta(): Vector2D {
-        let delta = Vector2D.from(Direction.Center)
+    public movementDelta(): Vector {
+        let delta = Vector.create2dVector(Direction.Center)
         delta = this.move(delta, Direction.North)
         delta = this.move(delta, Direction.West)
         delta = this.move(delta, Direction.South)
         delta = this.move(delta, Direction.East)
         return delta
     }
-
 
     get mouse(): Mouse {
         return this.state.mouse
@@ -146,9 +145,9 @@ export class Input implements GameSystem {
         }
     }
 
-    private move(delta: Vector2D, direction: Direction): Vector2D {
+    private move(delta: Vector, direction: Direction): Vector {
         if (this.direction(direction)) {
-            delta = delta.add(Vector2D.from(direction))
+            delta = delta.add(Vector.create2dVector(direction))
         }
         return delta
     }
@@ -157,7 +156,6 @@ export class Input implements GameSystem {
         modifiers.alt = altKey
         modifiers.ctrl = ctrlKey
     }
-
 
     private handleMouse(mouse: Mouse, e: MouseEvent, invert: boolean): void {
         const pos = this.eventToPosition(e) as [number, number]

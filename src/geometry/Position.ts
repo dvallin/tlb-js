@@ -1,6 +1,5 @@
 import { Direction } from "@/geometry/Direction"
 import { Vector } from "@/geometry/Vector"
-import { Vector2D } from "@/geometry/Vector2D"
 
 export enum Domain {
     Tower
@@ -8,8 +7,10 @@ export enum Domain {
 
 export class Position {
 
-    public static from(facing: Direction, domain: Domain): Position {
-        return new Position(domain, Vector2D.from(facing))
+    public static from(facing: Direction, level: number, domain: Domain): Position {
+        const pos = Vector.create2dVector(facing)
+        pos.z = level
+        return new Position(domain, pos)
     }
 
     constructor(
@@ -18,50 +19,42 @@ export class Position {
     ) { }
 
     public get x(): number {
-        return this.pos.coordinates[0]
+        return this.pos.x
     }
 
     public set x(value: number) {
-        this.pos.coordinates[0] = value
+        this.pos.x = value
     }
 
     public get y(): number {
-        return this.pos.coordinates[1]
+        return this.pos.y
     }
 
     public set y(value: number) {
-        this.pos.coordinates[1] = value
+        this.pos.y = value
+    }
+
+    public get z(): number {
+        return this.pos.z
+    }
+
+    public set z(value: number) {
+        this.pos.z = value
     }
 
     public index(): string {
-        let index = this.domain.toString()
-        for (const coordinate of this.pos.coordinates) {
-            index += "," + Math.floor(coordinate).toFixed(0)
-        }
-        return index
+        return this.domain.toString() + "," + this.pos.index()
     }
 
     public inside(boundary: Vector): boolean {
-        if (this.pos.coordinates.length !== boundary.coordinates.length) {
-            return false
-        }
-        for (let i = 0; i < this.pos.coordinates.length; ++i) {
-            if (this.pos.coordinates[i] < 0 || this.pos.coordinates[i] >= boundary.coordinates[i]) {
-                return false
-            }
-        }
-        return true
+        return this.pos.inside(boundary)
     }
 
-    public subtract(vector: Vector2D): Position {
-        return new Position(this.domain, this.toVector2D().subtract(vector))
+    public subtract(vector: Vector): Position {
+        return new Position(this.domain, this.pos.subtract(vector))
     }
 
-    public add(vector: Vector2D): Position {
-        return new Position(this.domain, this.toVector2D().add(vector))
-    }
-
-    public toVector2D(): Vector2D {
-        return new Vector2D(this.pos.coordinates[0], this.pos.coordinates[1])
+    public add(vector: Vector): Position {
+        return new Position(this.domain, this.pos.add(vector))
     }
 }

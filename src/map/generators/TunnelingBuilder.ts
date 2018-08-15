@@ -1,6 +1,5 @@
 import { Direction, leftOf, rightOf } from "@/geometry/Direction"
 import { Position } from "@/geometry/Position"
-import { Size } from "@/geometry/Size"
 import { Rectangle } from "@/geometry/Rectangle"
 import { bernoulli, binomialNormed, dualDecision, ternaryDecision, uniformInteger } from "@/random"
 import { toArray } from "@/rendering"
@@ -9,7 +8,7 @@ import { MapStorage, World, Boxed } from "mogwai-ecs/lib"
 import { rasterize as rasterizeRectangle } from "@/rendering/rectangle"
 import { machine, tunnelerTile, wallTile, corridorTile, randomWeapon } from "@/map/Tile"
 import { MapSystem } from "@/map/Map"
-import { Vector2D } from "@/geometry/Vector2D"
+import { Vector } from "@/geometry/Vector"
 
 class Tunneler {
     public alive: boolean = true
@@ -67,7 +66,7 @@ export class TunnelingBuilder {
                 if (bernoulli(Math.min(comp.tunneler.roomsBuilt / 7, 0.5))) {
                     this.spawnHub(comp.tunneler, comp.position.value)
                 } else {
-                    this.buildRooms(comp.tunneler, comp.position.value, new Size(uniformInteger(4, 10), uniformInteger(4, 10)))
+                    this.buildRooms(comp.tunneler, comp.position.value, new Vector([uniformInteger(4, 10), uniformInteger(4, 10)]))
                 }
 
                 if (!comp.tunneler.alive) {
@@ -91,15 +90,15 @@ export class TunnelingBuilder {
         return updated
     }
 
-    private buildRooms(tunneler: Tunneler, position: Position, size: Size): void {
-        const delta: Vector2D = Vector2D.from(tunneler.direction).normal()
+    private buildRooms(tunneler: Tunneler, position: Position, size: Vector): void {
+        const delta = Vector.normal2d(Vector.create2dVector(tunneler.direction))
         const [buildLeft, buildRight]: [boolean, boolean] = dualDecision(0.1, [0.4, 0.4], 0.2)
         if (buildLeft) {
             const length = -Math.ceil(tunneler.width / 2)
             const doorPosition = position.add(delta.mult(length))
             const roomPosition = doorPosition.add(delta.mult(-1))
             const direction = leftOf(tunneler.direction)
-            const rectangle = Rectangle.from(roomPosition.toVector2D(), size, direction)
+            const rectangle = Rectangle.from(roomPosition.pos, size, direction)
             this.buildRoom(tunneler, rectangle, doorPosition)
         }
         if (buildRight) {
@@ -107,7 +106,7 @@ export class TunnelingBuilder {
             const doorPosition = position.add(delta.mult(length))
             const roomPosition = doorPosition.add(delta)
             const direction = rightOf(tunneler.direction)
-            const rectangle = Rectangle.from(roomPosition.toVector2D(), size, direction)
+            const rectangle = Rectangle.from(roomPosition.pos, size, direction)
             this.buildRoom(tunneler, rectangle, doorPosition)
         }
     }
@@ -115,13 +114,13 @@ export class TunnelingBuilder {
     private closeTunneler(tunneler: Tunneler, position: Position): void {
         const dx = Math.abs(tunneler.startPosition.x - position.x)
         const dy = Math.abs(tunneler.startPosition.y - position.y)
-        let size: Size
+        let size: Vector
         if (dx === 0) {
-            size = new Size(tunneler.width, dy)
+            size = new Vector([tunneler.width, dy])
         } else {
-            size = new Size(dx, tunneler.width)
+            size = new Vector([dx, tunneler.width])
         }
-        const rectangle = Rectangle.from(tunneler.startPosition.toVector2D(), size, tunneler.direction)
+        const rectangle = Rectangle.from(tunneler.startPosition.pos, size, tunneler.direction)
         this.map.closeCorridor(this.world, tunneler.room, rectangle)
     }
 
@@ -161,7 +160,7 @@ export class TunnelingBuilder {
     }
 
     private tunnelerMoves(direction: Direction, width: number, position: Position): Position[] {
-        const delta: Vector2D = Vector2D.from(direction).normal()
+        const delta = Vector.normal2d(Vector.create2dVector(direction))
         const positions: Position[] = []
         for (let i = 0; i < width; i++) {
             const length = Math.ceil(i / 2)
@@ -172,8 +171,8 @@ export class TunnelingBuilder {
     }
 
     private spawnTunnelers(tunneler: Tunneler, hub: number, position: Position, offset: number): void {
-        const left: Vector2D = Vector2D.from(tunneler.direction).normal()
-        const forward: Vector2D = Vector2D.from(tunneler.direction)
+        const forward = Vector.create2dVector(tunneler.direction)
+        const left = Vector.normal2d(forward)
 
         const [spawnLeft, spawnForward, spawnRight]: [boolean, boolean, boolean] =
             ternaryDecision(0, [0.1, 0, 0.1], [0.2, 0.1, 0.2], 0.3)
@@ -211,7 +210,7 @@ export class TunnelingBuilder {
     }
 
     private moveTunneler(tunneler: Tunneler, position: Boxed<Position>): void {
-        const newPosition = position.value.add(Vector2D.from(tunneler.direction))
+        const newPosition = position.value.add(Vector.create2dVector(tunneler.direction))
         if (this.map.isInside(newPosition)) {
             position.value = newPosition
         } else {
@@ -223,7 +222,7 @@ export class TunnelingBuilder {
         const forward = this.freeCells(position.value, tunneler.direction, tunneler.width)
 
         const length = -Math.floor(tunneler.width / 2)
-        const savePosition = position.value.add(Vector2D.from(tunneler.direction).mult(length))
+        const savePosition = position.value.add(Vector.create2dVector(tunneler.direction).mult(length))
         const left = this.freeCells(savePosition, leftOf(tunneler.direction), tunneler.width)
         const right = this.freeCells(savePosition, rightOf(tunneler.direction), tunneler.width)
 
@@ -240,7 +239,7 @@ export class TunnelingBuilder {
 
     private spawnHub(tunneler: Tunneler, position: Position): void {
         const width = 7
-        const rectangle = Rectangle.from(position.toVector2D(), new Size(width, width), tunneler.direction)
+        const rectangle = Rectangle.from(position.pos, new Vector([width, width]), tunneler.direction)
         const rasterizedRectangle = toArray(rasterizeRectangle(rectangle.grow(1), true))
             .map(v => new Position(position.domain, v))
         if (this.map.isFree(rasterizedRectangle, tunneler.room) && tunneler.generation > 0) {
@@ -259,7 +258,7 @@ export class TunnelingBuilder {
     }
 
     private freeCells(position: Position, direction: Direction, width: number, maxSteps: number = 10): number {
-        const delta = Vector2D.from(direction)
+        const delta = Vector.create2dVector(direction)
         let steps = 0
         let currentPosition = position.add(delta)
         let positions = this.tunnelerMoves(direction, width + 2, currentPosition)
