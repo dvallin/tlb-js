@@ -24,6 +24,7 @@
         "trailing-comma": false
     },
     "rules": {
+        "no-console": false,
         "array-type": false,
         "arrow-parens": false,
         "interface-name": false,
@@ -64,9 +65,7 @@
             "call-signature",
             "parameter",
             "property-declaration",
-            "member-variable-declaration",
-            "object-destructuring",
-            "array-destructuring"
+            "member-variable-declaration"
         ]
     },
     "rulesDirectory": []

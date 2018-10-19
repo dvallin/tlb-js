@@ -16,7 +16,7 @@ module.exports = {
         [process.env.LAYER]: './src/main.ts'
     },
     output: {
-        filename: '[name].bundle.js',
+        filename: 'tlb.bundle.js',
         path: path.resolve(__dirname, 'dist')
     },
     module: {
