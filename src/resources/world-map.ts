@@ -1,4 +1,4 @@
-import { DiscreteSpace, DiscreteStackedSpace, Vector } from "@/spatial"
+import { DiscreteSpace, DiscreteStackedSpace, Vector, Space, StackedSpace } from "@/spatial"
 import { Entity } from "@/ecs/entity"
 import { ResourceName, TlbResource, TlbWorld } from "@/tlb"
 import { FeatureComponent } from "@/components/feature"
@@ -7,8 +7,8 @@ export class WorldMap implements TlbResource {
 
     public readonly kind: ResourceName = "map"
 
-    public readonly tiles: DiscreteSpace<Entity> = new DiscreteSpace<Entity>()
-    public readonly items: DiscreteStackedSpace<Entity> = new DiscreteStackedSpace<Entity>()
+    public readonly tiles: Space<Entity> = new DiscreteSpace<Entity>()
+    public readonly items: StackedSpace<Entity> = new DiscreteStackedSpace<Entity>()
 
     public constructor(
         public readonly boundary: Vector

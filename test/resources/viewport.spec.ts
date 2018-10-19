@@ -3,9 +3,10 @@ import { Viewport } from "../../src/resources/viewport"
 import { World } from "../../src/ecs/world"
 import { ComponentName, ResourceName, TlbWorld } from "../../src/tlb"
 
-import { mockComponent, mockMap } from "../mocks"
+import { mockComponent, mockMap, mockImplementation } from "../mocks"
 import { Storage } from "../../src/ecs/storage"
-import { WorldMap } from "../../src/resources/world-map";
+import { WorldMap } from "../../src/resources/world-map"
+import { Vector } from "../../src/spatial/vector"
 
 describe("Viewport", () => {
 
@@ -17,7 +18,7 @@ describe("Viewport", () => {
     beforeEach(() => {
         world = new World<ComponentName, ResourceName>()
         map = mockMap(world)
-        map.tiles.get.mockImplementation(vector => vector.key === "1,1" ? 42 : undefined)
+        mockImplementation(map.tiles.get, (vector: Vector) => vector.key === "1,1" ? 42 : undefined)
         inViewport = mockComponent(world, "in-viewport")
 
         viewport = new Viewport()
@@ -36,7 +37,7 @@ describe("Viewport", () => {
     })
 
     it("adds entities into the viewport", () => {
-        map.tiles.get.mockImplementation(vector => vector.key === "1,1" ? 42 : undefined)
+        mockImplementation(map.tiles.get, (vector: Vector) => vector.key === "1,1" ? 42 : undefined)
 
         viewport.update(world)
 

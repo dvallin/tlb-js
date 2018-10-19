@@ -3,7 +3,7 @@ import { Action } from "../../src/components/tunneller"
 import { World } from "../../src/ecs/world"
 import { TlbWorld } from "../../src/tlb"
 
-import { mockRandom, mockMap, mockComponent } from "../mocks"
+import { mockRandom, mockMap, mockComponent, mockReturnValue, mockReturnValues } from "../mocks"
 import { Vector } from "../../src/spatial/vector"
 import { WorldMap } from "../../src/resources/world-map"
 import { Direction } from "../../src/spatial/direction"
@@ -20,7 +20,8 @@ describe("Tunneller", () => {
         it("renders if free", () => {
             const tunneller = new Tunneller(mockRandom())
             const map = mockMap(world)
-            map.isFree.mockReturnValue(true)
+
+            mockReturnValue(map.isFree, true)
 
             expect(tunneller.createAction(world, emptyState())).toEqual("render")
             expect(map.isFree).toHaveBeenCalledWith(world, [new Vector(31, 43), new Vector(32, 43)])
@@ -29,7 +30,7 @@ describe("Tunneller", () => {
         it("closes after more moves than maximum age", () => {
             const tunneller = new Tunneller(mockRandom(), 2)
             const map = mockMap(world)
-            map.isFree.mockReturnValue(true)
+            mockReturnValue(map.isFree, true)
 
             expect(tunneller.createAction(world, stateOfActions(["move", "move", "move"]))).toEqual("close")
             expect(tunneller.createAction(world, stateOfActions(["move", "changeDirection", "move", "move"]))).toEqual("close")
@@ -41,8 +42,8 @@ describe("Tunneller", () => {
             const random = mockRandom()
             const tunneller = new Tunneller(random)
             const map = mockMap(world)
-            random.decision.mockReturnValue(true)
-            map.isFree.mockReturnValue(false)
+            mockReturnValue(random.decision, true)
+            mockReturnValue(map.isFree, false)
 
             expect(tunneller.createAction(world, stateOfActions(["move", "move", "move"]))).toEqual("changeDirection")
             expect(tunneller.createAction(world, stateOfActions(
@@ -56,8 +57,8 @@ describe("Tunneller", () => {
             const random = mockRandom()
             const tunneller = new Tunneller(random)
             const map = mockMap(world)
-            random.decision.mockReturnValue(false)
-            map.isFree.mockReturnValueOnce(false).mockReturnValueOnce(true)
+            mockReturnValue(random.decision, false)
+            mockReturnValues(map.isFree, false, true)
 
             expect(tunneller.createAction(world, stateOfActions(["move", "move", "move"]))).toEqual("move")
             expect(map.isFree).toHaveBeenCalledTimes(2)
@@ -69,8 +70,8 @@ describe("Tunneller", () => {
             const random = mockRandom()
             const tunneller = new Tunneller(random)
             const map = mockMap(world)
-            random.decision.mockReturnValue(false)
-            map.isFree.mockReturnValueOnce(false).mockReturnValueOnce(false)
+            mockReturnValue(random.decision, false)
+            mockReturnValues(map.isFree, false, false)
 
             expect(tunneller.createAction(world, stateOfActions(["move", "move", "move"]))).toEqual("close")
         })
@@ -137,7 +138,7 @@ describe("Tunneller", () => {
         it("turns right if all is free", () => {
             const tunneller = new Tunneller(mockRandom())
             const map = mockMap(world)
-            map.isFree.mockReturnValue(true)
+            mockReturnValue(map.isFree, true)
 
             expect(tunneller.changeDirection(world, stateOfDirection("up")).direction).toEqual("right")
             expect(tunneller.changeDirection(world, stateOfDirection("right")).direction).toEqual("down")
@@ -148,7 +149,7 @@ describe("Tunneller", () => {
         it("checks correct surrounding in up direction", () => {
             const tunneller = new Tunneller(mockRandom())
             const map = mockMap(world)
-            map.isFree.mockReturnValue(false)
+            mockReturnValue(map.isFree, false)
             tunneller.changeDirection(world, stateOfDirection("up"))
             expect(map.isFree).toHaveBeenCalledTimes(3)
             expect(map.isFree).toHaveBeenCalledWith(
@@ -165,7 +166,7 @@ describe("Tunneller", () => {
         it("checks correct surrounding in down direction", () => {
             const tunneller = new Tunneller(mockRandom())
             const map = mockMap(world)
-            map.isFree.mockReturnValue(false)
+            mockReturnValue(map.isFree, false)
             tunneller.changeDirection(world, stateOfDirection("down"))
             expect(map.isFree).toHaveBeenCalledTimes(3)
             expect(map.isFree).toHaveBeenCalledWith(
@@ -182,7 +183,7 @@ describe("Tunneller", () => {
         it("checks correct surrounding in right direction", () => {
             const tunneller = new Tunneller(mockRandom())
             const map = mockMap(world)
-            map.isFree.mockReturnValue(false)
+            mockReturnValue(map.isFree, false)
             tunneller.changeDirection(world, stateOfDirection("right"))
             expect(map.isFree).toHaveBeenCalledTimes(3)
             expect(map.isFree).toHaveBeenCalledWith(
@@ -199,7 +200,7 @@ describe("Tunneller", () => {
         it("checks correct surrounding in left direction", () => {
             const tunneller = new Tunneller(mockRandom())
             const map = mockMap(world)
-            map.isFree.mockReturnValue(false)
+            mockReturnValue(map.isFree, false)
             tunneller.changeDirection(world, stateOfDirection("left"))
             expect(map.isFree).toHaveBeenCalledTimes(3)
             expect(map.isFree).toHaveBeenCalledWith(
@@ -219,7 +220,7 @@ describe("Tunneller", () => {
         let map: WorldMap
         beforeEach(() => {
             map = mockMap(world)
-            map.isFree.mockReturnValue(true)
+            mockReturnValue(map.isFree, true)
         })
 
         it("is just position if width is 1", () => {

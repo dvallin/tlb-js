@@ -2,7 +2,7 @@ import { Vector } from "../src/spatial/vector"
 import { Storage } from "../src/ecs/storage"
 import { WorldMap } from "../src/resources/world-map"
 import { Renderer } from "../src/renderer/renderer"
-import { ComponentName, TlbWorld } from "../src/tlb"
+import { ComponentName, TlbWorld, ResourceName } from "../src/tlb"
 import { Random } from "../src/random"
 
 export function mockComponent(world: TlbWorld, component: ComponentName): Storage<{}> {
@@ -20,16 +20,21 @@ export function mockComponent(world: TlbWorld, component: ComponentName): Storag
 
 export function mockMap(world: TlbWorld, boundary: Vector = new Vector(42, 41)): WorldMap {
     const map = {
-        kind: "map",
+        kind: "map" as ResourceName,
         boundary,
         update: jest.fn(),
         isValid: jest.fn(),
         isFree: jest.fn(),
         tiles: {
-            get: jest.fn()
+            get: jest.fn(),
+            set: jest.fn(),
+            remove: jest.fn()
         },
         items: {
-            get: jest.fn()
+            get: jest.fn(),
+            set: jest.fn(),
+            add: jest.fn(),
+            retain: jest.fn()
         }
     }
     world.registerResource(map)
@@ -51,3 +56,20 @@ export function mockRandom(): Random {
         decision: jest.fn()
     }
 }
+
+export function mockReturnValue<T>(o: object, value: T): void {
+    (o as jest.Mock).mockReturnValue(value)
+}
+
+export function mockReturnValues<T>(o: object, ...values: T[]): void {
+    const mock = (o as jest.Mock)
+    for (const value of values) {
+        mock.mockReturnValueOnce(value)
+    }
+}
+
+export function mockImplementation<T, O>(o: object, f: (input: T) => O): void {
+    const mock = (o as jest.Mock)
+    mock.mockImplementation(f)
+}
+

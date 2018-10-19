@@ -1,12 +1,12 @@
 import { Render } from "../../src/resources/render"
-import { mockRenderer, mockComponent } from "../mocks";
-import { World } from "../../src/ecs/world";
-import { Vector } from "../../src/spatial/vector";
-import { gray } from "../../src/renderer/palettes";
+import { mockRenderer, mockComponent, mockImplementation } from "../mocks"
+import { World } from "../../src/ecs/world"
+import { Vector } from "../../src/spatial/vector"
 import { features } from "../../src/components/feature"
-import { Renderer } from "../../src/renderer/renderer";
-import { TlbWorld } from "../../src/tlb";
-import { Storage } from "../../src/ecs/storage";
+import { Renderer } from "../../src/renderer/renderer"
+import { TlbWorld } from "../../src/tlb"
+import { Storage } from "../../src/ecs/storage"
+
 describe("Render", () => {
 
     let renderer: Renderer
@@ -39,7 +39,7 @@ describe("Render", () => {
     })
 
     it("does not render entities without position and feature", () => {
-        inViewport.foreach.mockImplementation(f => f(42, {}))
+        mockImplementation(inViewport.foreach, (f: (entity: number, value: {}) => void) => f(42, {}))
 
         render.update(world)
 
@@ -47,9 +47,9 @@ describe("Render", () => {
     })
 
     it("renders each in viewport entity", () => {
-        inViewport.foreach.mockImplementation(f => f(42, {}))
-        featureStorage.get.mockImplementation(() => ({ type: "wall" }))
-        positions.get.mockImplementation(() => ({ position: new Vector(2, 43) }))
+        mockImplementation(inViewport.foreach, (f: (entity: number, value: {}) => void) => f(42, {}))
+        mockImplementation(featureStorage.get, () => ({ type: "wall" }))
+        mockImplementation(positions.get, () => ({ position: new Vector(2, 43) }))
 
         render.update(world)
 

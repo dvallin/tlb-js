@@ -43,8 +43,8 @@ describe("VectorStorage", () => {
         const storage = new VectorStorage<string>()
         storage.insert(2, "a")
         storage.insert(3, "b")
-        const entities = []
-        const values = []
+        const entities: number[] = []
+        const values: string[] = []
         storage.foreach((e, v) => {
             entities.push(e)
             values.push(v)
@@ -97,8 +97,8 @@ describe("MapStorage", () => {
         const storage = new MapStorage<string>()
         storage.insert(2, "a")
         storage.insert(3, "b")
-        const entities = []
-        const values = []
+        const entities: number[] = []
+        const values: string[] = []
         storage.foreach((e, v) => {
             entities.push(e)
             values.push(v)
@@ -151,8 +151,8 @@ describe("SetStorage", () => {
         const storage = new SetStorage()
         storage.insert(2, {})
         storage.insert(3, {})
-        const entities = []
-        const values = []
+        const entities: number[] = []
+        const values: {}[] = []
         storage.foreach((e, v) => {
             entities.push(e)
             values.push(v)
