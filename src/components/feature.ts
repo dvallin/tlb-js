@@ -1,7 +1,8 @@
-import { Color } from "@/renderer/color"
-import { gray, primary } from "@/renderer/palettes"
-import { TlbWorld } from "@/tlb"
-import { FeatureComponent } from "@/components/feature"
+import { Color } from "../renderer/color"
+import { gray, primary } from "../renderer/palettes"
+import { TlbWorld } from "../tlb"
+
+import { FeatureComponent } from "./feature"
 
 export type FeatureType = keyof typeof features
 export interface FeatureComponent {

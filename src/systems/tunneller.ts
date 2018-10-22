@@ -1,12 +1,12 @@
-import { TlbWorld, ComponentName, TlbSystem } from "@/tlb"
-import { Vector } from "@/spatial"
-import { WorldMap } from "@/resources/world-map"
-import { TunnellerComponent, Action } from "@/components/tunneller"
-import { PositionComponent } from "@/components/position"
-import { Entity } from "@/ecs/entity"
-import { FeatureType, FeatureComponent } from "@/components/feature"
-import { leftOf, rightOf, Direction } from "@/spatial/direction"
-import { Random } from "@/random"
+import { TlbWorld, ComponentName, TlbSystem } from "../tlb"
+import { Vector } from "../spatial"
+import { WorldMap } from "../resources/world-map"
+import { TunnellerComponent, Action } from "../components/tunneller"
+import { PositionComponent } from "../components/position"
+import { Entity } from "../ecs/entity"
+import { FeatureType, FeatureComponent } from "../components/feature"
+import { leftOf, rightOf, Direction } from "../spatial/direction"
+import { Random } from "../random"
 
 export interface PositionedTunneller {
     position: PositionComponent
@@ -89,7 +89,7 @@ export class Tunneller implements TlbSystem {
             return "render"
         }
 
-        if (movesSinceDirectionChange > state.tunneller.width && this.random.decision(0.1)) {
+        if (movesSinceDirectionChange > state.tunneller.width && this.random.decision(0.3)) {
             return "changeDirection"
         }
 
@@ -147,8 +147,9 @@ export class Tunneller implements TlbSystem {
 
         let direction = currentDirection
         let position = state.position.position
+
         if (forward <= Math.max(left, right)) {
-            if (forward < left) {
+            if (right < left) {
                 direction = leftDirection
                 position = leftPosition
             } else {
@@ -170,7 +171,7 @@ export class Tunneller implements TlbSystem {
         while (map.isFree(world, positions)) {
             steps++
             nextPosition = nextPosition.add(delta)
-            positions = this.footprint(position, direction, width + 2)
+            positions = this.footprint(nextPosition, direction, width + 2)
             if (steps >= maxSteps) {
                 break
             }

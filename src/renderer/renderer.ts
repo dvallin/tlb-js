@@ -8,7 +8,7 @@ import { Drawable } from "./drawable"
 export interface Renderer {
 
     clear(): void
-    eventToPosition(e: UIEvent): Position
+    eventToPosition(e: UIEvent): Position | undefined
 
     drawable(drawable: Drawable, position: Position, bg?: Color): void
     character(character: string, position: Position, fg: Color, bg?: Color): void
@@ -36,21 +36,24 @@ export class RotRenderer implements Renderer {
         this.display.clear()
     }
 
-    public eventToPosition(e: UIEvent): Position {
+    public eventToPosition(e: UIEvent): Position | undefined {
         const p = this.display.eventToPosition(e) as [number, number]
-        return { x: p[0], y: p[1] }
+        if (typeof p === "object") {
+            return { x: p[0], y: p[1] }
+        }
+        return undefined
     }
 
     public drawable(drawable: Drawable, position: Position, bg?: Color): void {
         const fgRgb = drawable.color
         const bgRgb = bg ? bg.rgb : undefined
-        this.display.draw(position.x, position.y, drawable.character, fgRgb, bgRgb)
+        this.display.draw(position.x, position.y, drawable.character[0], fgRgb, bgRgb)
     }
 
     public character(character: string, position: Position, fg: Color, bg?: Color): void {
         const fgRgb = fg.rgb
         const bgRgb = bg ? bg.rgb : undefined
-        this.display.draw(position.x, position.y, character, fgRgb, bgRgb)
+        this.display.draw(position.x, position.y, character[0], fgRgb, bgRgb)
     }
 
     public text(text: string, position: Position, fg: Color, bg?: Color): void {

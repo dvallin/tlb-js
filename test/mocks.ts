@@ -73,3 +73,13 @@ export function mockImplementation<T, O>(o: object, f: (input: T) => O): void {
     mock.mockImplementation(f)
 }
 
+export function mockImplementation2<T, T2, O>(o: object, f: (input: T, input2: T2) => O): void {
+    const mock = (o as jest.Mock)
+    mock.mockImplementation(f)
+}
+
+export function getInstances<T>(o: object): T[] {
+    const mock = (o as jest.MockInstance<T>)
+    return mock.mock.instances
+}
+

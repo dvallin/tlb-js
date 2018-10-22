@@ -21,7 +21,7 @@ export abstract class Drawable {
         this.color = this.diffuse.multiply(totalLight).rgb
     }
 
-    public setLight(entity: number, light: Color): void {
+    public addLight(entity: number, light: Color): void {
         this.lights.set(entity, light)
     }
 

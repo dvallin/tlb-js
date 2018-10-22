@@ -1,7 +1,7 @@
-import { DiscreteSpace, DiscreteStackedSpace, Vector, Space, StackedSpace } from "@/spatial"
-import { Entity } from "@/ecs/entity"
-import { ResourceName, TlbResource, TlbWorld } from "@/tlb"
-import { FeatureComponent } from "@/components/feature"
+import { DiscreteSpace, DiscreteStackedSpace, Vector, Space, StackedSpace } from "../spatial"
+import { Entity } from "../ecs/entity"
+import { ResourceName, TlbResource, TlbWorld } from "../tlb"
+import { FeatureComponent } from "../components/feature"
 
 export class WorldMap implements TlbResource {
 

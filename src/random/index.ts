@@ -6,7 +6,7 @@ export interface Random {
 
 export class SeedableRandom implements Random {
 
-    private readonly rng: RandomSeed
+    public readonly rng: RandomSeed
 
     public constructor(seed: string) {
         this.rng = create(seed)

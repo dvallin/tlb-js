@@ -1,4 +1,4 @@
-import { Color } from "@/renderer/color"
+import { Color } from "./color"
 
 export const primary: Color[] = [
     Color.fromHex("#FD971F"), Color.fromHex("#A6E22E"), Color.fromHex("#66D9EF"),

@@ -1,4 +1,4 @@
-import { Direction } from "@/spatial/direction"
+import { Direction } from "../spatial/direction"
 
 export type Action = "render" | "move" | "changeDirection" | "close"
 

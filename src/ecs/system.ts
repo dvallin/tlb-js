@@ -1,4 +1,4 @@
-import { World } from "@/ecs/world"
+import { World } from "./world"
 
 export interface System<C, R> {
 

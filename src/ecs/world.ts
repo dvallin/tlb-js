@@ -1,7 +1,7 @@
-import { Storage } from "@/ecs/storage"
-import { System } from "@/ecs/system"
-import { Resource } from "@/ecs/resource"
-import { Entity, EntityModifier } from "@/ecs/entity"
+import { Storage } from "./storage"
+import { System } from "./system"
+import { Resource } from "./resource"
+import { Entity, EntityModifier } from "./entity"
 
 export class World<C, R> {
 

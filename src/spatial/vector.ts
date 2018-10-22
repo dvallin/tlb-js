@@ -1,4 +1,4 @@
-import { Direction } from "@/spatial/direction"
+import { Direction } from "./direction"
 
 export class Vector {
 
@@ -42,6 +42,7 @@ export class Vector {
     }
 
     public add(other: Vector): Vector {
+        this.hasSameDimension(other)
         const result = []
         for (let i = 0; i < this.dimensions; i++) {
             result.push(this.at(i) + other.at(i))
@@ -66,6 +67,7 @@ export class Vector {
     }
 
     public bounds(other: Vector): boolean {
+        this.hasSameDimension(other)
         for (let i = 0; i < this.dimensions; i++) {
             if (Math.abs(other.at(i)) >= Math.abs(this.at(i))) {
                 return false
@@ -75,6 +77,15 @@ export class Vector {
     }
 
     public perpendicular(): Vector {
+        if (this.dimensions !== 2) {
+            throw new Error("wrong dimension")
+        }
         return new Vector(-this.y, this.x)
+    }
+
+    private hasSameDimension(other: Vector): void {
+        if (this.dimensions !== other.dimensions) {
+            throw new Error("dimension mismatch")
+        }
     }
 }

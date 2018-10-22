@@ -3,7 +3,7 @@ import { Action } from "../../src/components/tunneller"
 import { World } from "../../src/ecs/world"
 import { TlbWorld } from "../../src/tlb"
 
-import { mockRandom, mockMap, mockComponent, mockReturnValue, mockReturnValues } from "../mocks"
+import { mockRandom, mockMap, mockComponent, mockReturnValue, mockReturnValues, mockImplementation2 } from "../mocks"
 import { Vector } from "../../src/spatial/vector"
 import { WorldMap } from "../../src/resources/world-map"
 import { Direction } from "../../src/spatial/direction"
@@ -144,6 +144,22 @@ describe("Tunneller", () => {
             expect(tunneller.changeDirection(world, stateOfDirection("right")).direction).toEqual("down")
             expect(tunneller.changeDirection(world, stateOfDirection("down")).direction).toEqual("left")
             expect(tunneller.changeDirection(world, stateOfDirection("left")).direction).toEqual("up")
+        })
+
+        it("turns left if there is more room", () => {
+            const tunneller = new Tunneller(mockRandom())
+            const map = mockMap(world)
+            mockImplementation2(map.isFree, ({ }: TlbWorld, v: Vector[]) => v[1].x === 30)
+
+            expect(tunneller.changeDirection(world, stateOfDirection("up")).direction).toEqual("left")
+        })
+
+        it("keeps going forward if there is more room", () => {
+            const tunneller = new Tunneller(mockRandom())
+            const map = mockMap(world)
+            mockImplementation2(map.isFree, ({ }: TlbWorld, v: Vector[]) => v[2].x === 32)
+
+            expect(tunneller.changeDirection(world, stateOfDirection("up")).direction).toEqual("up")
         })
 
         it("checks correct surrounding in up direction", () => {

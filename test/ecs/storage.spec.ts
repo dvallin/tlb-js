@@ -1,4 +1,4 @@
-import { VectorStorage, MapStorage, SetStorage } from "../../src/ecs/storage"
+import { VectorStorage, MapStorage, SetStorage, SingletonStorage } from "../../src/ecs/storage"
 
 describe("VectorStorage", () => {
 
@@ -159,5 +159,59 @@ describe("SetStorage", () => {
         })
         expect(entities).toEqual([2, 3])
         expect(values).toEqual([{}, {}])
+    })
+})
+
+describe("SingletonStorage", () => {
+
+    it("inserts and gets values", () => {
+        const storage = new SingletonStorage()
+        storage.insert(2, {})
+        expect(storage.get(2)).toEqual({})
+    })
+
+    it("gets undefined if value is missing", () => {
+        const storage = new SingletonStorage()
+        expect(storage.get(2)).toBeUndefined()
+    })
+
+    it("checks if value exists", () => {
+        const storage = new SingletonStorage()
+        storage.insert(2, {})
+        expect(storage.has(2)).toBeTruthy()
+        expect(storage.has(3)).toBeFalsy()
+    })
+
+    it("removes values", () => {
+        const storage = new SingletonStorage()
+        storage.insert(2, {})
+        const value1 = storage.remove(2)
+        const value2 = storage.remove(2)
+        expect(storage.has(2)).toBeFalsy()
+        expect(value1).toEqual({})
+        expect(value2).toBeUndefined()
+    })
+
+    it("clears storage", () => {
+        const storage = new SingletonStorage()
+        storage.insert(2, {})
+        storage.insert(3, {})
+        storage.clear()
+        expect(storage.has(2)).toBeFalsy()
+        expect(storage.has(3)).toBeFalsy()
+    })
+
+    it("iterates over elements", () => {
+        const storage = new SingletonStorage()
+        storage.insert(2, {})
+        storage.insert(3, {})
+        const entities: number[] = []
+        const values: {}[] = []
+        storage.foreach((e, v) => {
+            entities.push(e)
+            values.push(v)
+        })
+        expect(entities).toEqual([3])
+        expect(values).toEqual([{}])
     })
 })

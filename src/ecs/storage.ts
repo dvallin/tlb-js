@@ -1,4 +1,3 @@
-
 export interface Storage<T> {
 
     insert(entity: number, value: T): void
@@ -36,6 +35,41 @@ export class SetStorage implements Storage<{}> {
 
     public foreach(f: (entity: number, value: {}) => void): void {
         this.data.forEach(v => f(v, {}))
+    }
+}
+
+export class SingletonStorage implements Storage<{}> {
+
+    private datum: number | undefined = undefined
+
+    public insert(entity: number, { }: {}): void {
+        this.datum = entity
+    }
+
+    public clear(): void {
+        this.datum = undefined
+    }
+
+    public get(entity: number): {} | undefined {
+        return this.datum === entity ? {} : undefined
+    }
+
+    public remove(entity: number): {} | undefined {
+        if (this.datum === entity) {
+            this.datum = undefined
+            return {}
+        }
+        return undefined
+    }
+
+    public has(entity: number): boolean {
+        return this.datum === entity
+    }
+
+    public foreach(f: (entity: number, value: {}) => void): void {
+        if (this.datum !== undefined) {
+            f(this.datum, {})
+        }
     }
 }
 

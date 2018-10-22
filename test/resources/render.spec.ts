@@ -6,6 +6,7 @@ import { features } from "../../src/components/feature"
 import { Renderer } from "../../src/renderer/renderer"
 import { TlbWorld } from "../../src/tlb"
 import { Storage } from "../../src/ecs/storage"
+import { Viewport } from "../../src/resources/viewport"
 
 describe("Render", () => {
 
@@ -21,6 +22,7 @@ describe("Render", () => {
         renderer = mockRenderer()
         render = new Render(renderer)
         world = new World()
+        world.registerResource(new Viewport())
         featureStorage = mockComponent(world, "feature")
         positions = mockComponent(world, "position")
         inViewport = mockComponent(world, "in-viewport")
@@ -55,7 +57,7 @@ describe("Render", () => {
 
         expect(renderer.character).toHaveBeenCalledTimes(1)
         expect(renderer.character).toHaveBeenCalledWith(
-            features.wall.character, new Vector(2, 43), features.wall.diffuse
+            features.wall.character, { x: 2, y: 43 }, features.wall.diffuse
         )
     })
 })

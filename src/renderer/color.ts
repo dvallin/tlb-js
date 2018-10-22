@@ -5,16 +5,12 @@ export class Color {
         return new Color(rot.Color.fromString(hex))
     }
 
-    public static fromName(name: string): Color {
-        return new Color(rot.Color.fromString(name))
-    }
-
-    public rgb: string
+    public readonly rgb: string
 
     public constructor(
         public color: [number, number, number]
     ) {
-        this.rgb = rot.Color.toRGB(this.color)
+        this.rgb = rot.Color.toRGB(color)
     }
 
     public add(other: Color): Color {
