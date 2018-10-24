@@ -6,7 +6,7 @@ export class Input implements TlbResource {
 
     public readonly kind: ResourceName = "input"
 
-    public position: Position = { x: 0, y: 0 }
+    public position: Position | undefined = undefined
 
     public mouseDown: boolean = false
     public mousePressed: boolean = false
@@ -14,6 +14,7 @@ export class Input implements TlbResource {
 
     public keyDown: Set<number> = new Set()
     public keyPressed: Set<number> = new Set()
+    public keyReleased: Set<number> = new Set()
 
     private mouseEvent: MouseEvent | undefined = undefined
     private keyEvents: KeyboardEvent[] = []
@@ -32,19 +33,19 @@ export class Input implements TlbResource {
 
     private handleMouseEvent(world: TlbWorld): void {
         this.mouseReleased = false
+        this.mousePressed = false
         if (this.mouseEvent) {
             const render = world.resources.get("render") as Render
-            const position = render.eventToPosition(this.mouseEvent)
-            if (position) {
-                const pressed = this.mouseEvent.buttons > 0
-                if (pressed) {
-                    if (!this.mouseDown) {
-                        this.mouseDown = true
-                        this.mousePressed = true
-                    }
-                } else {
-                    this.mouseReleased = true
+            this.position = render.eventToPosition(this.mouseEvent)
+            const pressed = this.mouseEvent.buttons > 0
+            if (pressed) {
+                if (this.position) {
+                    this.mousePressed = true
+                    this.mouseDown = true
                 }
+            } else {
+                this.mouseDown = false
+                this.mouseReleased = true
             }
             this.mouseEvent = undefined
         }
@@ -52,13 +53,13 @@ export class Input implements TlbResource {
 
     private handleKeyboardEvents(): void {
         this.keyPressed.clear()
+        this.keyReleased.clear()
         for (const e of this.keyEvents) {
             if (e.type === "keydown") {
-                if (!this.keyDown.has(e.keyCode)) {
-                    this.keyPressed.add(e.keyCode)
-                }
+                this.keyPressed.add(e.keyCode)
                 this.keyDown.add(e.keyCode)
             } else {
+                this.keyReleased.add(e.keyCode)
                 this.keyDown.delete(e.keyCode)
             }
         }

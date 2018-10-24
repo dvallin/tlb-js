@@ -22,6 +22,12 @@ export class Game {
                 direction: "down",
                 width: 3
             })
+            .withComponent<PositionComponent>("position", {
+                position: new Vector(20, 20)
+            })
+
+        this.world.createEntity()
+            .withComponent<{}>("free-mode-anchor", {})
             .withComponent<{}>("viewport-focus", {})
             .withComponent<PositionComponent>("position", {
                 position: new Vector(20, 20)

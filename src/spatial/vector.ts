@@ -83,6 +83,22 @@ export class Vector {
         return new Vector(-this.y, this.x)
     }
 
+    public squaredLength(): number {
+        let l = 0
+        for (let i = 0; i < this.dimensions; i++) {
+            l += this.at(i) * this.at(i)
+        }
+        return l
+    }
+
+    public length(): number {
+        return Math.sqrt(this.squaredLength())
+    }
+
+    public normalize(): Vector {
+        return this.mult(1.0 / this.length())
+    }
+
     private hasSameDimension(other: Vector): void {
         if (this.dimensions !== other.dimensions) {
             throw new Error("dimension mismatch")

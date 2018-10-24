@@ -24,7 +24,6 @@ export class Viewport implements TlbResource {
                 }
             }
         }
-        console.log(this.topLeft)
     }
 
     public fromDisplay(p: Position): Vector {

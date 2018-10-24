@@ -18,8 +18,9 @@ import { Vector } from "./spatial"
 import { SeedableRandom } from "./random"
 import { RotRenderer } from "./renderer/renderer"
 import { Input } from "./resources/input"
+import { FreeModeControl } from "./systems/free-mode-control";
 
-export type ComponentName = "position" | "feature" | "in-viewport" | "viewport-focus" | "active" | "tunneller"
+export type ComponentName = "position" | "feature" | "in-viewport" | "viewport-focus" | "free-mode-anchor" | "active" | "tunneller"
 export type ResourceName = "map" | "viewport" | "render" | "input"
 
 export type TlbWorld = World<ComponentName, ResourceName>
@@ -33,11 +34,13 @@ export function registerComponents<R>(world: World<ComponentName, R>): void {
     world.registerComponentStorage("in-viewport", new SetStorage())
     world.registerComponentStorage("active", new SetStorage())
     world.registerComponentStorage("viewport-focus", new SingletonStorage())
+    world.registerComponentStorage("free-mode-anchor", new SingletonStorage())
 }
 
 export function registerSystems(world: World<ComponentName, ResourceName>): void {
     world.registerSystem(new Tunneller(new SeedableRandom("some see")))
     world.registerSystem(new ViewportFocus())
+    world.registerSystem(new FreeModeControl())
 }
 
 export function registerResources(world: World<ComponentName, ResourceName>): void {
