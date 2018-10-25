@@ -25,6 +25,7 @@ export function mockMap(world: TlbWorld, boundary: Vector = new Vector(42, 41)):
         update: jest.fn(),
         isValid: jest.fn(),
         isFree: jest.fn(),
+        isShapeFree: jest.fn(),
         tiles: {
             get: jest.fn(),
             set: jest.fn(),

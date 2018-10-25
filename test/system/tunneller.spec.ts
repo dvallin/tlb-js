@@ -7,6 +7,7 @@ import { mockRandom, mockMap, mockComponent, mockReturnValue, mockReturnValues, 
 import { Vector } from "../../src/spatial/vector"
 import { WorldMap } from "../../src/resources/world-map"
 import { Direction } from "../../src/spatial/direction"
+import { Rectangle } from "../../src/geometry/rectangle";
 
 describe("Tunneller", () => {
 
@@ -21,16 +22,17 @@ describe("Tunneller", () => {
             const tunneller = new Tunneller(mockRandom())
             const map = mockMap(world)
 
-            mockReturnValue(map.isFree, true)
+            mockReturnValue(map.isShapeFree, true)
 
             expect(tunneller.createAction(world, emptyState())).toEqual("render")
-            expect(map.isFree).toHaveBeenCalledWith(world, [new Vector(31, 43), new Vector(32, 43)])
+            expect(map.isShapeFree).toHaveBeenCalledTimes(1)
+            expect(map.isShapeFree).toHaveBeenCalledWith(world, new Rectangle(31, 43, 2, 1))
         })
 
         it("closes after more moves than maximum age", () => {
             const tunneller = new Tunneller(mockRandom(), 2)
             const map = mockMap(world)
-            mockReturnValue(map.isFree, true)
+            mockReturnValue(map.isShapeFree, true)
 
             expect(tunneller.createAction(world, stateOfActions(["move", "move", "move"]))).toEqual("close")
             expect(tunneller.createAction(world, stateOfActions(["move", "changeDirection", "move", "move"]))).toEqual("close")
@@ -58,12 +60,13 @@ describe("Tunneller", () => {
             const tunneller = new Tunneller(random)
             const map = mockMap(world)
             mockReturnValue(random.decision, false)
-            mockReturnValues(map.isFree, false, true)
+            mockReturnValues(map.isShapeFree, false, true)
 
-            expect(tunneller.createAction(world, stateOfActions(["move", "move", "move"]))).toEqual("move")
-            expect(map.isFree).toHaveBeenCalledTimes(2)
-            expect(map.isFree).toHaveBeenCalledWith(world, [new Vector(31, 42), new Vector(32, 42)])
-            expect(map.isFree).toHaveBeenCalledWith(world, [new Vector(31, 43), new Vector(32, 43)])
+            const nextAction = tunneller.createAction(world, stateOfActions(["move", "move", "move"]))
+            expect(nextAction).toEqual("move")
+            expect(map.isShapeFree).toHaveBeenCalledTimes(2)
+            expect(map.isShapeFree).toHaveBeenCalledWith(world, new Rectangle(31, 43, 2, 1))
+            expect(map.isShapeFree).toHaveBeenCalledWith(world, new Rectangle(31, 42, 2, 1))
         })
 
         it("closes if next position is not free", () => {
@@ -149,7 +152,9 @@ describe("Tunneller", () => {
         it("turns left if there is more room", () => {
             const tunneller = new Tunneller(mockRandom())
             const map = mockMap(world)
-            mockImplementation2(map.isFree, ({ }: TlbWorld, v: Vector[]) => v[1].x === 30)
+            mockImplementation2(map.isShapeFree, ({ }: TlbWorld, r: Rectangle) => {
+                return r.left === 30 && r.height === 4
+            })
 
             expect(tunneller.changeDirection(world, stateOfDirection("up")).direction).toEqual("left")
         })
@@ -157,7 +162,9 @@ describe("Tunneller", () => {
         it("keeps going forward if there is more room", () => {
             const tunneller = new Tunneller(mockRandom())
             const map = mockMap(world)
-            mockImplementation2(map.isFree, ({ }: TlbWorld, v: Vector[]) => v[2].x === 32)
+            mockImplementation2(map.isShapeFree, ({ }: TlbWorld, r: Rectangle) => {
+                return r.top === 42 && r.width === 4
+            })
 
             expect(tunneller.changeDirection(world, stateOfDirection("up")).direction).toEqual("up")
         })
@@ -165,35 +172,23 @@ describe("Tunneller", () => {
         it("checks correct surrounding in up direction", () => {
             const tunneller = new Tunneller(mockRandom())
             const map = mockMap(world)
-            mockReturnValue(map.isFree, false)
+            mockReturnValue(map.isShapeFree, false)
             tunneller.changeDirection(world, stateOfDirection("up"))
-            expect(map.isFree).toHaveBeenCalledTimes(3)
-            expect(map.isFree).toHaveBeenCalledWith(
-                world, [new Vector(30, 42), new Vector(31, 42), new Vector(32, 42), new Vector(33, 42)]
-            )
-            expect(map.isFree).toHaveBeenCalledWith(
-                world, [new Vector(30, 42), new Vector(30, 43), new Vector(30, 44), new Vector(30, 45)]
-            )
-            expect(map.isFree).toHaveBeenCalledWith(
-                world, [new Vector(33, 42), new Vector(33, 43), new Vector(33, 44), new Vector(33, 45)]
-            )
+            expect(map.isShapeFree).toHaveBeenCalledTimes(3)
+            expect(map.isShapeFree).toHaveBeenCalledWith(world, new Rectangle(33, 42, 1, 4))
+            expect(map.isShapeFree).toHaveBeenCalledWith(world, new Rectangle(30, 42, 1, 4))
+            expect(map.isShapeFree).toHaveBeenCalledWith(world, new Rectangle(30, 42, 4, 1))
         })
 
         it("checks correct surrounding in down direction", () => {
             const tunneller = new Tunneller(mockRandom())
             const map = mockMap(world)
-            mockReturnValue(map.isFree, false)
+            mockReturnValue(map.isShapeFree, false)
             tunneller.changeDirection(world, stateOfDirection("down"))
-            expect(map.isFree).toHaveBeenCalledTimes(3)
-            expect(map.isFree).toHaveBeenCalledWith(
-                world, [new Vector(30, 44), new Vector(31, 44), new Vector(32, 44), new Vector(33, 44)]
-            )
-            expect(map.isFree).toHaveBeenCalledWith(
-                world, [new Vector(30, 41), new Vector(30, 42), new Vector(30, 43), new Vector(30, 44)]
-            )
-            expect(map.isFree).toHaveBeenCalledWith(
-                world, [new Vector(33, 41), new Vector(33, 42), new Vector(33, 43), new Vector(33, 44)]
-            )
+            expect(map.isShapeFree).toHaveBeenCalledTimes(3)
+            expect(map.isShapeFree).toHaveBeenCalledWith(world, new Rectangle(30, 41, 1, 4))
+            expect(map.isShapeFree).toHaveBeenCalledWith(world, new Rectangle(33, 41, 1, 4))
+            expect(map.isShapeFree).toHaveBeenCalledWith(world, new Rectangle(30, 44, 4, 1))
         })
 
         it("checks correct surrounding in right direction", () => {
@@ -201,33 +196,21 @@ describe("Tunneller", () => {
             const map = mockMap(world)
             mockReturnValue(map.isFree, false)
             tunneller.changeDirection(world, stateOfDirection("right"))
-            expect(map.isFree).toHaveBeenCalledTimes(3)
-            expect(map.isFree).toHaveBeenCalledWith(
-                world, [new Vector(33, 41), new Vector(33, 42), new Vector(33, 43), new Vector(33, 44)]
-            )
-            expect(map.isFree).toHaveBeenCalledWith(
-                world, [new Vector(30, 41), new Vector(31, 41), new Vector(32, 41), new Vector(33, 41)]
-            )
-            expect(map.isFree).toHaveBeenCalledWith(
-                world, [new Vector(30, 44), new Vector(31, 44), new Vector(32, 44), new Vector(33, 44)]
-            )
+            expect(map.isShapeFree).toHaveBeenCalledTimes(3)
+            expect(map.isShapeFree).toHaveBeenCalledWith(world, new Rectangle(33, 41, 1, 4))
+            expect(map.isShapeFree).toHaveBeenCalledWith(world, new Rectangle(30, 41, 4, 1))
+            expect(map.isShapeFree).toHaveBeenCalledWith(world, new Rectangle(30, 44, 4, 1))
         })
 
         it("checks correct surrounding in left direction", () => {
             const tunneller = new Tunneller(mockRandom())
             const map = mockMap(world)
-            mockReturnValue(map.isFree, false)
+            mockReturnValue(map.isShapeFree, false)
             tunneller.changeDirection(world, stateOfDirection("left"))
-            expect(map.isFree).toHaveBeenCalledTimes(3)
-            expect(map.isFree).toHaveBeenCalledWith(
-                world, [new Vector(31, 41), new Vector(31, 42), new Vector(31, 43), new Vector(31, 44)]
-            )
-            expect(map.isFree).toHaveBeenCalledWith(
-                world, [new Vector(31, 44), new Vector(32, 44), new Vector(33, 44), new Vector(34, 44)]
-            )
-            expect(map.isFree).toHaveBeenCalledWith(
-                world, [new Vector(31, 41), new Vector(32, 41), new Vector(33, 41), new Vector(34, 41)]
-            )
+            expect(map.isShapeFree).toHaveBeenCalledTimes(3)
+            expect(map.isShapeFree).toHaveBeenCalledWith(world, new Rectangle(31, 41, 1, 4))
+            expect(map.isShapeFree).toHaveBeenCalledWith(world, new Rectangle(31, 44, 4, 1))
+            expect(map.isShapeFree).toHaveBeenCalledWith(world, new Rectangle(31, 41, 4, 1))
         })
     })
 
@@ -236,28 +219,28 @@ describe("Tunneller", () => {
         let map: WorldMap
         beforeEach(() => {
             map = mockMap(world)
-            mockReturnValue(map.isFree, true)
+            mockReturnValue(map.isShapeFree, true)
         })
 
         it("is just position if width is 1", () => {
             const tunneller = new Tunneller(mockRandom())
             tunneller.createAction(world, stateOfWidth(1))
 
-            expect(map.isFree).toHaveBeenCalledWith(world, [new Vector(32, 43)])
+            expect(map.isShapeFree).toHaveBeenCalledWith(world, new Rectangle(32, 43, 1, 1))
         })
 
         it("is left and position if width is 2", () => {
             const tunneller = new Tunneller(mockRandom())
             tunneller.createAction(world, stateOfWidth(2))
 
-            expect(map.isFree).toHaveBeenCalledWith(world, [new Vector(31, 43), new Vector(32, 43)])
+            expect(map.isShapeFree).toHaveBeenCalledWith(world, new Rectangle(31, 43, 2, 1))
         })
 
         it("is left, right and position if width is 3", () => {
             const tunneller = new Tunneller(mockRandom())
             tunneller.createAction(world, stateOfWidth(3))
 
-            expect(map.isFree).toHaveBeenCalledWith(world, [new Vector(31, 43), new Vector(32, 43), new Vector(33, 43)])
+            expect(map.isShapeFree).toHaveBeenCalledWith(world, new Rectangle(31, 43, 3, 1))
         })
     })
 })

@@ -2,6 +2,7 @@ import { DiscreteSpace, DiscreteStackedSpace, Vector, Space, StackedSpace } from
 import { Entity } from "../ecs/entity"
 import { ResourceName, TlbResource, TlbWorld } from "../tlb"
 import { FeatureComponent } from "../components/feature"
+import { Shape } from "src/geometry/shape";
 
 export class WorldMap implements TlbResource {
 
@@ -22,16 +23,18 @@ export class WorldMap implements TlbResource {
         return this.boundary.bounds(position)
     }
 
-    public isFree(world: TlbWorld, footprint: Vector[]): boolean {
-        for (const position of footprint) {
-            const entity = this.tiles.get(position)
-            if (entity) {
-                const feature = world.getComponent<FeatureComponent>(entity, "feature")
-                if (feature) {
-                    return false
-                }
+    public isFree(world: TlbWorld, position: Vector): boolean {
+        const entity = this.tiles.get(position)
+        if (entity) {
+            const feature = world.getComponent<FeatureComponent>(entity, "feature")
+            if (feature) {
+                return false
             }
         }
         return true
+    }
+
+    public isShapeFree(world: TlbWorld, shape: Shape): boolean {
+        return shape.takeWhile(p => this.isFree(world, p))
     }
 }

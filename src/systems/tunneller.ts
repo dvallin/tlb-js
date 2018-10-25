@@ -7,6 +7,7 @@ import { Entity } from "../ecs/entity"
 import { FeatureType, FeatureComponent } from "../components/feature"
 import { leftOf, rightOf, Direction } from "../spatial/direction"
 import { Random } from "../random"
+import { Rectangle } from "../geometry/rectangle"
 
 export interface PositionedTunneller {
     position: PositionComponent
@@ -55,6 +56,10 @@ export class Tunneller implements TlbSystem {
                     .withComponent<PositionComponent>("position", { position })
                 break
             }
+            case "createRoom": {
+                this.createRoom(world, state)
+                break
+            }
             case "close": {
                 world.deleteEntity(entity)
                 break
@@ -82,20 +87,25 @@ export class Tunneller implements TlbSystem {
             return "close"
         }
 
-        const map = world.getResource<WorldMap>("map")
         const footprint = this.footprint(state.position.position, state.tunneller.direction, state.tunneller.width)
-        const canRender = map.isFree(world, footprint)
+        const map = world.getResource<WorldMap>("map")
+        const canRender = map.isShapeFree(world, footprint)
         if (canRender) {
             return "render"
         }
 
         if (movesSinceDirectionChange > state.tunneller.width && this.random.decision(0.3)) {
-            return "changeDirection"
+            // take a feature action
+            if (this.random.decision(0.3)) {
+                return "changeDirection"
+            } else {
+                return "createRoom"
+            }
         }
 
         const nextPosition = state.position.position.add(Vector.fromDirection(state.tunneller.direction))
         const nextFootprint = this.footprint(nextPosition, state.tunneller.direction, state.tunneller.width)
-        if (!map.isFree(world, nextFootprint)) {
+        if (!map.isShapeFree(world, nextFootprint)) {
             return "close"
         }
 
@@ -105,9 +115,11 @@ export class Tunneller implements TlbSystem {
     public render(world: TlbWorld, state: PositionedTunneller): void {
         const map = world.getResource<WorldMap>("map")
         const footprint = this.footprint(state.position.position, state.tunneller.direction, state.tunneller.width)
-        for (const position of footprint) {
-            this.createTile(world, map, position, "corridor")
-        }
+        footprint.foreach(position => this.createTile(world, map, position, "corridor"))
+    }
+
+    public createRoom({ }: TlbWorld, { }: PositionedTunneller): void {
+        return
     }
 
     public move(state: PositionedTunneller): Vector {
@@ -129,11 +141,11 @@ export class Tunneller implements TlbSystem {
         let leftPosition
         let rightPosition
         if (currentDirection === "down" || currentDirection === "left") {
-            leftPosition = footprint[footprint.length - 1]
-            rightPosition = footprint[0]
+            leftPosition = footprint.bottomRight
+            rightPosition = footprint.topLeft
         } else {
-            leftPosition = footprint[0]
-            rightPosition = footprint[footprint.length - 1]
+            leftPosition = footprint.topLeft
+            rightPosition = footprint.bottomRight
         }
         const delta = Vector.fromDirection(currentDirection).mult(-length)
         rightPosition = rightPosition.add(delta)
@@ -168,7 +180,7 @@ export class Tunneller implements TlbSystem {
         let steps = 0
         let nextPosition = position.add(delta)
         let positions = this.footprint(nextPosition, direction, width + 2)
-        while (map.isFree(world, positions)) {
+        while (map.isShapeFree(world, positions)) {
             steps++
             nextPosition = nextPosition.add(delta)
             positions = this.footprint(nextPosition, direction, width + 2)
@@ -179,14 +191,12 @@ export class Tunneller implements TlbSystem {
         return steps
     }
 
-    private footprint(position: Vector, direction: Direction, width: number): Vector[] {
+    private footprint(position: Vector, direction: Direction, width: number): Rectangle {
         const delta: Vector = Vector.fromDirection(direction).perpendicular().abs()
-        const positions: Vector[] = []
-        for (let i = 0; i < width; i++) {
-            const length = Math.floor(width / 2)
-            positions.push(position.add(delta.mult(i - length)))
-        }
-        return positions
+        const length = Math.floor(width / 2)
+        const left = position.add(delta.mult(-length))
+        const right = left.add(delta.mult(width - 1))
+        return Rectangle.fromBounds(left.x, right.x, left.y, right.y)
     }
 
     private createTile(world: TlbWorld, map: WorldMap, position: Vector, type: FeatureType): void {
