@@ -8,6 +8,7 @@ import { FeatureType, FeatureComponent } from "../components/feature"
 import { leftOf, rightOf, Direction } from "../spatial/direction"
 import { Random } from "../random"
 import { Rectangle } from "../geometry/rectangle"
+import { RoomGenerator } from "../artifacts/room-generator"
 
 export interface PositionedTunneller {
     position: PositionComponent
@@ -18,10 +19,14 @@ export class Tunneller implements TlbSystem {
 
     public readonly components: ComponentName[] = ["tunneller"]
 
+    public readonly roomGenerator: RoomGenerator
+
     public constructor(
         public random: Random,
         private readonly maximumAge: number = 70
-    ) { }
+    ) {
+        this.roomGenerator = new RoomGenerator(random)
+    }
 
     public update(world: TlbWorld, entity: number): void {
         const tunneller = world.getComponent<TunnellerComponent>(entity, "tunneller")
@@ -34,6 +39,51 @@ export class Tunneller implements TlbSystem {
     public run(world: TlbWorld, entity: Entity, state: PositionedTunneller): void {
         const action = this.createAction(world, state)
         this.takeAction(world, entity, state, action)
+    }
+
+    public createAction(world: TlbWorld, state: PositionedTunneller): Action {
+        let movesSinceDirectionChange = 0
+        for (let i = state.tunneller.actions.length - 1; i >= 0; i--) {
+            const action = state.tunneller.actions[i]
+            if (action === "move") {
+                movesSinceDirectionChange++
+            } else if (action === "changeDirection") {
+                break
+            }
+        }
+        let moves = 0
+        for (const action of state.tunneller.actions) {
+            if (action === "move") {
+                moves++
+            }
+        }
+        if (moves > this.maximumAge) {
+            return "close"
+        }
+
+        const footprint = this.footprint(state.position.position, state.tunneller.direction, state.tunneller.width + 2)
+        const map = world.getResource<WorldMap>("map")
+        const canRender = map.isShapeFree(world, footprint)
+        if (canRender) {
+            return "render"
+        }
+
+        if (movesSinceDirectionChange > state.tunneller.width && this.random.decision(0.3)) {
+            // take a feature action
+            if (this.random.decision(0.3)) {
+                return "changeDirection"
+            } else {
+                return "createRoom"
+            }
+        }
+
+        const nextPosition = state.position.position.add(Vector.fromDirection(state.tunneller.direction))
+        const nextFootprint = this.footprint(nextPosition, state.tunneller.direction, state.tunneller.width + 2)
+        if (!map.isShapeFree(world, nextFootprint)) {
+            return "close"
+        }
+
+        return "move"
     }
 
     public takeAction(world: TlbWorld, entity: Entity, state: PositionedTunneller, action: Action): void {
@@ -67,59 +117,31 @@ export class Tunneller implements TlbSystem {
         }
     }
 
-    public createAction(world: TlbWorld, state: PositionedTunneller): Action {
-        let movesSinceDirectionChange = 0
-        for (let i = state.tunneller.actions.length - 1; i >= 0; i--) {
-            const action = state.tunneller.actions[i]
-            if (action === "move") {
-                movesSinceDirectionChange++
-            } else if (action === "changeDirection") {
-                break
-            }
-        }
-        let moves = 0
-        for (const action of state.tunneller.actions) {
-            if (action === "move") {
-                moves++
-            }
-        }
-        if (moves > this.maximumAge) {
-            return "close"
-        }
-
-        const footprint = this.footprint(state.position.position, state.tunneller.direction, state.tunneller.width)
-        const map = world.getResource<WorldMap>("map")
-        const canRender = map.isShapeFree(world, footprint)
-        if (canRender) {
-            return "render"
-        }
-
-        if (movesSinceDirectionChange > state.tunneller.width && this.random.decision(0.3)) {
-            // take a feature action
-            if (this.random.decision(0.3)) {
-                return "changeDirection"
-            } else {
-                return "createRoom"
-            }
-        }
-
-        const nextPosition = state.position.position.add(Vector.fromDirection(state.tunneller.direction))
-        const nextFootprint = this.footprint(nextPosition, state.tunneller.direction, state.tunneller.width)
-        if (!map.isShapeFree(world, nextFootprint)) {
-            return "close"
-        }
-
-        return "move"
-    }
-
     public render(world: TlbWorld, state: PositionedTunneller): void {
         const map = world.getResource<WorldMap>("map")
         const footprint = this.footprint(state.position.position, state.tunneller.direction, state.tunneller.width)
         footprint.foreach(position => this.createTile(world, map, position, "corridor"))
     }
 
-    public createRoom({ }: TlbWorld, { }: PositionedTunneller): void {
-        return
+    public createRoom(world: TlbWorld, state: PositionedTunneller): void {
+        const map = world.getResource<WorldMap>("map")
+        const direction = this.random.decision(0.5) ?
+            leftOf(state.tunneller.direction) : rightOf(state.tunneller.direction)
+        const delta: Vector = Vector.fromDirection(direction)
+        const doorWidth = this.random.integerBetween(1, 3)
+        const length = Math.floor(state.tunneller.width / 2)
+        const stepBack = this.stepBack(state, doorWidth)
+        const doorPosition = state.position.position
+            .add(delta.mult(length + 1))
+            .add(stepBack)
+        const entry = this.footprint(doorPosition, direction, doorWidth)
+        const room = this.roomGenerator.generate(entry, direction)
+        if (map.isShapeFree(world, room.shape.grow())) {
+            room.entries.forEach(e => e.shape.foreach(p =>
+                this.createTile(world, map, p, "room")
+            ))
+            room.shape.foreach(p => this.createTile(world, map, p, "room"))
+        }
     }
 
     public move(state: PositionedTunneller): Vector {
@@ -133,11 +155,6 @@ export class Tunneller implements TlbSystem {
         const footprint = this.footprint(state.position.position, currentDirection, width)
         const forward = this.freeCells(world, map, state.position.position, currentDirection, width)
 
-        let length = Math.floor(state.tunneller.width / 2)
-        if (width % 2 === 0 && (currentDirection === "down" || currentDirection === "right")) {
-            length--
-        }
-
         let leftPosition
         let rightPosition
         if (currentDirection === "down" || currentDirection === "left") {
@@ -147,9 +164,9 @@ export class Tunneller implements TlbSystem {
             leftPosition = footprint.topLeft
             rightPosition = footprint.bottomRight
         }
-        const delta = Vector.fromDirection(currentDirection).mult(-length)
-        rightPosition = rightPosition.add(delta)
-        leftPosition = leftPosition.add(delta)
+        const stepBack = this.stepBack(state, width)
+        rightPosition = rightPosition.add(stepBack)
+        leftPosition = leftPosition.add(stepBack)
 
         const leftDirection = leftOf(currentDirection)
         const left = this.freeCells(world, map, leftPosition, leftDirection, width)
@@ -172,7 +189,16 @@ export class Tunneller implements TlbSystem {
         return { position, direction }
     }
 
-    private freeCells(
+    public stepBack(state: PositionedTunneller, width: number): Vector {
+        const direction = state.tunneller.direction
+        let length = Math.floor(width / 2)
+        if (width % 2 === 0 && (direction === "down" || direction === "right")) {
+            length--
+        }
+        return Vector.fromDirection(direction).mult(-length)
+    }
+
+    public freeCells(
         world: TlbWorld, map: WorldMap,
         position: Vector, direction: Direction, width: number, maxSteps: number = 10
     ): number {
@@ -191,7 +217,7 @@ export class Tunneller implements TlbSystem {
         return steps
     }
 
-    private footprint(position: Vector, direction: Direction, width: number): Rectangle {
+    public footprint(position: Vector, direction: Direction, width: number): Rectangle {
         const delta: Vector = Vector.fromDirection(direction).perpendicular().abs()
         const length = Math.floor(width / 2)
         const left = position.add(delta.mult(-length))
@@ -199,7 +225,7 @@ export class Tunneller implements TlbSystem {
         return Rectangle.fromBounds(left.x, right.x, left.y, right.y)
     }
 
-    private createTile(world: TlbWorld, map: WorldMap, position: Vector, type: FeatureType): void {
+    public createTile(world: TlbWorld, map: WorldMap, position: Vector, type: FeatureType): void {
         let e = map.tiles.get(position)
         if (e === undefined) {
             e = world.createEntity().entity

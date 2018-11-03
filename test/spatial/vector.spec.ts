@@ -35,6 +35,18 @@ describe("Vector", () => {
         })
     })
 
+    describe("minus", () => {
+
+        it("substracts equal sized vectors", () => {
+            expect(new Vector(1, 2).minus(new Vector(2, 1))).toEqual(new Vector(-1, 1))
+        })
+
+        it("throws on different sized vectors", () => {
+            expect(() => new Vector(2).minus(new Vector(1, 2))).toThrowError("dimension mismatch")
+            expect(() => new Vector(1, 2).minus(new Vector(2))).toThrowError("dimension mismatch")
+        })
+    })
+
     describe("bounds", () => {
 
         it("checks the bounding", () => {
@@ -57,6 +69,15 @@ describe("Vector", () => {
         })
     })
 
+    describe("floor", () => {
+
+        it("rounds down", () => {
+            expect(new Vector().floor()).toEqual(new Vector())
+            expect(new Vector(1, 1.1, 1.5, 1.9).floor()).toEqual(new Vector(1, 1, 1, 1))
+            expect(new Vector(-2, -2.1, -2.5, -2.9).floor()).toEqual(new Vector(-2, -3, -3, -3))
+        })
+    })
+
     describe("mult", () => {
 
         it("checks the bounding", () => {
@@ -65,6 +86,25 @@ describe("Vector", () => {
             expect(new Vector(-2, 2).mult(0)).toEqual(new Vector(-0, 0))
         })
     })
+
+    describe("interpolate", () => {
+
+        it("returns the extremal points", () => {
+            expect(Vector.interpolate(new Vector(1), new Vector(2), 0)).toEqual(new Vector(1))
+            expect(Vector.interpolate(new Vector(1), new Vector(2), 1)).toEqual(new Vector(2))
+        })
+
+        it("returns internal points", () => {
+            expect(Vector.interpolate(new Vector(1), new Vector(2), 0.5)).toEqual(new Vector(1.5))
+            expect(Vector.interpolate(new Vector(1), new Vector(2), 0.75)).toEqual(new Vector(1.75))
+        })
+
+        it("returns external points", () => {
+            expect(Vector.interpolate(new Vector(1), new Vector(2), 1.5)).toEqual(new Vector(2.5))
+            expect(Vector.interpolate(new Vector(1), new Vector(2), -0.5)).toEqual(new Vector(0.5))
+        })
+    })
+
 
     describe("perpendicular", () => {
 

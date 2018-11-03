@@ -7,7 +7,8 @@ import { mockRandom, mockMap, mockComponent, mockReturnValue, mockReturnValues, 
 import { Vector } from "../../src/spatial/vector"
 import { WorldMap } from "../../src/resources/world-map"
 import { Direction } from "../../src/spatial/direction"
-import { Rectangle } from "../../src/geometry/rectangle";
+import { Rectangle } from "../../src/geometry/rectangle"
+import { Random } from "../../src/random";
 
 describe("Tunneller", () => {
 
@@ -26,7 +27,7 @@ describe("Tunneller", () => {
 
             expect(tunneller.createAction(world, emptyState())).toEqual("render")
             expect(map.isShapeFree).toHaveBeenCalledTimes(1)
-            expect(map.isShapeFree).toHaveBeenCalledWith(world, new Rectangle(31, 43, 2, 1))
+            expect(map.isShapeFree).toHaveBeenCalledWith(world, new Rectangle(30, 43, 4, 1))
         })
 
         it("closes after more moves than maximum age", () => {
@@ -55,6 +56,16 @@ describe("Tunneller", () => {
             expect(tunneller.createAction(world, stateOfActions(["move", "move", "move", "changeDirection", "move"]))).toEqual("close")
         })
 
+        it("creates room if enough moves and decision is false", () => {
+            const random = mockRandom()
+            const tunneller = new Tunneller(random)
+            const map = mockMap(world)
+            mockReturnValues(random.decision, true, false)
+            mockReturnValue(map.isFree, false)
+
+            expect(tunneller.createAction(world, stateOfActions(["move", "move", "move"]))).toEqual("createRoom")
+        })
+
         it("moves if next position is free", () => {
             const random = mockRandom()
             const tunneller = new Tunneller(random)
@@ -65,8 +76,8 @@ describe("Tunneller", () => {
             const nextAction = tunneller.createAction(world, stateOfActions(["move", "move", "move"]))
             expect(nextAction).toEqual("move")
             expect(map.isShapeFree).toHaveBeenCalledTimes(2)
-            expect(map.isShapeFree).toHaveBeenCalledWith(world, new Rectangle(31, 43, 2, 1))
-            expect(map.isShapeFree).toHaveBeenCalledWith(world, new Rectangle(31, 42, 2, 1))
+            expect(map.isShapeFree).toHaveBeenCalledWith(world, new Rectangle(30, 43, 4, 1))
+            expect(map.isShapeFree).toHaveBeenCalledWith(world, new Rectangle(30, 42, 4, 1))
         })
 
         it("closes if next position is not free", () => {
@@ -122,6 +133,16 @@ describe("Tunneller", () => {
                 42, { position: new Vector(2, 3) }
             )
             expect(state.tunneller.actions).toEqual(["changeDirection"])
+        })
+
+        it("creates room", () => {
+            const state = emptyState()
+            const tunneller = new Tunneller(mockRandom())
+            tunneller.createRoom = jest.fn()
+
+            tunneller.takeAction(world, 42, state, "createRoom")
+
+            expect(state.tunneller.actions).toEqual(["createRoom"])
         })
 
         it("closes tunneller", () => {
@@ -214,6 +235,62 @@ describe("Tunneller", () => {
         })
     })
 
+    describe("createRoom", () => {
+
+        let random: Random
+        let tunneller: Tunneller
+        let map: WorldMap
+        beforeEach(() => {
+            map = mockMap(world)
+            random = mockRandom()
+            tunneller = new Tunneller(random)
+            tunneller.roomGenerator.generate = jest.fn().mockReturnValue({
+                shape: new Rectangle(0, 1, 2, 3),
+                entries: [{ direction: "up", shape: new Rectangle(0, 1, 2, 3) }]
+            })
+        })
+
+        it("calls room creation to the left", () => {
+            random.integerBetween = jest.fn().mockReturnValue(2)
+            random.decision = jest.fn().mockReturnValue(true)
+
+            tunneller.createRoom(world, stateOfDirection("up"))
+
+            expect(tunneller.roomGenerator.generate).toHaveBeenCalledWith(new Rectangle(30, 43, 1, 2), "left")
+        })
+
+        it("calls room creation to the right", () => {
+            random.integerBetween = jest.fn().mockReturnValue(2)
+            random.decision = jest.fn().mockReturnValue(false)
+
+            tunneller.createRoom(world, stateOfDirection("up"))
+
+            expect(tunneller.roomGenerator.generate).toHaveBeenCalledWith(new Rectangle(34, 43, 1, 2), "right")
+        })
+
+        it("creates room if map is free", () => {
+            random.integerBetween = jest.fn().mockReturnValue(2)
+            random.decision = jest.fn().mockReturnValue(false)
+            map.isShapeFree = jest.fn().mockReturnValue(true)
+            tunneller.createTile = jest.fn()
+
+            tunneller.createRoom(world, stateOfDirection("up"))
+
+            expect(tunneller.createTile).toHaveBeenCalled()
+        })
+
+        it("does not create room if map is not free", () => {
+            random.integerBetween = jest.fn().mockReturnValue(2)
+            random.decision = jest.fn().mockReturnValue(false)
+            map.isShapeFree = jest.fn().mockReturnValue(false)
+            tunneller.createTile = jest.fn()
+
+            tunneller.createRoom(world, stateOfDirection("up"))
+
+            expect(tunneller.createTile).not.toHaveBeenCalled()
+        })
+    })
+
     describe("footprint", () => {
 
         let map: WorldMap
@@ -226,21 +303,21 @@ describe("Tunneller", () => {
             const tunneller = new Tunneller(mockRandom())
             tunneller.createAction(world, stateOfWidth(1))
 
-            expect(map.isShapeFree).toHaveBeenCalledWith(world, new Rectangle(32, 43, 1, 1))
+            expect(map.isShapeFree).toHaveBeenCalledWith(world, new Rectangle(31, 43, 3, 1))
         })
 
         it("is left and position if width is 2", () => {
             const tunneller = new Tunneller(mockRandom())
             tunneller.createAction(world, stateOfWidth(2))
 
-            expect(map.isShapeFree).toHaveBeenCalledWith(world, new Rectangle(31, 43, 2, 1))
+            expect(map.isShapeFree).toHaveBeenCalledWith(world, new Rectangle(30, 43, 4, 1))
         })
 
         it("is left, right and position if width is 3", () => {
             const tunneller = new Tunneller(mockRandom())
             tunneller.createAction(world, stateOfWidth(3))
 
-            expect(map.isShapeFree).toHaveBeenCalledWith(world, new Rectangle(31, 43, 3, 1))
+            expect(map.isShapeFree).toHaveBeenCalledWith(world, new Rectangle(30, 43, 5, 1))
         })
     })
 })

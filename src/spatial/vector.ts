@@ -11,6 +11,17 @@ export class Vector {
         }
     }
 
+    public static interpolate(a: Vector, b: Vector, alpha: number): Vector {
+        Vector.assertHasSameDimensions(a, b)
+        return a.add(b.minus(a).mult(alpha))
+    }
+
+    public static assertHasSameDimensions(v1: Vector, v2: Vector): void {
+        if (v1.dimensions !== v2.dimensions) {
+            throw new Error("dimension mismatch")
+        }
+    }
+
     private readonly coordinates: number[]
 
     public constructor(...coords: number[]) {
@@ -42,10 +53,27 @@ export class Vector {
     }
 
     public add(other: Vector): Vector {
-        this.hasSameDimension(other)
+        Vector.assertHasSameDimensions(this, other)
         const result = []
         for (let i = 0; i < this.dimensions; i++) {
             result.push(this.at(i) + other.at(i))
+        }
+        return new Vector(...result)
+    }
+
+    public minus(other: Vector): Vector {
+        Vector.assertHasSameDimensions(this, other)
+        const result = []
+        for (let i = 0; i < this.dimensions; i++) {
+            result.push(this.at(i) - other.at(i))
+        }
+        return new Vector(...result)
+    }
+
+    public floor(): Vector {
+        const result = []
+        for (let i = 0; i < this.dimensions; i++) {
+            result.push(Math.floor(this.at(i)))
         }
         return new Vector(...result)
     }
@@ -67,7 +95,7 @@ export class Vector {
     }
 
     public bounds(other: Vector): boolean {
-        this.hasSameDimension(other)
+        Vector.assertHasSameDimensions(this, other)
         for (let i = 0; i < this.dimensions; i++) {
             if (Math.abs(other.at(i)) >= Math.abs(this.at(i))) {
                 return false
@@ -97,11 +125,5 @@ export class Vector {
 
     public normalize(): Vector {
         return this.mult(1.0 / this.length())
-    }
-
-    private hasSameDimension(other: Vector): void {
-        if (this.dimensions !== other.dimensions) {
-            throw new Error("dimension mismatch")
-        }
     }
 }

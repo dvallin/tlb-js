@@ -4,6 +4,7 @@ import { Vector } from "../../src/spatial"
 describe("Rectangle", () => {
     const empty = new Rectangle(0, 0, 0, 0)
     const single = new Rectangle(0, 0, 1, 1)
+    const twoByThree = new Rectangle(0, 0, 2, 3)
 
     describe("empty rectangle", () => {
 
@@ -15,10 +16,10 @@ describe("Rectangle", () => {
         })
 
         it("has correct containment", () => {
-            expect(empty.contains(new Vector(0, 0))).toBeFalsy()
-            expect(empty.contains(new Vector(1, 0))).toBeFalsy()
-            expect(empty.contains(new Vector(0, 1))).toBeFalsy()
-            expect(empty.contains(new Vector(1, 1))).toBeFalsy()
+            expect(empty.containsVector(new Vector(0, 0))).toBeFalsy()
+            expect(empty.containsVector(new Vector(1, 0))).toBeFalsy()
+            expect(empty.containsVector(new Vector(0, 1))).toBeFalsy()
+            expect(empty.containsVector(new Vector(1, 1))).toBeFalsy()
         })
 
         it("iterates", () => {
@@ -42,10 +43,10 @@ describe("Rectangle", () => {
         })
 
         it("has correct containment", () => {
-            expect(single.contains(new Vector(0, 0))).toBeTruthy()
-            expect(single.contains(new Vector(1, 0))).toBeFalsy()
-            expect(single.contains(new Vector(0, 1))).toBeFalsy()
-            expect(single.contains(new Vector(1, 1))).toBeFalsy()
+            expect(single.containsVector(new Vector(0, 0))).toBeTruthy()
+            expect(single.containsVector(new Vector(1, 0))).toBeFalsy()
+            expect(single.containsVector(new Vector(0, 1))).toBeFalsy()
+            expect(single.containsVector(new Vector(1, 1))).toBeFalsy()
         })
 
         it("iterates", () => {
@@ -59,6 +60,33 @@ describe("Rectangle", () => {
         it("is already its own bound", () => {
             expect(empty.bounds()).toEqual(empty)
             expect(single.bounds()).toEqual(single)
+        })
+    })
+
+    describe("corners", () => {
+
+        it("returns topLeft", () => {
+            expect(empty.topLeft).toEqual(new Vector(0, 0))
+            expect(single.topLeft).toEqual(new Vector(0, 0))
+            expect(twoByThree.topLeft).toEqual(new Vector(0, 0))
+        })
+
+        it("returns topRight", () => {
+            expect(empty.topRight).toEqual(new Vector(-1, 0))
+            expect(single.topRight).toEqual(new Vector(0, 0))
+            expect(twoByThree.topRight).toEqual(new Vector(1, 0))
+        })
+
+        it("returns bottomLeft", () => {
+            expect(empty.bottomLeft).toEqual(new Vector(0, -1))
+            expect(single.bottomLeft).toEqual(new Vector(0, 0))
+            expect(twoByThree.bottomLeft).toEqual(new Vector(0, 2))
+        })
+
+        it("returns bottomRight", () => {
+            expect(empty.bottomRight).toEqual(new Vector(-1, -1))
+            expect(single.bottomRight).toEqual(new Vector(0, 0))
+            expect(twoByThree.bottomRight).toEqual(new Vector(1, 2))
         })
     })
 
@@ -88,6 +116,26 @@ describe("Rectangle", () => {
 
         it("adds non overlapping rectangles", () => {
             expect(new Rectangle(0, 0, 2, 2).plus(new Rectangle(4, 4, 2, 2))).toEqual(new Rectangle(0, 0, 6, 6))
+        })
+    })
+
+    describe("translate", () => {
+
+        it("equals identity for zero vector", () => {
+            expect(single.translate(new Vector(0, 0))).toEqual(single)
+        })
+
+        it("translates", () => {
+            expect(single.translate(new Vector(1, 2))).toEqual(new Rectangle(1, 2, 1, 1))
+        })
+    })
+
+    describe("grow", () => {
+
+        it("grows by one in all direction", () => {
+            expect(empty.grow()).toEqual(new Rectangle(-1, -1, 2, 2))
+            expect(single.grow()).toEqual(new Rectangle(-1, -1, 3, 3))
+            expect(twoByThree.grow()).toEqual(new Rectangle(-1, -1, 4, 5))
         })
     })
 })

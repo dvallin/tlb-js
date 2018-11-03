@@ -1,32 +1,41 @@
-import { Shape } from "./shape"
+import { Shape, AbstractShape } from "./shape"
 import { Rectangle } from "./rectangle"
-import { Vector } from "src/spatial"
+import { Vector } from "../spatial/vector"
 
-export class Union implements Shape {
+export class Union extends AbstractShape {
 
     public constructor(
         public readonly shape1: Shape,
         public readonly shape2: Shape
-    ) { }
+    ) {
+        super()
+    }
 
     public bounds(): Rectangle {
         return this.shape1.bounds().plus(this.shape2.bounds())
     }
 
-    public contains(p: Vector): boolean {
-        return this.shape1.contains(p) || this.shape2.contains(p)
+    public containsVector(p: Vector): boolean {
+        return this.shape1.containsVector(p) || this.shape2.containsVector(p)
     }
 
-    public foreach(f: (p: Vector) => void): void {
-        this.takeWhile(p => {
-            f(p)
-            return true
-        })
+    public grow(): Union {
+        return new Union(
+            this.shape1.grow(),
+            this.shape2.grow()
+        )
+    }
+
+    public translate(t: Vector): Union {
+        return new Union(
+            this.shape1.translate(t),
+            this.shape2.translate(t)
+        )
     }
 
     public takeWhile(f: (p: Vector) => boolean): boolean {
         return this.bounds().takeWhile(p => {
-            if (this.contains(p)) {
+            if (this.containsVector(p)) {
                 return f(p)
             }
             return true

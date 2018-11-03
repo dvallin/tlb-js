@@ -13,6 +13,10 @@ describe("Union", () => {
             expect(union.bounds()).toEqual(new Rectangle(0, 0, 3, 3))
         })
 
+        it("grows shapes individually", () => {
+            expect(union.grow()).toEqual(new Union(shape1.grow(), shape2.grow()))
+        })
+
         it("iterates", () => {
             const elements: Vector[] = []
             union.foreach(f => elements.push(f))

@@ -54,7 +54,10 @@ export function mockRenderer(): Renderer {
 
 export function mockRandom(): Random {
     return {
-        decision: jest.fn()
+        decision: jest.fn(),
+        weightedDecision: jest.fn(),
+        integerBetween: jest.fn(),
+        shuffle: jest.fn()
     }
 }
 

@@ -1,4 +1,4 @@
-import { blockSymbols, gridSymbols, strangeSymbols, arrows } from "../src/symbols"
+import { blockSymbols, gridSymbols, strangeSymbols, arrows } from "./symbols"
 
 describe("symbols", () => {
     it("has blockSymbols", () => expect(blockSymbols).toHaveLength(5))

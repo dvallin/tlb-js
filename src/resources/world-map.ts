@@ -2,7 +2,7 @@ import { DiscreteSpace, DiscreteStackedSpace, Vector, Space, StackedSpace } from
 import { Entity } from "../ecs/entity"
 import { ResourceName, TlbResource, TlbWorld } from "../tlb"
 import { FeatureComponent } from "../components/feature"
-import { Shape } from "src/geometry/shape";
+import { Shape } from "../geometry/shape"
 
 export class WorldMap implements TlbResource {
 

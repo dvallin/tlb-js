@@ -1,7 +1,7 @@
-import { Shape } from "./shape"
+import { AbstractShape } from "./shape"
 import { Vector } from "../spatial"
 
-export class Rectangle implements Shape {
+export class Rectangle extends AbstractShape {
 
     public static fromBounds(left: number, right: number, top: number, bottom: number): Rectangle {
         return new Rectangle(left, top, right - left + 1, bottom - top + 1)
@@ -12,7 +12,9 @@ export class Rectangle implements Shape {
         public readonly y: number,
         public readonly width: number,
         public readonly height: number,
-    ) { }
+    ) {
+        super()
+    }
 
     public get left(): number {
         return this.x
@@ -34,17 +36,16 @@ export class Rectangle implements Shape {
         return new Vector(this.left, this.top)
     }
 
+    public get topRight(): Vector {
+        return new Vector(this.right, this.top)
+    }
+
     public get bottomRight(): Vector {
         return new Vector(this.right, this.bottom)
     }
 
-    public bounds(): Rectangle {
-        return this
-    }
-
-    public contains(p: Vector): boolean {
-        return p.x >= this.x && p.x < this.x + this.width
-            && p.y >= this.y && p.y < this.y + this.height
+    public get bottomLeft(): Vector {
+        return new Vector(this.left, this.bottom)
     }
 
     public plus(other: Rectangle): Rectangle {
@@ -54,11 +55,21 @@ export class Rectangle implements Shape {
         )
     }
 
-    public foreach(f: (position: Vector) => void): void {
-        this.takeWhile(p => {
-            f(p)
-            return true
-        })
+    public bounds(): Rectangle {
+        return this
+    }
+
+    public containsVector(p: Vector): boolean {
+        return p.x >= this.x && p.x < this.x + this.width
+            && p.y >= this.y && p.y < this.y + this.height
+    }
+
+    public translate(t: Vector): Rectangle {
+        return new Rectangle(this.x + t.x, this.y + t.y, this.width, this.height)
+    }
+
+    public grow(): Rectangle {
+        return new Rectangle(this.x - 1, this.y - 1, this.width + 2, this.height + 2)
     }
 
     public takeWhile(f: (position: Vector) => boolean): boolean {
