@@ -9,6 +9,7 @@ import { leftOf, rightOf, Direction } from "../spatial/direction"
 import { Random } from "../random"
 import { Rectangle } from "../geometry/rectangle"
 import { RoomGenerator } from "../artifacts/room-generator"
+import { Shape } from "src/geometry/shape"
 
 export interface PositionedTunneller {
     position: PositionComponent
@@ -137,9 +138,14 @@ export class Tunneller implements TlbSystem {
         const entry = this.footprint(doorPosition, direction, doorWidth)
         const room = this.roomGenerator.generate(entry, direction)
         if (map.isShapeFree(world, room.shape.grow())) {
-            room.entries.forEach(e => e.shape.foreach(p =>
+            const roomEntry = room.entries[0]
+            roomEntry.shape.foreach(p =>
                 this.createTile(world, map, p, "room")
-            ))
+            )
+            const secondEntry = room.entries[1]
+            if (secondEntry) {
+                this.spawnTuneller(world, secondEntry.shape, secondEntry.direction)
+            }
             room.shape.foreach(p => this.createTile(world, map, p, "room"))
         }
     }
@@ -234,5 +240,30 @@ export class Tunneller implements TlbSystem {
             .withComponent<PositionComponent>("position", { position })
             .withComponent<FeatureComponent>("feature", { type })
         map.tiles.set(position, e)
+    }
+
+    public spawnTuneller(world: TlbWorld, shape: Shape, direction: Direction): void {
+        const width = this.extendOfRectangle(shape.bounds(), direction)
+        const position = shape.bounds().topLeft
+        world.createEntity()
+            .withComponent<TunnellerComponent>("tunneller", {
+                actions: [],
+                direction,
+                width
+            })
+            .withComponent<PositionComponent>("position", {
+                position
+            })
+    }
+
+    private extendOfRectangle(rectangle: Rectangle, direction: Direction): number {
+        switch (direction) {
+            case "up":
+            case "down":
+                return rectangle.height
+            case "left":
+            case "right":
+                return rectangle.width
+        }
     }
 }

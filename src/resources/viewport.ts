@@ -39,8 +39,8 @@ export class Viewport implements TlbResource {
 
     public focus(position: Vector): void {
         this.topLeft = new Vector(
-            position.x - Math.floor(this.boundaries.x / 2),
-            position.y - Math.floor(this.boundaries.y / 2)
+            Math.floor(position.x) - Math.floor(this.boundaries.x / 2),
+            Math.floor(position.y) - Math.floor(this.boundaries.y / 2)
         )
     }
 }

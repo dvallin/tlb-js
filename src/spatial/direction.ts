@@ -17,6 +17,14 @@ export function rightOf(direction: Direction): Direction {
         case "left": return "up"
     }
 }
+export function oppositeOf(direction: Direction): Direction {
+    switch (direction) {
+        case "up": return "down"
+        case "right": return "left"
+        case "down": return "up"
+        case "left": return "right"
+    }
+}
 
 export function perDirection<T>(direction: Direction, up: () => T, right: () => T, down: () => T, left: () => T): T {
     switch (direction) {

@@ -6,7 +6,7 @@ import { Rectangle } from "../geometry/rectangle"
 import { Union } from "../geometry/union"
 
 export interface Entry {
-    shape: Rectangle
+    shape: Shape
     direction: Direction
 }
 
@@ -23,7 +23,7 @@ export class RoomGenerator {
 
     public generate(doorShape: Rectangle, entryDirection: Direction): Room {
         let room: Room | undefined
-        if (this.random.decision(0.4)) {
+        if (this.random.decision(0.0)) {
             let tries = 4
             while (room === undefined && tries > 0) {
                 tries--
@@ -44,9 +44,18 @@ export class RoomGenerator {
 
         const alpha = [1 / 6, 1 / 2, 5 / 6][this.random.weightedDecision([2, 3, 2])]
         const translatedShape = this.translateToEntry(shape, doorPivot, direction, alpha)
+
+        const entries = [
+            { shape: doorShape, direction }
+        ]
+        const exit = this.findExit(translatedShape, doorPivot, direction)
+        if (exit) {
+            entries.push(
+                { shape: new Rectangle(exit.x, exit.y, 1, 1), direction }
+            )
+        }
         return {
-            shape: translatedShape,
-            entries: [{ shape: doorShape, direction }]
+            shape: translatedShape, entries
         }
     }
 
@@ -93,13 +102,34 @@ export class RoomGenerator {
 
     private translateToEntry(shape: Shape, pivot: Vector, direction: Direction, alpha: number): Shape {
         const bound = shape.bounds()
-        const shapeEntry = perDirection(direction,
+        const entry = perDirection(direction,
             () => Vector.interpolate(bound.bottomLeft, bound.bottomRight, alpha),
             () => Vector.interpolate(bound.bottomLeft, bound.topLeft, alpha),
             () => Vector.interpolate(bound.topRight, bound.topLeft, alpha),
             () => Vector.interpolate(bound.topRight, bound.bottomRight, alpha)
         ).floor()
-        const translation = pivot.minus(shapeEntry)
+        const translation = pivot.minus(entry)
         return shape.translate(translation)
+    }
+
+    private findExit(shape: Shape, entry: Vector, direction: Direction): Vector | undefined {
+        const delta = Vector.fromDirection(direction)
+        let inside = shape.containsVector(entry)
+        let position = entry
+        let turns = 0
+        while (true) {
+            position = position.add(delta)
+
+            const newInside = shape.containsVector(position)
+            if (inside && !newInside) {
+                return position
+            }
+            inside = newInside
+
+            if (turns > Math.max(shape.bounds().height, shape.bounds().width) + 2) {
+                return undefined
+            }
+            turns++
+        }
     }
 }

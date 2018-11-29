@@ -12,6 +12,10 @@ export class World<C, R> {
     private openEntities: Set<Entity> = new Set()
     private lastEntity: Entity = -1
 
+    public get entities(): number {
+        return (this.lastEntity + 1) - this.openEntities.size
+    }
+
     public registerComponentStorage<T extends object>(component: C, storage: Storage<T>): void {
         this.components.set(component, storage)
     }

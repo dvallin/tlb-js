@@ -7,11 +7,16 @@ export interface Storage<T> {
 
     foreach(f: (entity: number, value: T) => void): void
     clear(): void
+    size(): number
 }
 
 export class SetStorage implements Storage<{}> {
 
     private data: Set<number> = new Set()
+
+    public size(): number {
+        return this.data.size
+    }
 
     public insert(entity: number, { }: {}): void {
         this.data.add(entity)
@@ -41,6 +46,10 @@ export class SetStorage implements Storage<{}> {
 export class SingletonStorage implements Storage<{}> {
 
     private datum: number | undefined = undefined
+
+    public size(): number {
+        return this.datum ? 1 : 0
+    }
 
     public insert(entity: number, { }: {}): void {
         this.datum = entity
@@ -77,6 +86,10 @@ export class MapStorage<T> implements Storage<T> {
 
     private data: Map<number, T> = new Map()
 
+    public size(): number {
+        return this.data.size
+    }
+
     public insert(entity: number, value: T): void {
         this.data.set(entity, value)
     }
@@ -107,8 +120,16 @@ export class MapStorage<T> implements Storage<T> {
 export class VectorStorage<T> implements Storage<T> {
 
     private data: (T | undefined)[] = []
+    private count: number = 0
+
+    public size(): number {
+        return this.count
+    }
 
     public insert(entity: number, value: T): void {
+        if (this.data[entity] === undefined) {
+            this.count++
+        }
         this.data[entity] = value
     }
 
@@ -121,6 +142,9 @@ export class VectorStorage<T> implements Storage<T> {
     }
 
     public remove(entity: number): T | undefined {
+        if (this.data[entity] !== undefined) {
+            this.count--
+        }
         const value = this.get(entity)
         this.data[entity] = undefined
         return value

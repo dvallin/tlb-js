@@ -45,7 +45,7 @@ export class Game {
 
         this.frames++
         if (this.frames % 100 === 0) {
-            console.log(`${this.mspf.toFixed(2)} ms per frame @${this.fps.toFixed(1)} FPS`)
+            console.log(`${this.mspf.toFixed(2)} ms per frame @${this.fps.toFixed(1)} FPS entities: ${this.world.entities}`)
         }
 
         setTimeout(() => this.tick(), (1000 / 30) - delta)
