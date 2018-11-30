@@ -20,7 +20,8 @@ export class Game {
             .withComponent<TunnellerComponent>("tunneller", {
                 actions: [],
                 direction: "down",
-                width: 3
+                width: 3,
+                generation: 1
             })
             .withComponent<PositionComponent>("position", {
                 position: new Vector(20, 20)
@@ -32,7 +33,6 @@ export class Game {
             .withComponent<PositionComponent>("position", {
                 position: new Vector(20, 20)
             })
-        this.started = Date.now()
         this.tick()
     }
 
@@ -46,6 +46,9 @@ export class Game {
         this.frames++
         if (this.frames % 100 === 0) {
             console.log(`${this.mspf.toFixed(2)} ms per frame @${this.fps.toFixed(1)} FPS entities: ${this.world.entities}`)
+            this.frames = 0
+            this.compute = 0
+            this.started = Date.now()
         }
 
         setTimeout(() => this.tick(), (1000 / 30) - delta)

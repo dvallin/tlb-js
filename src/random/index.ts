@@ -3,7 +3,8 @@ import { create, RandomSeed } from "random-seed"
 export interface Random {
     decision(probability: number): boolean
     weightedDecision(weights: number[]): number
-    integerBetween(min: number, max: number): number
+    integerBetween(minInclusive: number, maxInclusive: number): number
+    pick<T>(array: T[]): T
     shuffle<T>(array: T[]): void
 }
 
@@ -34,6 +35,10 @@ export class SeedableRandom implements Random {
 
     public integerBetween(minInclusive: number, maxInclusive: number): number {
         return this.rng.intBetween(minInclusive, maxInclusive)
+    }
+
+    public pick<T>(array: T[]): T {
+        return array[this.rng.intBetween(0, array.length - 1)]
     }
 
     public shuffle<T>(array: T[]): void {

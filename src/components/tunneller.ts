@@ -1,6 +1,6 @@
 import { Direction } from "../spatial/direction"
 
-export type Action = "render" | "move" | "changeDirection" | "close" | "createRoom"
+export type Action = "render" | "changeDirection" | "close" | "createRoom" | "move"
 
 export interface TunnellerComponent {
 
@@ -8,4 +8,5 @@ export interface TunnellerComponent {
 
     direction: Direction
     width: number
+    generation: number
 }
