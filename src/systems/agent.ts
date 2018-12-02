@@ -8,10 +8,11 @@ import { createFeature } from "../components/feature"
 import { leftOf, rightOf, Direction, oppositeOf } from "../spatial/direction"
 import { Random } from "../random"
 import { Rectangle } from "../geometry/rectangle"
+import { Neighbourhood } from "../geometry/neighbourhood"
 import { RoomGenerator } from "../assets/room-generator"
 import { Room } from "../assets/rooms"
 import { dropAt } from "../array-utils"
-import { createDoor } from "../components/asset"
+import { createDoor, AssetType, createAssetFromPosition } from "../components/asset"
 
 export interface PositionedAgent {
     position: PositionComponent
@@ -150,16 +151,16 @@ export class Agent implements TlbSystem {
 
         if (state.agent.generation < this.maximumGenerations) {
             let remainingSpawns = this.random.integerBetween(0, 2)
-            while (remainingSpawns-- > 0) {
+            while (remainingSpawns-- > 0 && room.availableEntries.length > 0) {
                 const exitIndex = this.random.integerBetween(0, room.availableEntries.length - 1)
-                const exit = room.availableEntries[exitIndex]
-                const agentDirection = oppositeOf(exit.direction)
+                const exitSlot = room.availableEntries[exitIndex]
+                const agentDirection = oppositeOf(exitSlot.direction)
                 const exitWidth = this.random.integerBetween(1, 3)
-                const largerShape = this.footprint(exit.position, agentDirection, exitWidth + 2)
+                const largerShape = this.footprint(exitSlot.position, agentDirection, exitWidth + 2)
                 if (map.isShapeFree(world, largerShape)) {
                     dropAt(room.availableEntries, exitIndex)
-                    room.entries.push(this.footprint(exit.position, agentDirection, exitWidth))
-                    this.spawnAgent(world, exit.position, exitWidth, agentDirection, state.agent.generation + 1)
+                    room.entries.push(this.footprint(exitSlot.position, agentDirection, exitWidth))
+                    this.spawnAgent(world, exitSlot.position, exitWidth, agentDirection, state.agent.generation + 1)
                 }
             }
         }
@@ -168,6 +169,23 @@ export class Agent implements TlbSystem {
             entry.foreach(p => createFeature(world, map, p, "corridor"))
             createDoor(world, map, entry)
         })
+
+        let remainingAssets = this.random.integerBetween(1, 2)
+        while (remainingAssets-- > 0 && room.availableAssets.length > 0) {
+            const assetIndex = this.random.integerBetween(0, room.availableAssets.length - 1)
+            const assetSlot = room.availableAssets[assetIndex]
+            const hasWall = map.shapeHasSome(world, Neighbourhood.L1(assetSlot.position), f => f === undefined || f.type === "wall")
+
+            const possibleAssets: AssetType[] = []
+            if (hasWall) {
+                possibleAssets.push("locker")
+            }
+            possibleAssets.push("trash")
+            const assetType = this.random.pick<AssetType>(possibleAssets)
+            dropAt(room.availableAssets, assetIndex)
+            console.log("spawn", assetSlot.position, assetType)
+            createAssetFromPosition(world, map, assetSlot.position, assetType)
+        }
     }
 
     public move(state: PositionedAgent): Vector {

@@ -33,8 +33,8 @@ export class Union extends AbstractShape {
         )
     }
 
-    public takeWhile(f: (p: Vector) => boolean): boolean {
-        return this.bounds().takeWhile(p => {
+    public all(f: (p: Vector) => boolean): boolean {
+        return this.bounds().all(p => {
             if (this.containsVector(p)) {
                 return f(p)
             }

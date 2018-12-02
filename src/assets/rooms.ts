@@ -6,9 +6,13 @@ import { Vector } from "../spatial"
 import { Union } from "../geometry/union"
 import { Asset } from "../components/asset"
 
-export interface Entry {
+export interface EntrySlot {
     position: Vector
     direction: Direction
+}
+
+export interface AssetSlot {
+    position: Vector
 }
 
 export interface Room {
@@ -16,8 +20,8 @@ export interface Room {
     entries: Shape[]
     assets: Asset[]
 
-    availableEntries: Entry[]
-    availableAssets: Shape[]
+    availableEntries: EntrySlot[]
+    availableAssets: AssetSlot[]
 }
 
 export const rectangular: Room = {
@@ -30,13 +34,7 @@ export const rectangular: Room = {
         { position: new Vector(7, 3), direction: "left" },
         { position: new Vector(4, 7), direction: "up" }
     ],
-    availableAssets: [
-        new Rectangle(0, 0, 3, 3),
-        new Rectangle(4, 0, 3, 3),
-        new Rectangle(0, 4, 3, 3),
-        new Rectangle(4, 4, 3, 3),
-        new Rectangle(2, 2, 3, 3)
-    ]
+    availableAssets: []
 }
 
 export const largeRectangular: Room = {
@@ -81,5 +79,8 @@ export const lShaped: Room = {
         { position: new Vector(3, 14), direction: "up" },
     ],
     availableAssets: [
+        { position: new Vector(0, 0) },
+        { position: new Vector(5, 5) },
+        { position: new Vector(7, 4) },
     ]
 }

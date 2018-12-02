@@ -9,14 +9,26 @@ import { WorldMap } from "../../src/resources/world-map"
 import { Direction } from "../../src/spatial/direction"
 import { Rectangle } from "../../src/geometry/rectangle"
 import { Random } from "../../src/random"
-import { Room } from "../../src/artifacts/rooms"
+import { Room } from "../../src/assets/rooms"
 import { MapStorage } from "../../src/ecs/storage"
 import { PositionComponent } from "../../src/components/position"
+import { FeatureType } from "../../src/components/feature"
+import { Shape } from "../../src/geometry/shape"
+
+const mockCreateFeature = jest.fn()
+const mockCreateDoor = jest.fn()
+jest.mock("../../src/components/feature", () => ({
+    createFeature: (world: TlbWorld, map: WorldMap, pos: Vector, type: FeatureType) => mockCreateFeature(world, map, pos, type),
+}))
+jest.mock("../../src/components/asset", () => ({
+    createDoor: (world: TlbWorld, map: WorldMap, shape: Shape) => mockCreateDoor(world, map, shape),
+}))
 
 describe("Agent", () => {
 
     let world: TlbWorld
     beforeEach(() => {
+        jest.clearAllMocks()
         world = new World()
     })
 
@@ -297,11 +309,11 @@ describe("Agent", () => {
             random.integerBetween = jest.fn().mockReturnValue(2)
             random.decision = jest.fn().mockReturnValue(false)
             map.isShapeFree = jest.fn().mockReturnValue(false)
-            agent.createTile = jest.fn()
+            agent.buildRoom = jest.fn()
 
             agent.createRoom(world, stateOfDirection("up"))
 
-            expect(agent.createTile).not.toHaveBeenCalled()
+            expect(agent.buildRoom).not.toHaveBeenCalled()
         })
     })
 
@@ -312,7 +324,6 @@ describe("Agent", () => {
         beforeEach(() => {
             random = mockRandom()
             agent = new Agent(random)
-            agent.createTile = jest.fn()
             agent.spawnAgent = jest.fn()
         })
 
@@ -322,12 +333,18 @@ describe("Agent", () => {
                 position: { position: new Vector(1, 2) },
                 agent: { actions: [], direction: "up", width: 2, generation: 1 }
             }
-            const room: Room = { shape: new Rectangle(3, 4, 1, 1), entries: [], availableEntries: [] }
+            const room: Room = {
+                shape: new Rectangle(3, 4, 1, 1),
+                entries: [],
+                assets: [],
+                availableEntries: [],
+                availableAssets: []
+            }
 
             agent.buildRoom(world, state, map, room)
 
-            expect(agent.createTile).toHaveBeenCalledTimes(1)
-            expect(agent.createTile).toHaveBeenCalledWith(world, map, new Vector(3, 4), "room")
+            expect(mockCreateFeature).toHaveBeenCalledTimes(1)
+            expect(mockCreateFeature).toHaveBeenCalledWith(world, map, new Vector(3, 4), "room")
         })
 
         it("spawns new agents at available entries", () => {
@@ -337,9 +354,13 @@ describe("Agent", () => {
                 agent: { actions: [], direction: "up", width: 2, generation: 1 }
             }
             const room: Room = {
-                shape: new Rectangle(3, 4, 1, 1), entries: [], availableEntries: [
+                shape: new Rectangle(3, 4, 1, 1),
+                entries: [],
+                assets: [],
+                availableEntries: [
                     { position: new Vector(6, 7), direction: "left" }
-                ]
+                ],
+                availableAssets: []
             }
 
             mockReturnValues(random.integerBetween, 1, 0, 3)
@@ -358,9 +379,13 @@ describe("Agent", () => {
                 agent: { actions: [], direction: "up", width: 2, generation: 10 }
             }
             const room: Room = {
-                shape: new Rectangle(3, 4, 1, 1), entries: [], availableEntries: [
+                shape: new Rectangle(3, 4, 1, 1),
+                entries: [],
+                assets: [],
+                availableEntries: [
                     { position: new Vector(6, 7), direction: "left" }
-                ]
+                ],
+                availableAssets: []
             }
 
             mockReturnValues(random.integerBetween, 1, 0, 3)
@@ -378,9 +403,13 @@ describe("Agent", () => {
                 agent: { actions: [], direction: "up", width: 2, generation: 1 }
             }
             const room: Room = {
-                shape: new Rectangle(3, 4, 1, 1), entries: [], availableEntries: [
+                shape: new Rectangle(3, 4, 1, 1),
+                entries: [],
+                assets: [],
+                availableEntries: [
                     { position: new Vector(6, 7), direction: "left" }
-                ]
+                ],
+                availableAssets: []
             }
 
             mockReturnValues(random.integerBetween, 1, 0, 3)
@@ -400,12 +429,14 @@ describe("Agent", () => {
             const room: Room = {
                 shape: new Rectangle(3, 4, 1, 1),
                 entries: [new Rectangle(5, 6, 1, 1)],
-                availableEntries: []
+                assets: [],
+                availableEntries: [],
+                availableAssets: []
             }
 
             agent.buildRoom(world, state, map, room)
-            expect(agent.createTile).toHaveBeenCalledTimes(2)
-            expect(agent.createTile).toHaveBeenCalledWith(world, map, new Vector(5, 6), "corridor")
+            expect(mockCreateFeature).toHaveBeenCalledTimes(2)
+            expect(mockCreateFeature).toHaveBeenCalledWith(world, map, new Vector(5, 6), "corridor")
         })
     })
 

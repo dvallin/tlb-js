@@ -34,7 +34,24 @@ export class WorldMap implements TlbResource {
         return true
     }
 
+    public featureMatches(world: TlbWorld, position: Vector, predicate: (f: FeatureComponent | undefined) => boolean): boolean {
+        const entity = this.tiles.get(position)
+        let feature: FeatureComponent | undefined
+        if (entity) {
+            feature = world.getComponent<FeatureComponent>(entity, "feature")
+        }
+        return predicate(feature)
+    }
+
     public isShapeFree(world: TlbWorld, shape: Shape): boolean {
-        return shape.takeWhile(p => this.isFree(world, p))
+        return this.shapeHasAll(world, shape, f => f === undefined)
+    }
+
+    public shapeHasAll(world: TlbWorld, shape: Shape, predicate: (f: FeatureComponent | undefined) => boolean): boolean {
+        return shape.all(p => this.featureMatches(world, p, predicate))
+    }
+
+    public shapeHasSome(world: TlbWorld, shape: Shape, predicate: (f: FeatureComponent | undefined) => boolean): boolean {
+        return shape.some(p => this.featureMatches(world, p, predicate))
     }
 }

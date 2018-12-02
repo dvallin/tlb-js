@@ -1,9 +1,9 @@
-import { RoomGenerator } from "../../src/artifacts/room-generator"
+import { RoomGenerator } from "../../src/assets/room-generator"
 import { Random } from "../../src/random"
 import { Rectangle } from "../../src/geometry/rectangle"
 
 import { mockRandom } from "../mocks"
-import { rectangular } from "../../src/artifacts/rooms"
+import { rectangular } from "../../src/assets/rooms"
 
 describe("RoomGenerator", () => {
 

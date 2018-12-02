@@ -78,7 +78,7 @@ export class Rectangle extends AbstractShape {
         return new Rectangle(this.x - 1, this.y - 1, this.width + 2, this.height + 2)
     }
 
-    public takeWhile(f: (position: Vector) => boolean): boolean {
+    public all(f: (position: Vector) => boolean): boolean {
         for (let i = 0; i < this.height; i++) {
             for (let j = 0; j < this.width; j++) {
                 const position = new Vector(j + this.x, i + this.y)

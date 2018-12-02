@@ -11,7 +11,8 @@ export class Game {
     public frames: number = 0
 
     public constructor(
-        private readonly world: TlbWorld = new World()
+        private readonly world: TlbWorld = new World(),
+        private readonly targetFps: number = 60
     ) { }
 
     public execute(): void {
@@ -52,7 +53,7 @@ export class Game {
             this.started = Date.now()
         }
 
-        setTimeout(() => this.tick(), (1000 / 30) - delta)
+        setTimeout(() => this.tick(), (1000 / this.targetFps) - delta)
     }
 
     public get fps(): number {

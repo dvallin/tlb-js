@@ -93,14 +93,27 @@ describe("Rectangle", () => {
         })
     })
 
-    describe("takeWhile", () => {
+    describe("all", () => {
 
         it("breaks when false is returned", () => {
             const large = new Rectangle(0, 0, 1000, 1000)
             const elements: Vector[] = []
-            large.takeWhile(f => {
+            large.all(f => {
                 elements.push(f)
                 return false
+            })
+            expect(elements).toEqual([new Vector(0, 0)])
+        })
+    })
+
+    describe("some", () => {
+
+        it("breaks when true is returned", () => {
+            const large = new Rectangle(0, 0, 1000, 1000)
+            const elements: Vector[] = []
+            large.some(f => {
+                elements.push(f)
+                return true
             })
             expect(elements).toEqual([new Vector(0, 0)])
         })

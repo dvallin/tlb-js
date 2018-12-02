@@ -1,14 +1,14 @@
-import { Random } from "../random"
 import { Vector } from "../spatial"
 import { TlbWorld } from "../tlb"
 import { Entity } from "../ecs/entity"
-import { WorldMap } from "src/resources/world-map"
-import { Shape } from "src/geometry/shape"
+import { WorldMap } from "../resources/world-map"
+import { Shape } from "../geometry/shape"
 
 import { FeatureType, FeatureComponent, features } from "./feature"
 import { OwnerComponent } from "./owner"
 import { GroundComponent } from "./ground"
-import { PositionComponent } from "./position";
+import { PositionComponent } from "./position"
+import { Rectangle } from "../geometry/rectangle"
 
 export type AssetType = "door" | "locker" | "trash"
 export interface AssetComponent {
@@ -16,7 +16,13 @@ export interface AssetComponent {
 }
 
 export interface Asset {
-    spawn: (world: TlbWorld, position: Vector, random: Random) => void
+    size: number | undefined
+}
+
+export const assets = {
+    door: {},
+    locker: { size: 1 },
+    trash: { size: 1 }
 }
 
 export function createLocker(world: TlbWorld, map: WorldMap, position: Vector): Entity {
@@ -37,6 +43,14 @@ export function createDoor(world: TlbWorld, map: WorldMap, shape: Shape): Entity
         putTile(world, map, position, entity, "door")
     })
     return entity
+}
+
+export function createAssetFromPosition(world: TlbWorld, map: WorldMap, position: Vector, type: AssetType): Entity {
+    switch (type) {
+        case "door": return createDoor(world, map, new Rectangle(position.x, position.y, 1, 1))
+        case "locker": return createLocker(world, map, position)
+        case "trash": return createTrash(world, map, position)
+    }
 }
 
 function createAsset(world: TlbWorld, type: AssetType): Entity {
