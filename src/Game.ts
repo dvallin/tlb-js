@@ -1,6 +1,6 @@
 import { World } from "./ecs/world"
 import { TlbWorld, registerComponents, registerSystems, registerResources } from "./tlb"
-import { TunnellerComponent } from "./components/tunneller"
+import { AgentComponent } from "./components/agent"
 import { PositionComponent } from "./components/position"
 import { Vector } from "./spatial"
 
@@ -17,7 +17,7 @@ export class Game {
     public execute(): void {
         this.init()
         this.world.createEntity()
-            .withComponent<TunnellerComponent>("tunneller", {
+            .withComponent<AgentComponent>("agent", {
                 actions: [],
                 direction: "down",
                 width: 3,

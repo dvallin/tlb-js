@@ -2,7 +2,7 @@ import { Game } from "../src/game"
 import { World } from "../src/ecs/world"
 import { ComponentName, ResourceName } from "../src/tlb"
 
-import { TunnellerComponent } from "../src/components/tunneller"
+import { AgentComponent } from "../src/components/agent"
 
 describe("Game", () => {
 
@@ -31,16 +31,16 @@ describe("Game", () => {
         expect(game.mspf).toBeGreaterThan(0)
     })
 
-    it("creates a tunneller", () => {
+    it("creates an agent", () => {
         game.execute()
 
-        expect(world.getComponent(0, "tunneller")).toBeDefined()
+        expect(world.getComponent(0, "agent")).toBeDefined()
         expect(world.getComponent(0, "position")).toBeDefined()
     })
 
-    it("already updated the tunneller", () => {
+    it("already updated the agent", () => {
         game.execute()
 
-        expect(world.getComponent<TunnellerComponent>(0, "tunneller")!.actions).toEqual(["render"])
+        expect(world.getComponent<AgentComponent>(0, "agent")!.actions).toEqual(["render"])
     })
 })

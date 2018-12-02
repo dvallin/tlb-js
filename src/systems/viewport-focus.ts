@@ -8,10 +8,8 @@ export class ViewportFocus implements TlbSystem {
     public readonly components: ComponentName[] = ["viewport-focus", "position"]
 
     public update(world: World<ComponentName, ResourceName>, entity: number): void {
-        const position = world.getComponent<PositionComponent>(entity, "position")
-        const viewport = world.getResource<Viewport>("viewport")
-        if (position && viewport) {
-            viewport.focus(position.position)
-        }
+        const position = world.getComponent<PositionComponent>(entity, "position")!
+        const viewport = world.getResource<Viewport>("viewport")!
+        viewport.focus(position.position)
     }
 }
