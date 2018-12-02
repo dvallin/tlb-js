@@ -66,6 +66,21 @@ describe("SeedableRandom", () => {
         })
     })
 
+    describe("pick", () => {
+
+        it("works on empty arrays", () => {
+            const array: number[] = []
+            const element = random.pick(array)
+            expect(element).toBeUndefined()
+        })
+
+        it("picks random element from  array", () => {
+            const array: number[] = [0, 1, 2, 3, 4, 5]
+            const element = random.pick(array)
+            expect(element).toEqual(4)
+        })
+    })
+
     describe("shuffle", () => {
 
         it("works on empty arrays", () => {

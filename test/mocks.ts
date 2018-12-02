@@ -12,7 +12,8 @@ export function mockComponent(world: TlbWorld, component: ComponentName): Storag
         remove: jest.fn(),
         has: jest.fn(),
         foreach: jest.fn(),
-        clear: jest.fn()
+        clear: jest.fn(),
+        size: jest.fn()
     }
     world.registerComponentStorage(component, storage)
     return storage
@@ -57,7 +58,8 @@ export function mockRandom(): Random {
         decision: jest.fn(),
         weightedDecision: jest.fn(),
         integerBetween: jest.fn(),
-        shuffle: jest.fn()
+        shuffle: jest.fn(),
+        pick: jest.fn()
     }
 }
 

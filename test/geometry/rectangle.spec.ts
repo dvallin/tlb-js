@@ -1,10 +1,13 @@
 import { Rectangle } from "../../src/geometry/rectangle"
 import { Vector } from "../../src/spatial"
+import { shapeTest } from "./shape.test"
 
 describe("Rectangle", () => {
     const empty = new Rectangle(0, 0, 0, 0)
     const single = new Rectangle(0, 0, 1, 1)
     const twoByThree = new Rectangle(0, 0, 2, 3)
+
+    shapeTest(new Rectangle(1, 1, 2, 2))
 
     describe("empty rectangle", () => {
 

@@ -32,6 +32,17 @@ describe("World", () => {
         })
     })
 
+    describe("entities count", () => {
+
+        it("counts entities", () => {
+            const entity = world.createEntity().entity
+            world.createEntity()
+            expect(world.entityCount).toEqual(2)
+            world.deleteEntity(entity)
+            expect(world.entityCount).toEqual(1)
+        })
+    })
+
     describe("component", () => {
 
         it("registers components", () => {

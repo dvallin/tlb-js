@@ -52,6 +52,15 @@ describe("VectorStorage", () => {
         expect(entities).toEqual([2, 3])
         expect(values).toEqual(["a", "b"])
     })
+
+    it("tracks size", () => {
+        const storage = new VectorStorage<string>()
+        expect(storage.size()).toBe(0)
+        storage.insert(2, "a")
+        expect(storage.size()).toBe(1)
+        storage.remove(2)
+        expect(storage.size()).toBe(0)
+    })
 })
 
 describe("MapStorage", () => {
@@ -105,6 +114,16 @@ describe("MapStorage", () => {
         })
         expect(entities).toEqual([2, 3])
         expect(values).toEqual(["a", "b"])
+    })
+
+    it("tracks size", () => {
+        const storage = new MapStorage<string>()
+        expect(storage.size()).toBe(0)
+        storage.insert(2, "a")
+        storage.insert(3, "b")
+        expect(storage.size()).toBe(2)
+        storage.remove(2)
+        expect(storage.size()).toBe(1)
     })
 })
 
@@ -160,6 +179,16 @@ describe("SetStorage", () => {
         expect(entities).toEqual([2, 3])
         expect(values).toEqual([{}, {}])
     })
+
+    it("tracks size", () => {
+        const storage = new SetStorage()
+        expect(storage.size()).toBe(0)
+        storage.insert(2, {})
+        storage.insert(3, {})
+        expect(storage.size()).toBe(2)
+        storage.remove(2)
+        expect(storage.size()).toBe(1)
+    })
 })
 
 describe("SingletonStorage", () => {
@@ -213,5 +242,14 @@ describe("SingletonStorage", () => {
         })
         expect(entities).toEqual([3])
         expect(values).toEqual([{}])
+    })
+    it("tracks size", () => {
+        const storage = new SingletonStorage()
+        expect(storage.size()).toBe(0)
+        storage.insert(2, {})
+        storage.insert(3, {})
+        expect(storage.size()).toBe(1)
+        storage.remove(3)
+        expect(storage.size()).toBe(0)
     })
 })

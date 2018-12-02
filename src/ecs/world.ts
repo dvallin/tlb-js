@@ -12,7 +12,7 @@ export class World<C, R> {
     private openEntities: Set<Entity> = new Set()
     private lastEntity: Entity = -1
 
-    public get entities(): number {
+    public get entityCount(): number {
         return (this.lastEntity + 1) - this.openEntities.size
     }
 

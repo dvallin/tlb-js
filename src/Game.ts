@@ -34,6 +34,7 @@ export class Game {
                 position: new Vector(20, 20)
             })
         this.tick()
+        this.started = Date.now()
     }
 
     private tick(): void {
@@ -45,7 +46,7 @@ export class Game {
 
         this.frames++
         if (this.frames % 100 === 0) {
-            console.log(`${this.mspf.toFixed(2)} ms per frame @${this.fps.toFixed(1)} FPS entities: ${this.world.entities}`)
+            console.log(`${this.mspf.toFixed(2)} ms per frame @${this.fps.toFixed(1)} FPS entities: ${this.world.entityCount}`)
             this.frames = 0
             this.compute = 0
             this.started = Date.now()

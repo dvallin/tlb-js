@@ -10,6 +10,7 @@ import { Random } from "../random"
 import { Rectangle } from "../geometry/rectangle"
 import { RoomGenerator } from "../artifacts/room-generator"
 import { dropAt } from "../array-utils"
+import { Room } from "../artifacts/rooms"
 
 export interface PositionedTunneller {
     position: PositionComponent
@@ -141,29 +142,34 @@ export class Tunneller implements TlbSystem {
         const entry = this.footprint(doorPosition, direction, doorWidth)
         const room = this.roomGenerator.generate(entry, direction)
         if (map.isShapeFree(world, room.shape.grow())) {
-            const roomEntry = room.entries[0]
-            room.shape.foreach(p => this.createTile(world, map, p, "room"))
+            this.buildRoom(world, state, map, room)
+        }
+    }
 
-            if (state.tunneller.generation < this.maximumGenerations) {
-                let remainingSpawns = this.random.integerBetween(0, 2)
-                while (remainingSpawns-- > 0) {
-                    const exitIndex = this.random.integerBetween(0, room.availableEntries.length - 1)
-                    const exit = room.availableEntries[exitIndex]
-                    const tunellerDirection = oppositeOf(exit.direction)
-                    const exitWidth = this.random.integerBetween(1, 3)
-                    const largerShape = this.footprint(exit.position, tunellerDirection, exitWidth + 2)
-                    if (map.isShapeFree(world, largerShape)) {
-                        dropAt(room.availableEntries, exitIndex)
-                        room.entries.push(this.footprint(exit.position, tunellerDirection, exitWidth))
-                        this.spawnTuneller(world, exit.position, exitWidth, tunellerDirection, state.tunneller.generation + 1)
-                    }
+    public buildRoom(world: TlbWorld, state: PositionedTunneller, map: WorldMap, room: Room): void {
+        room.shape.foreach(p => this.createTile(world, map, p, "room"))
+
+        if (state.tunneller.generation < this.maximumGenerations) {
+            let remainingSpawns = this.random.integerBetween(0, 2)
+            while (remainingSpawns-- > 0) {
+                const exitIndex = this.random.integerBetween(0, room.availableEntries.length - 1)
+                const exit = room.availableEntries[exitIndex]
+                const tunellerDirection = oppositeOf(exit.direction)
+                const exitWidth = this.random.integerBetween(1, 3)
+                const largerShape = this.footprint(exit.position, tunellerDirection, exitWidth + 2)
+                if (map.isShapeFree(world, largerShape)) {
+                    dropAt(room.availableEntries, exitIndex)
+                    room.entries.push(this.footprint(exit.position, tunellerDirection, exitWidth))
+                    this.spawnTuneller(world, exit.position, exitWidth, tunellerDirection, state.tunneller.generation + 1)
                 }
             }
-
-            roomEntry.foreach(p =>
-                this.createTile(world, map, p, "hub")
-            )
         }
+
+        room.entries.forEach(entry => {
+            entry.foreach(p =>
+                this.createTile(world, map, p, "corridor")
+            )
+        })
     }
 
     public move(state: PositionedTunneller): Vector {
@@ -178,7 +184,7 @@ export class Tunneller implements TlbSystem {
         const forward = this.freeCells(world, map, state.position.position, currentDirection, width)
 
         let leftPosition = this.leftPosition(currentDirection, footprint)
-        let rightPosition = this.leftPosition(currentDirection, footprint)
+        let rightPosition = this.rightPosition(currentDirection, footprint)
         const stepBack = this.stepBack(state, width)
         rightPosition = rightPosition.add(stepBack)
         leftPosition = leftPosition.add(stepBack)

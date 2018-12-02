@@ -25,12 +25,3 @@ export function oppositeOf(direction: Direction): Direction {
         case "left": return "right"
     }
 }
-
-export function perDirection<T>(direction: Direction, up: () => T, right: () => T, down: () => T, left: () => T): T {
-    switch (direction) {
-        case "up": return up()
-        case "right": return right()
-        case "down": return down()
-        case "left": return left()
-    }
-}

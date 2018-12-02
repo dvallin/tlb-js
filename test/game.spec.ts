@@ -17,8 +17,8 @@ describe("Game", () => {
     it("counts frames and sets timing values", () => {
         game.execute()
         expect(game.frames).toEqual(1)
-        expect(game.compute).toBeGreaterThan(0)
         expect(game.started).toBeGreaterThan(0)
+        expect(game.compute).toBeGreaterThan(0)
         expect(game.fps).toBeGreaterThan(0)
         expect(game.mspf).toBeGreaterThan(0)
 
