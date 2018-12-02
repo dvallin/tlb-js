@@ -3,9 +3,12 @@ import { VectorStorage, MapStorage, SetStorage, SingletonStorage } from "./ecs/s
 import { System } from "./ecs/system"
 import { Resource } from "./ecs/resource"
 
-import { PositionComponent } from "./components/position"
-import { FeatureComponent } from "./components/feature"
 import { AgentComponent } from "./components/agent"
+import { AssetComponent } from "./components/asset"
+import { FeatureComponent } from "./components/feature"
+import { GroundComponent } from "./components/ground"
+import { OwnerComponent } from "./components/owner"
+import { PositionComponent } from "./components/position"
 
 import { Agent } from "./systems/agent"
 import { ViewportFocus } from "./systems/viewport-focus"
@@ -18,23 +21,40 @@ import { Vector } from "./spatial"
 import { SeedableRandom } from "./random"
 import { RotRenderer } from "./renderer/renderer"
 import { Input } from "./resources/input"
-import { FreeModeControl } from "./systems/free-mode-control";
+import { FreeModeControl } from "./systems/free-mode-control"
 
-export type ComponentName = "position" | "feature" | "in-viewport" | "viewport-focus" | "free-mode-anchor" | "active" | "agent"
-export type ResourceName = "map" | "viewport" | "render" | "input"
+export type ComponentName =
+    "active" |
+    "agent" |
+    "asset" |
+    "feature" |
+    "free-mode-anchor" |
+    "ground" |
+    "in-viewport" |
+    "owner" |
+    "position" |
+    "viewport-focus"
+export type ResourceName =
+    "input" |
+    "map" |
+    "render" |
+    "viewport"
 
 export type TlbWorld = World<ComponentName, ResourceName>
 export type TlbResource = Resource<ComponentName, ResourceName>
 export type TlbSystem = System<ComponentName, ResourceName>
 
 export function registerComponents<R>(world: World<ComponentName, R>): void {
-    world.registerComponentStorage("position", new VectorStorage<PositionComponent>())
-    world.registerComponentStorage("feature", new MapStorage<FeatureComponent>())
-    world.registerComponentStorage("agent", new MapStorage<AgentComponent>())
-    world.registerComponentStorage("in-viewport", new SetStorage())
     world.registerComponentStorage("active", new SetStorage())
-    world.registerComponentStorage("viewport-focus", new SingletonStorage())
+    world.registerComponentStorage("agent", new MapStorage<AgentComponent>())
+    world.registerComponentStorage("asset", new MapStorage<AssetComponent>())
+    world.registerComponentStorage("feature", new MapStorage<FeatureComponent>())
     world.registerComponentStorage("free-mode-anchor", new SingletonStorage())
+    world.registerComponentStorage("ground", new MapStorage<GroundComponent>())
+    world.registerComponentStorage("in-viewport", new SetStorage())
+    world.registerComponentStorage("owner", new MapStorage<OwnerComponent>())
+    world.registerComponentStorage("position", new VectorStorage<PositionComponent>())
+    world.registerComponentStorage("viewport-focus", new SingletonStorage())
 }
 
 export function registerSystems(world: World<ComponentName, ResourceName>): void {

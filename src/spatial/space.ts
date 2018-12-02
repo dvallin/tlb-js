@@ -2,7 +2,7 @@ import { Vector } from "./vector"
 
 export interface Space<A> {
     get(pos: Vector): A | undefined
-    set(pos: Vector, objects: A): void
+    set(pos: Vector, object: A): void
     remove(pos: Vector): A | undefined
 }
 
@@ -14,8 +14,8 @@ export class DiscreteSpace<A> implements Space<A> {
         return this.objects.get(pos.key)
     }
 
-    public set(pos: Vector, objects: A): void {
-        this.objects.set(pos.key, objects)
+    public set(pos: Vector, object: A): void {
+        this.objects.set(pos.key, object)
     }
 
     public remove(pos: Vector): A | undefined {
@@ -37,8 +37,8 @@ export class SubSpace<A> implements Space<A> {
         return this.space.get(this.transform(pos))
     }
 
-    public set(pos: Vector, objects: A): void {
-        return this.space.set(this.transform(pos), objects)
+    public set(pos: Vector, object: A): void {
+        return this.space.set(this.transform(pos), object)
     }
 
     public remove(pos: Vector): A | undefined {

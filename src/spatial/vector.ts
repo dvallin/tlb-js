@@ -29,7 +29,7 @@ export class Vector {
     }
 
     public get key(): string {
-        return this.coordinates.join()
+        return this.coordinates.join(",")
     }
 
     public get dimensions(): number {

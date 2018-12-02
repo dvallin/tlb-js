@@ -4,13 +4,14 @@ import { WorldMap } from "../resources/world-map"
 import { AgentComponent, Action } from "../components/agent"
 import { PositionComponent } from "../components/position"
 import { Entity } from "../ecs/entity"
-import { FeatureType, FeatureComponent } from "../components/feature"
+import { createFeature } from "../components/feature"
 import { leftOf, rightOf, Direction, oppositeOf } from "../spatial/direction"
 import { Random } from "../random"
 import { Rectangle } from "../geometry/rectangle"
-import { RoomGenerator } from "../artifacts/room-generator"
+import { RoomGenerator } from "../assets/room-generator"
+import { Room } from "../assets/rooms"
 import { dropAt } from "../array-utils"
-import { Room } from "../artifacts/rooms"
+import { createDoor } from "../components/asset"
 
 export interface PositionedAgent {
     position: PositionComponent
@@ -120,7 +121,7 @@ export class Agent implements TlbSystem {
     public render(world: TlbWorld, state: PositionedAgent): void {
         const map = world.getResource<WorldMap>("map")
         const footprint = this.footprint(state.position.position, state.agent.direction, state.agent.width)
-        footprint.foreach(position => this.createTile(world, map, position, "corridor"))
+        footprint.foreach(position => createFeature(world, map, position, "corridor"))
     }
 
     public createRoom(world: TlbWorld, state: PositionedAgent): void {
@@ -145,7 +146,7 @@ export class Agent implements TlbSystem {
     }
 
     public buildRoom(world: TlbWorld, state: PositionedAgent, map: WorldMap, room: Room): void {
-        room.shape.foreach(p => this.createTile(world, map, p, "room"))
+        room.shape.foreach(p => createFeature(world, map, p, "room"))
 
         if (state.agent.generation < this.maximumGenerations) {
             let remainingSpawns = this.random.integerBetween(0, 2)
@@ -164,9 +165,8 @@ export class Agent implements TlbSystem {
         }
 
         room.entries.forEach(entry => {
-            entry.foreach(p =>
-                this.createTile(world, map, p, "corridor")
-            )
+            entry.foreach(p => createFeature(world, map, p, "corridor"))
+            createDoor(world, map, entry)
         })
     }
 
@@ -258,17 +258,6 @@ export class Agent implements TlbSystem {
         const left = position.add(delta.mult(-length))
         const right = left.add(delta.mult(width - 1))
         return Rectangle.fromBounds(left.x, right.x, left.y, right.y)
-    }
-
-    public createTile(world: TlbWorld, map: WorldMap, position: Vector, type: FeatureType): void {
-        let e = map.tiles.get(position)
-        if (e === undefined) {
-            e = world.createEntity().entity
-        }
-        world.editEntity(e)
-            .withComponent<PositionComponent>("position", { position })
-            .withComponent<FeatureComponent>("feature", { type })
-        map.tiles.set(position, e)
     }
 
     public spawnAgent(world: TlbWorld, position: Vector, width: number, direction: Direction, generation: number): void {

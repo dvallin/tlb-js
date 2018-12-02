@@ -4,6 +4,7 @@ import { Rectangle } from "../geometry/rectangle"
 import { Direction } from "../spatial/direction"
 import { Vector } from "../spatial"
 import { Union } from "../geometry/union"
+import { Asset } from "../components/asset"
 
 export interface Entry {
     position: Vector
@@ -13,23 +14,35 @@ export interface Entry {
 export interface Room {
     shape: Shape
     entries: Shape[]
+    assets: Asset[]
+
     availableEntries: Entry[]
+    availableAssets: Shape[]
 }
 
 export const rectangular: Room = {
     shape: new Rectangle(0, 0, 7, 7),
     entries: [],
+    assets: [],
     availableEntries: [
         { position: new Vector(3, -1), direction: "down" },
         { position: new Vector(-1, 3), direction: "right" },
         { position: new Vector(7, 3), direction: "left" },
         { position: new Vector(4, 7), direction: "up" }
+    ],
+    availableAssets: [
+        new Rectangle(0, 0, 3, 3),
+        new Rectangle(4, 0, 3, 3),
+        new Rectangle(0, 4, 3, 3),
+        new Rectangle(4, 4, 3, 3),
+        new Rectangle(2, 2, 3, 3)
     ]
 }
 
 export const largeRectangular: Room = {
     shape: new Rectangle(0, 0, 14, 14),
     entries: [],
+    assets: [],
     availableEntries: [
         { position: new Vector(3, -1), direction: "down" },
         { position: new Vector(7, -1), direction: "down" },
@@ -43,6 +56,8 @@ export const largeRectangular: Room = {
         { position: new Vector(3, 14), direction: "up" },
         { position: new Vector(7, 14), direction: "up" },
         { position: new Vector(11, 14), direction: "up" },
+    ],
+    availableAssets: [
     ]
 }
 
@@ -52,6 +67,7 @@ export const lShaped: Room = {
         new Rectangle(0, 7, 7, 7),
     ),
     entries: [],
+    assets: [],
     availableEntries: [
         { position: new Vector(3, -1), direction: "down" },
         { position: new Vector(7, -1), direction: "down" },
@@ -63,5 +79,7 @@ export const lShaped: Room = {
         { position: new Vector(-1, 11), direction: "right" },
         { position: new Vector(7, 6), direction: "left" },
         { position: new Vector(3, 14), direction: "up" },
+    ],
+    availableAssets: [
     ]
 }

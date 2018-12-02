@@ -3,6 +3,8 @@ import { Direction } from "../spatial/direction"
 import { Rectangle } from "../geometry/rectangle"
 import { rectangular, Room, Entry, largeRectangular, lShaped } from "./rooms"
 import { findAll } from "../array-utils"
+import { Shape } from "../geometry/shape"
+import { Asset } from "../components/asset"
 
 export class RoomGenerator {
 
@@ -23,6 +25,8 @@ export class RoomGenerator {
 
         const shape = room.shape.translate(translation)
         const entries = [doorShape]
+        const assets: Asset[] = []
+        const availableAssets: Shape[] = []
         const availableEntries: Entry[] = []
 
         room.availableEntries.forEach((e, i) => {
@@ -34,6 +38,6 @@ export class RoomGenerator {
             }
         })
 
-        return { shape, entries, availableEntries }
+        return { shape, assets, entries, availableEntries, availableAssets }
     }
 }
