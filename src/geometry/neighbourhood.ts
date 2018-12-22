@@ -17,7 +17,7 @@ export class Neighbourhood extends AbstractShape {
     }
 
     public bounds(): Rectangle {
-        return new Rectangle(this.x, this.y, this.size, this.size)
+        return new Rectangle(this.x - this.size, this.y - this.size, 2 * this.size + 1, 2 * this.size + 1)
     }
 
     public containsVector(p: Vector): boolean {

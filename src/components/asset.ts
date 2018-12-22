@@ -5,7 +5,7 @@ import { WorldMap } from "../resources/world-map"
 import { Shape } from "../geometry/shape"
 
 import { FeatureType, FeatureComponent, features } from "./feature"
-import { OwnerComponent } from "./owner"
+import { ParentComponent } from "./parent"
 import { GroundComponent } from "./ground"
 import { PositionComponent } from "./position"
 import { Rectangle } from "../geometry/rectangle"
@@ -66,7 +66,7 @@ function putTile(world: TlbWorld, map: WorldMap, position: Vector, entity: Entit
         .createEntity()
         .withComponent<PositionComponent>("position", { position })
         .withComponent<FeatureComponent>("feature", { type })
-        .withComponent<OwnerComponent>("owner", { entity })
+        .withComponent<ParentComponent>("parent", { entity })
         .withComponent<GroundComponent>("ground", { feature })
         .entity
     map.tiles.set(position, tile)

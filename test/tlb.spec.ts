@@ -9,7 +9,7 @@ describe("registerComponents", () => {
 
         registerComponents(world)
 
-        expect(world.registerComponentStorage).toHaveBeenCalledTimes(10)
+        expect(world.registerComponentStorage).toHaveBeenCalledTimes(11)
     })
 })
 
@@ -21,7 +21,7 @@ describe("registerResources", () => {
 
         registerSystems(world)
 
-        expect(world.registerSystem).toHaveBeenCalledTimes(3)
+        expect(world.registerSystem).toHaveBeenCalledTimes(4)
     })
 })
 

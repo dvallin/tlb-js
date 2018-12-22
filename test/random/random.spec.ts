@@ -1,16 +1,19 @@
-import { SeedableRandom } from "../src/random"
+import { Random } from "../../src/random"
+import { Distribution, Uniform } from "../../src/random/distributions"
 
-describe("SeedableRandom", () => {
+describe("Random", () => {
 
-    let random: SeedableRandom
+    let random: Random
+    let distribution: Distribution
     beforeEach(() => {
-        random = new SeedableRandom("000")
+        distribution = new Uniform("000")
+        random = new Random(distribution)
     })
 
     describe("decision", () => {
 
         beforeEach(() => {
-            random.rng.random = jest.fn()
+            distribution.sample = jest.fn()
                 .mockReturnValueOnce(0.0)
                 .mockReturnValueOnce(0.1)
                 .mockReturnValueOnce(0.25)
@@ -51,18 +54,14 @@ describe("SeedableRandom", () => {
         })
 
         it("picks a random item", () => {
-            const spy = jest.spyOn(random.rng, "intBetween")
             expect(random.weightedDecision([1, 2, 1])).toEqual(2)
-            expect(spy).toHaveBeenCalledWith(0, 3)
         })
     })
 
     describe("integerBetween", () => {
 
         it("returns a random integer", () => {
-            const spy = jest.spyOn(random.rng, "intBetween")
             expect(random.integerBetween(0, 3)).toEqual(3)
-            expect(spy).toHaveBeenCalledWith(0, 3)
         })
     })
 

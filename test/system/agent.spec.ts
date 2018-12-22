@@ -61,7 +61,7 @@ describe("Agent", () => {
             const agent = new Agent(random)
             agent.freeCells = jest.fn().mockReturnValue(1)
             const map = mockMap(world)
-            mockReturnValue(map.isFree, false)
+            mockReturnValue(map.isShapeFree, false)
 
             expect(agent.createAction(world, stateOfActions(["move", "move", "move"]))).toEqual("changeDirection")
             expect(agent.createAction(world, stateOfActions(
@@ -77,7 +77,7 @@ describe("Agent", () => {
             const agent = new Agent(random)
             agent.freeCells = jest.fn().mockReturnValue(2)
             const map = mockMap(world)
-            mockReturnValue(map.isFree, false)
+            mockReturnValue(map.isShapeFree, false)
 
             expect(agent.createAction(world, stateOfActions(["move", "move", "move"]))).not.toEqual("changeDirection")
         })
@@ -88,7 +88,7 @@ describe("Agent", () => {
             const map = mockMap(world)
             agent.freeCells = jest.fn().mockReturnValue(2)
             mockReturnValue(random.decision, true)
-            mockReturnValue(map.isFree, false)
+            mockReturnValue(map.isShapeFree, false)
 
             expect(agent.createAction(world, stateOfActions(["move", "move", "move"]))).toEqual("createRoom")
         })
@@ -186,7 +186,7 @@ describe("Agent", () => {
         it("turns right if all is free", () => {
             const agent = new Agent(mockRandom())
             const map = mockMap(world)
-            mockReturnValue(map.isFree, true)
+            mockReturnValue(map.isShapeFree, true)
 
             expect(agent.changeDirection(world, stateOfDirection("up")).direction).toEqual("right")
             expect(agent.changeDirection(world, stateOfDirection("right")).direction).toEqual("down")
@@ -239,7 +239,7 @@ describe("Agent", () => {
         it("checks correct surrounding in right direction", () => {
             const agent = new Agent(mockRandom())
             const map = mockMap(world)
-            mockReturnValue(map.isFree, false)
+            mockReturnValue(map.isShapeFree, false)
             agent.changeDirection(world, stateOfDirection("right"))
             expect(map.isShapeFree).toHaveBeenCalledTimes(3)
             expect(map.isShapeFree).toHaveBeenCalledWith(world, new Rectangle(33, 41, 1, 4))

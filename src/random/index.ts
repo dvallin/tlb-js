@@ -1,28 +1,26 @@
-import { create, RandomSeed } from "random-seed"
+import { Distribution } from "./distributions"
 
-export interface Random {
-    decision(probability: number): boolean
-    weightedDecision(weights: number[]): number
-    integerBetween(minInclusive: number, maxInclusive: number): number
-    pick<T>(array: T[]): T
-    shuffle<T>(array: T[]): void
-}
+export class Random {
 
-export class SeedableRandom implements Random {
+    public constructor(public readonly distribution: Distribution) {
+    }
 
-    public readonly rng: RandomSeed
+    public floatBetween(minInclusive: number, maxExclusive: number): number {
+        return this.distribution.sample() * (maxExclusive - minInclusive) + minInclusive;
+    }
 
-    public constructor(seed: string) {
-        this.rng = create(seed)
+    public integerBetween(minInclusive: number, maxInclusive: number): number {
+        const c = this.distribution.sample()
+        return Math.floor(c * (maxInclusive - minInclusive + 1)) + minInclusive;
     }
 
     public decision(probability: number): boolean {
-        return this.rng.random() < probability
+        return this.distribution.sample() < probability
     }
 
     public weightedDecision(weights: number[]): number {
         const sum = weights.reduce((v, c) => v + c, 0)
-        const pick = this.rng.intBetween(0, sum - 1)
+        const pick = this.integerBetween(0, sum - 1)
         let agg = 0
         for (let i = 0; i < weights.length; i++) {
             agg += weights[i]
@@ -33,12 +31,8 @@ export class SeedableRandom implements Random {
         throw new Error("invalid input to weighted decision")
     }
 
-    public integerBetween(minInclusive: number, maxInclusive: number): number {
-        return this.rng.intBetween(minInclusive, maxInclusive)
-    }
-
     public pick<T>(array: T[]): T {
-        return array[this.rng.intBetween(0, array.length - 1)]
+        return array[this.integerBetween(0, array.length - 1)]
     }
 
     public shuffle<T>(array: T[]): void {

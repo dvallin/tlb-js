@@ -23,17 +23,6 @@ export class WorldMap implements TlbResource {
         return this.boundary.bounds(position)
     }
 
-    public isFree(world: TlbWorld, position: Vector): boolean {
-        const entity = this.tiles.get(position)
-        if (entity) {
-            const feature = world.getComponent<FeatureComponent>(entity, "feature")
-            if (feature) {
-                return false
-            }
-        }
-        return true
-    }
-
     public featureMatches(world: TlbWorld, position: Vector, predicate: (f: FeatureComponent | undefined) => boolean): boolean {
         const entity = this.tiles.get(position)
         let feature: FeatureComponent | undefined

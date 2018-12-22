@@ -183,7 +183,6 @@ export class Agent implements TlbSystem {
             possibleAssets.push("trash")
             const assetType = this.random.pick<AssetType>(possibleAssets)
             dropAt(room.availableAssets, assetIndex)
-            console.log("spawn", assetSlot.position, assetType)
             createAssetFromPosition(world, map, assetSlot.position, assetType)
         }
     }

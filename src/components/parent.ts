@@ -1,5 +1,5 @@
 import { Entity } from "../ecs/entity"
 
-export interface OwnerComponent {
+export interface ParentComponent {
     entity: Entity
 }

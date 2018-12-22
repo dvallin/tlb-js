@@ -25,7 +25,6 @@ export function mockMap(world: TlbWorld, boundary: Vector = new Vector(42, 41)):
         boundary,
         update: jest.fn(),
         isValid: jest.fn(),
-        isFree: jest.fn(),
         isShapeFree: jest.fn(),
         featureMatches: jest.fn(),
         shapeHasAll: jest.fn(),
@@ -58,9 +57,11 @@ export function mockRenderer(): Renderer {
 
 export function mockRandom(): Random {
     return {
+        distribution: { sample: jest.fn() },
+        integerBetween: jest.fn(),
+        floatBetween: jest.fn(),
         decision: jest.fn(),
         weightedDecision: jest.fn(),
-        integerBetween: jest.fn(),
         shuffle: jest.fn(),
         pick: jest.fn()
     }
