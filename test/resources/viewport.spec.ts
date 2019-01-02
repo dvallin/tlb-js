@@ -1,7 +1,7 @@
 import { Viewport } from "../../src/resources/viewport"
 
 import { World } from "../../src/ecs/world"
-import { ComponentName, ResourceName, TlbWorld } from "../../src/tlb"
+import { TlbWorld } from "../../src/tlb"
 
 import { mockComponent, mockMap, mockImplementation } from "../mocks"
 import { Storage } from "../../src/ecs/storage"
@@ -16,7 +16,7 @@ describe("Viewport", () => {
     let map: WorldMap
     let world: TlbWorld
     beforeEach(() => {
-        world = new World<ComponentName, ResourceName>()
+        world = new World()
         map = mockMap(world)
         mockImplementation(map.tiles.get, (vector: Vector) => vector.key === "1,1" ? 42 : undefined)
         inViewport = mockComponent(world, "in-viewport")

@@ -2,11 +2,12 @@ import { StitTesselator } from "../../src/systems/stit-tesselator"
 import { Uniform } from "../../src/random/distributions"
 import { TlbWorld } from "../../src/tlb"
 import { World } from "../../src/ecs/world"
-import { StitCellComponent } from "../../src/components/stit-cell"
+import { AgeComponent } from "../../src/components/age"
+import { SubdivisionComponent } from "../../src/components/subdivision"
 import { Rectangle } from "../../src/geometry/rectangle"
 import { MapStorage } from "../../src/ecs/storage"
 import { Entity } from "../../src/ecs/entity"
-import { ParentComponent } from "../../src/components/parent"
+import { AgentComponent } from "../../src/components/agent"
 
 describe(StitTesselator.name, () => {
 
@@ -18,9 +19,9 @@ describe(StitTesselator.name, () => {
         distribution.sample = jest.fn().mockReturnValue(0.5)
         tesseltor = new StitTesselator(distribution)
         world = new World()
-        world.registerComponentStorage<StitCellComponent>("stit-cell", new MapStorage())
+        world.registerComponentStorage<SubdivisionComponent>("subdivision", new MapStorage())
+        world.registerComponentStorage<AgentComponent>("age", new MapStorage())
         world.registerComponentStorage<{}>("active", new MapStorage())
-        world.registerComponentStorage<ParentComponent>("parent", new MapStorage())
     })
 
     describe("age update", () => {
@@ -33,7 +34,7 @@ describe(StitTesselator.name, () => {
             tesseltor.update(world, entity)
 
             // then
-            expect(getStit(world, entity).age).toEqual(9)
+            expect(getAge(world, entity).age).toEqual(9)
         })
 
         it("splits if age is zero", () => {
@@ -45,7 +46,7 @@ describe(StitTesselator.name, () => {
             tesseltor.update(world, entity)
 
             // the
-            expect(split).toHaveBeenCalledWith(world, entity, getStit(world, entity))
+            expect(split).toHaveBeenCalledWith(world, getSubdivision(world, entity))
         })
 
         it("deactivates if age is zero ", () => {
@@ -82,20 +83,9 @@ describe(StitTesselator.name, () => {
             tesseltor.update(world, entity)
 
             // then
-            expect(world.getComponent(entity + 1, "stit-cell")).toBeDefined()
-            expect(world.getComponent(entity + 2, "stit-cell")).toBeDefined()
-        })
-
-        it("sets parent relation", () => {
-            // given
-            const entity = addStit(world, new Rectangle(0, 0, 10, 61), 0)
-
-            // when
-            tesseltor.update(world, entity)
-
-            // then
-            expect(world.getComponent(entity + 1, "parent")).toEqual({ entity })
-            expect(world.getComponent(entity + 2, "parent")).toEqual({ entity })
+            expect(getSubdivision(world, entity).children).toEqual([entity + 1, entity + 2])
+            expect(getSubdivision(world, entity + 1)).toBeDefined()
+            expect(getSubdivision(world, entity + 2)).toBeDefined()
         })
 
         it("creates ages for both children", () => {
@@ -109,8 +99,8 @@ describe(StitTesselator.name, () => {
             tesseltor.update(world, entity)
 
             // then
-            expect(getStit(world, entity + 1).age).toEqual(1)
-            expect(getStit(world, entity + 2).age).toEqual(41)
+            expect(getAge(world, entity + 1).age).toEqual(1)
+            expect(getAge(world, entity + 2).age).toEqual(41)
         })
 
         it("splits along the height of the rectangle correctly", () => {
@@ -121,8 +111,8 @@ describe(StitTesselator.name, () => {
             tesseltor.update(world, entity)
 
             // then
-            expect(getStit(world, entity + 1).rectangle).toEqual(new Rectangle(0, 0, 10, 31))
-            expect(getStit(world, entity + 2).rectangle).toEqual(new Rectangle(0, 31, 10, 30))
+            expect(getSubdivision(world, entity + 1).rectangle).toEqual(new Rectangle(0, 0, 10, 31))
+            expect(getSubdivision(world, entity + 2).rectangle).toEqual(new Rectangle(0, 31, 10, 30))
         })
 
         it("splits along the width of the rectangle correctly", () => {
@@ -136,19 +126,24 @@ describe(StitTesselator.name, () => {
             tesseltor.update(world, entity)
 
             // then
-            expect(getStit(world, entity + 1).rectangle).toEqual(new Rectangle(0, 0, 31, 10))
-            expect(getStit(world, entity + 2).rectangle).toEqual(new Rectangle(31, 0, 30, 10))
+            expect(getSubdivision(world, entity + 1).rectangle).toEqual(new Rectangle(0, 0, 31, 10))
+            expect(getSubdivision(world, entity + 2).rectangle).toEqual(new Rectangle(31, 0, 30, 10))
         })
     })
 })
 
 function addStit(world: TlbWorld, rectangle: Rectangle, age: number): Entity {
     return world.createEntity()
-        .withComponent<StitCellComponent>("stit-cell", { rectangle, age })
+        .withComponent<SubdivisionComponent>("subdivision", { rectangle, children: [] })
+        .withComponent<AgeComponent>("age", { age })
         .withComponent("active", {})
         .entity
 }
 
-function getStit(world: TlbWorld, entity: Entity): StitCellComponent {
-    return world.getComponent<StitCellComponent>(entity, "stit-cell")!
+function getSubdivision(world: TlbWorld, entity: Entity): SubdivisionComponent {
+    return world.getComponent<SubdivisionComponent>(entity, "subdivision")!
+}
+
+function getAge(world: TlbWorld, entity: Entity): AgeComponent {
+    return world.getComponent<AgeComponent>(entity, "age")!
 }

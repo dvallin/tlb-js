@@ -1,14 +1,15 @@
 import { World } from "./ecs/world"
 import { TlbWorld, registerComponents, registerSystems, registerResources } from "./tlb"
-import { AgentComponent } from "./components/agent"
-import { PositionComponent } from "./components/position"
-import { Vector } from "./spatial"
+import { State } from "./game-states/state"
+import { Running } from "./game-states/running"
+import { MapCreation } from "./game-states/map-creation"
 
 export class Game {
 
     public compute: number = 0
     public started: number = 0
     public frames: number = 0
+    public states: State[] = []
 
     public constructor(
         private readonly world: TlbWorld = new World(),
@@ -17,33 +18,34 @@ export class Game {
 
     public execute(): void {
         this.init()
-        this.world.createEntity()
-            .withComponent<AgentComponent>("agent", {
-                actions: [],
-                direction: "down",
-                width: 3,
-                generation: 1
-            })
-            .withComponent<PositionComponent>("position", {
-                position: new Vector(20, 20)
-            })
-
-        this.world.createEntity()
-            .withComponent<{}>("free-mode-anchor", {})
-            .withComponent<{}>("viewport-focus", {})
-            .withComponent<PositionComponent>("position", {
-                position: new Vector(20, 20)
-            })
-        this.tick()
+        this.enterState()
         this.started = Date.now()
+        this.tick()
     }
 
     private tick(): void {
+        const state = this.states[this.states.length - 1]
+        let msLeft = (1000 / this.targetFps)
+        let delta = 0
+        while (msLeft > delta) {
+            const start = Date.now()
+            state.tick(this.world)
+            const delta = Date.now() - start
+            msLeft -= delta
+            this.compute += delta
 
-        const start = Date.now()
-        this.world.execute()
-        const delta = Date.now() - start
-        this.compute += delta
+            if (state.isFrameLocked() || state.isDone(this.world)) {
+                break
+            }
+        }
+
+        if (state.isDone(this.world)) {
+            this.states.pop()
+            if (this.states.length === 0) {
+                return
+            }
+            this.enterState()
+        }
 
         this.frames++
         if (this.frames % 100 === 0) {
@@ -53,7 +55,7 @@ export class Game {
             this.started = Date.now()
         }
 
-        setTimeout(() => this.tick(), (1000 / this.targetFps) - delta)
+        setTimeout(() => this.tick(), msLeft)
     }
 
     public get fps(): number {
@@ -68,5 +70,13 @@ export class Game {
         registerComponents(this.world)
         registerResources(this.world)
         registerSystems(this.world)
+        const running = new Running()
+        const mapCreation = new MapCreation()
+        this.states = [running, mapCreation]
+    }
+
+    private enterState(): void {
+        const nextState = this.states[this.states.length - 1]
+        nextState.start(this.world)
     }
 }

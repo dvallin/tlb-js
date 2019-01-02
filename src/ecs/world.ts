@@ -3,11 +3,13 @@ import { System } from "./system"
 import { Resource } from "./resource"
 import { Entity, EntityModifier } from "./entity"
 
-export class World<C, R> {
+export class World<C, S, R> {
 
     public readonly components: Map<C, Storage<object>> = new Map()
-    public readonly resources: Map<R, Resource<C, R>> = new Map()
-    public readonly systems: System<C, R>[] = []
+    public readonly resources: Map<R, Resource<C, S, R>> = new Map()
+    public readonly systems: Map<S, System<C, S, R>> = new Map()
+    public readonly emptySystems: Set<S> = new Set()
+    public readonly activeSystems: Set<S> = new Set()
 
     private openEntities: Set<Entity> = new Set()
     private lastEntity: Entity = -1
@@ -24,7 +26,7 @@ export class World<C, R> {
         return this.components.get(component)! as Storage<T>
     }
 
-    public getResource<T extends Resource<C, R>>(resource: R): T {
+    public getResource<T extends Resource<C, S, R>>(resource: R): T {
         return this.resources.get(resource)! as T
     }
 
@@ -44,7 +46,7 @@ export class World<C, R> {
         return false
     }
 
-    public createEntity(): EntityModifier<C, R> {
+    public createEntity(): EntityModifier<C, S, R> {
         let entity
         if (this.openEntities.size > 0) {
             entity = this.openEntities.values().next().value
@@ -55,7 +57,7 @@ export class World<C, R> {
         return new EntityModifier(this, entity)
     }
 
-    public editEntity(entity: number): EntityModifier<C, R> {
+    public editEntity(entity: number): EntityModifier<C, S, R> {
         return new EntityModifier(this, entity)
     }
 
@@ -64,20 +66,31 @@ export class World<C, R> {
         this.openEntities.add(entity)
     }
 
-    public registerSystem(system: System<C, R>): void {
-        this.systems.push(system)
+    public registerSystem(name: S, system: System<C, S, R>): void {
+        this.systems.set(name, system)
     }
 
-    public registerResource(resource: Resource<C, R>): void {
+    public enableSystem(name: S): void {
+        this.activeSystems.add(name)
+    }
+
+    public disableSystem(name: S): void {
+        this.activeSystems.delete(name)
+    }
+
+    public registerResource(resource: Resource<C, S, R>): void {
         this.resources.set(resource.kind, resource)
     }
 
     public execute(): void {
+        this.emptySystems.clear()
         for (const resource of this.resources) {
             resource[1].update(this)
         }
-        for (const system of this.systems) {
+        for (const name of this.activeSystems) {
+            const system = this.systems.get(name)!
             const firstStorage = this.getStorage(system.components[0])
+            let calls = 0
             firstStorage.foreach((entity: Entity) => {
                 let callSystem = true
                 for (let i = 1; i < system.components.length; i++) {
@@ -88,8 +101,12 @@ export class World<C, R> {
                 }
                 if (callSystem) {
                     system.update(this, entity)
+                    calls++
                 }
             })
+            if (calls === 0) {
+                this.emptySystems.add(name)
+            }
         }
     }
 }

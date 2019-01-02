@@ -5,10 +5,11 @@ import { Resource } from "../../src/ecs/resource"
 
 type ComponentName = "component1" | "component2"
 type ResourceName = "resource1" | "resource2"
+type SystemName = "system1" | "system2"
 
 describe("World", () => {
 
-    let world: World<ComponentName, ResourceName>
+    let world: World<ComponentName, SystemName, ResourceName>
     beforeEach(() => {
         jest.resetAllMocks()
         world = new World()
@@ -104,17 +105,17 @@ describe("World", () => {
     describe("system", () => {
 
         const updated = jest.fn()
-        class S implements System<ComponentName, ResourceName> {
+        class S implements System<ComponentName, SystemName, ResourceName> {
             public readonly components: ComponentName[] = ["component1"]
-            public update({ }: World<ComponentName, ResourceName>, entity: number): void {
+            public update({ }: World<ComponentName, SystemName, ResourceName>, entity: number): void {
                 updated(entity)
             }
         }
 
         const updated2 = jest.fn()
-        class T implements System<ComponentName, ResourceName> {
+        class T implements System<ComponentName, SystemName, ResourceName> {
             public readonly components: ComponentName[] = ["component1", "component2"]
-            public update({ }: World<ComponentName, ResourceName>, entity: number): void {
+            public update({ }: World<ComponentName, SystemName, ResourceName>, entity: number): void {
                 updated2(entity)
             }
         }
@@ -124,8 +125,9 @@ describe("World", () => {
             world.registerComponentStorage("component2", new VectorStorage<{}>())
         })
 
-        it("runs registered systems with matching entities", () => {
-            world.registerSystem(new S())
+        it("runs enabled systems with matching entities", () => {
+            world.registerSystem("system1", new S())
+            world.enableSystem("system1")
             world.createEntity().withComponent("component1", {})
             world.createEntity().withComponent("component1", {})
             world.execute()
@@ -135,7 +137,8 @@ describe("World", () => {
         })
 
         it("does not run system on non-matching entities", () => {
-            world.registerSystem(new S())
+            world.registerSystem("system1", new S())
+            world.enableSystem("system1")
             world.createEntity().withComponent("component1", {})
             world.createEntity().withComponent("component2", {})
             world.createEntity().withComponent("component1", {}).withComponent("component2", {})
@@ -146,8 +149,10 @@ describe("World", () => {
         })
 
         it("runs multiple systems", () => {
-            world.registerSystem(new S())
-            world.registerSystem(new T())
+            world.registerSystem("system1", new S())
+            world.registerSystem("system2", new T())
+            world.enableSystem("system1")
+            world.enableSystem("system2")
             world.createEntity().withComponent("component1", {})
             world.createEntity().withComponent("component2", {})
             world.createEntity().withComponent("component1", {}).withComponent("component2", {})
@@ -164,9 +169,9 @@ describe("World", () => {
     describe("resources", () => {
 
         const updated = jest.fn()
-        class R implements Resource<ComponentName, ResourceName> {
+        class R implements Resource<ComponentName, SystemName, ResourceName> {
             public readonly kind: ResourceName = "resource1"
-            public update({ }: World<ComponentName, ResourceName>): void {
+            public update({ }: World<ComponentName, SystemName, ResourceName>): void {
                 updated()
             }
         }

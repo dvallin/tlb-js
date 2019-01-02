@@ -9,7 +9,8 @@ import { FeatureComponent } from "./components/feature"
 import { GroundComponent } from "./components/ground"
 import { ParentComponent } from "./components/parent"
 import { PositionComponent } from "./components/position"
-import { StitCellComponent } from "./components/stit-cell"
+import { SubdivisionComponent } from "./components/subdivision"
+import { AgeComponent } from "./components/age"
 
 import { Agent } from "./systems/agent"
 import { ViewportFocus } from "./systems/viewport-focus"
@@ -25,10 +26,11 @@ import { Uniform } from "./random/distributions"
 import { RotRenderer } from "./renderer/renderer"
 import { Input } from "./resources/input"
 import { FreeModeControl } from "./systems/free-mode-control"
-import { StitTesselator } from "./systems/stit-tesselator";
+import { StitTesselator } from "./systems/stit-tesselator"
 
 export type ComponentName =
     "active" |
+    "age" |
     "agent" |
     "asset" |
     "feature" |
@@ -37,7 +39,12 @@ export type ComponentName =
     "in-viewport" |
     "parent" |
     "position" |
-    "stit-cell" |
+    "subdivision" |
+    "viewport-focus"
+export type SystemName =
+    "agent" |
+    "free-mode-control" |
+    "stit-tesselator" |
     "viewport-focus"
 export type ResourceName =
     "input" |
@@ -45,12 +52,13 @@ export type ResourceName =
     "render" |
     "viewport"
 
-export type TlbWorld = World<ComponentName, ResourceName>
-export type TlbResource = Resource<ComponentName, ResourceName>
-export type TlbSystem = System<ComponentName, ResourceName>
+export type TlbWorld = World<ComponentName, SystemName, ResourceName>
+export type TlbResource = Resource<ComponentName, SystemName, ResourceName>
+export type TlbSystem = System<ComponentName, SystemName, ResourceName>
 
-export function registerComponents<R>(world: World<ComponentName, R>): void {
+export function registerComponents<S, R>(world: World<ComponentName, S, R>): void {
     world.registerComponentStorage("active", new SetStorage())
+    world.registerComponentStorage("age", new MapStorage<AgeComponent>())
     world.registerComponentStorage("agent", new MapStorage<AgentComponent>())
     world.registerComponentStorage("asset", new MapStorage<AssetComponent>())
     world.registerComponentStorage("feature", new MapStorage<FeatureComponent>())
@@ -59,21 +67,21 @@ export function registerComponents<R>(world: World<ComponentName, R>): void {
     world.registerComponentStorage("in-viewport", new SetStorage())
     world.registerComponentStorage("parent", new MapStorage<ParentComponent>())
     world.registerComponentStorage("position", new VectorStorage<PositionComponent>())
-    world.registerComponentStorage("stit-cell", new MapStorage<StitCellComponent>())
+    world.registerComponentStorage("subdivision", new MapStorage<SubdivisionComponent>())
     world.registerComponentStorage("viewport-focus", new SingletonStorage())
 }
 
-export function registerSystems(world: World<ComponentName, ResourceName>): void {
-    const uniform = new Uniform("some seed")
-    world.registerSystem(new Agent(new Random(uniform)))
-    world.registerSystem(new StitTesselator(uniform))
-    world.registerSystem(new ViewportFocus())
-    world.registerSystem(new FreeModeControl())
-}
-
-export function registerResources(world: World<ComponentName, ResourceName>): void {
+export function registerResources(world: World<ComponentName, SystemName, ResourceName>): void {
     world.registerResource(new Render(new RotRenderer()))
     world.registerResource(new WorldMap(new Vector(128, 128)))
     world.registerResource(new Viewport())
     world.registerResource(new Input())
+}
+
+export function registerSystems(world: World<ComponentName, SystemName, ResourceName>): void {
+    const uniform = new Uniform("some seed")
+    world.registerSystem("agent", new Agent(new Random(uniform)))
+    world.registerSystem("free-mode-control", new FreeModeControl())
+    world.registerSystem("stit-tesselator", new StitTesselator(uniform))
+    world.registerSystem("viewport-focus", new ViewportFocus())
 }

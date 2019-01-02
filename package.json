@@ -8,7 +8,7 @@
         "start": "webpack-dev-server",
         "build": "webpack -p",
         "test": "tsc --noEmit && jest --config=jest.conf.js --coverage",
-        "test:watch": "jest --config=jest.conf.js --watch"
+        "test:watch": "jest --config=jest.conf.js --watchAll"
     },
     "dependencies": {
         "random-seed": "^0.3.0",

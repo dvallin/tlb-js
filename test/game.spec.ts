@@ -1,13 +1,11 @@
 import { Game } from "../src/game"
 import { World } from "../src/ecs/world"
-import { ComponentName, ResourceName } from "../src/tlb"
-
-import { AgentComponent } from "../src/components/agent"
+import { ComponentName, ResourceName, SystemName } from "../src/tlb"
 
 describe("Game", () => {
 
     let game: Game
-    let world: World<ComponentName, ResourceName>
+    let world: World<ComponentName, SystemName, ResourceName>
     beforeEach(() => {
         jest.useFakeTimers()
         world = new World()
@@ -36,11 +34,5 @@ describe("Game", () => {
 
         expect(world.getComponent(0, "agent")).toBeDefined()
         expect(world.getComponent(0, "position")).toBeDefined()
-    })
-
-    it("already updated the agent", () => {
-        game.execute()
-
-        expect(world.getComponent<AgentComponent>(0, "agent")!.actions).toEqual(["render"])
     })
 })
