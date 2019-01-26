@@ -1,38 +1,35 @@
-import { registerComponents, registerResources, registerSystems, ComponentName, SystemName, ResourceName } from "../src/tlb"
-import { World } from "../src/ecs/world"
+import { registerComponents, registerResources, registerSystems, ComponentName, SystemName, ResourceName } from '../src/tlb'
+import { World } from '../src/ecs/world'
 
-describe("registerComponents", () => {
+describe('registerComponents', () => {
+  it('registers all components', () => {
+    const world = new World<ComponentName, SystemName, ResourceName>()
+    world.registerComponentStorage = jest.fn()
 
-    it("registers all components", () => {
-        const world = new World<ComponentName, SystemName, ResourceName>()
-        world.registerComponentStorage = jest.fn()
+    registerComponents(world)
 
-        registerComponents(world)
-
-        expect(world.registerComponentStorage).toHaveBeenCalledTimes(12)
-    })
+    expect(world.registerComponentStorage).toHaveBeenCalledTimes(13)
+  })
 })
 
-describe("registerResources", () => {
+describe('registerResources', () => {
+  it('registers all systems', () => {
+    const world = new World<ComponentName, SystemName, ResourceName>()
+    world.registerSystem = jest.fn()
 
-    it("registers all systems", () => {
-        const world = new World<ComponentName, SystemName, ResourceName>()
-        world.registerSystem = jest.fn()
+    registerSystems(world)
 
-        registerSystems(world)
-
-        expect(world.registerSystem).toHaveBeenCalledTimes(4)
-    })
+    expect(world.registerSystem).toHaveBeenCalledTimes(4)
+  })
 })
 
-describe("registerSystems", () => {
+describe('registerSystems', () => {
+  it('registers all components', () => {
+    const world = new World<ComponentName, SystemName, ResourceName>()
+    world.registerResource = jest.fn()
 
-    it("registers all components", () => {
-        const world = new World<ComponentName, SystemName, ResourceName>()
-        world.registerResource = jest.fn()
+    registerResources(world)
 
-        registerResources(world)
-
-        expect(world.registerResource).toHaveBeenCalledTimes(4)
-    })
+    expect(world.registerResource).toHaveBeenCalledTimes(4)
+  })
 })

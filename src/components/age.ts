@@ -1,4 +1,3 @@
 export interface AgeComponent {
-
-    age: number
+  age: number
 }

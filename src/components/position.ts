@@ -1,5 +1,5 @@
-import { Vector } from "../spatial"
+import { Vector } from '../spatial'
 
 export interface PositionComponent {
-    position: Vector
+  position: Vector
 }

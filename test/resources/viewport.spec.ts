@@ -1,46 +1,45 @@
-import { Viewport } from "../../src/resources/viewport"
+import { Viewport } from '../../src/resources/viewport'
 
-import { World } from "../../src/ecs/world"
-import { TlbWorld } from "../../src/tlb"
+import { World } from '../../src/ecs/world'
+import { TlbWorld } from '../../src/tlb'
 
-import { mockComponent, mockMap, mockImplementation } from "../mocks"
-import { Storage } from "../../src/ecs/storage"
-import { WorldMap } from "../../src/resources/world-map"
-import { Vector } from "../../src/spatial/vector"
+import { mockComponent, mockMap, mockImplementation } from '../mocks'
+import { Storage } from '../../src/ecs/storage'
+import { WorldMap } from '../../src/resources/world-map'
+import { Vector } from '../../src/spatial/vector'
 
-describe("Viewport", () => {
+describe('Viewport', () => {
+  let viewport: Viewport
 
-    let viewport: Viewport
+  let inViewport: Storage<{}>
+  let map: WorldMap
+  let world: TlbWorld
+  beforeEach(() => {
+    world = new World()
+    map = mockMap(world)
+    mockImplementation(map.tiles.get, (vector: Vector) => (vector.key === '1,1' ? 42 : undefined))
+    inViewport = mockComponent(world, 'in-viewport')
 
-    let inViewport: Storage<{}>
-    let map: WorldMap
-    let world: TlbWorld
-    beforeEach(() => {
-        world = new World()
-        map = mockMap(world)
-        mockImplementation(map.tiles.get, (vector: Vector) => vector.key === "1,1" ? 42 : undefined)
-        inViewport = mockComponent(world, "in-viewport")
+    viewport = new Viewport()
+  })
 
-        viewport = new Viewport()
-    })
+  it('adds entities into the viewport', () => {
+    viewport.update(world)
 
-    it("adds entities into the viewport", () => {
-        viewport.update(world)
+    expect(map.tiles.get).toHaveBeenCalledTimes(60 * 40)
+  })
 
-        expect(map.tiles.get).toHaveBeenCalledTimes(60 * 40)
-    })
+  it('clears in viewport components', () => {
+    viewport.update(world)
 
-    it("clears in viewport components", () => {
-        viewport.update(world)
+    expect(inViewport.clear).toHaveBeenCalledTimes(1)
+  })
 
-        expect(inViewport.clear).toHaveBeenCalledTimes(1)
-    })
+  it('adds entities into the viewport', () => {
+    mockImplementation(map.tiles.get, (vector: Vector) => (vector.key === '1,1' ? 42 : undefined))
 
-    it("adds entities into the viewport", () => {
-        mockImplementation(map.tiles.get, (vector: Vector) => vector.key === "1,1" ? 42 : undefined)
+    viewport.update(world)
 
-        viewport.update(world)
-
-        expect(inViewport.insert).toHaveBeenCalledWith(42, {})
-    })
+    expect(inViewport.insert).toHaveBeenCalledWith(42, {})
+  })
 })

@@ -1,5 +1,5 @@
-import { Entity } from "../ecs/entity"
+import { Entity } from '../ecs/entity'
 
 export interface ParentComponent {
-    entity: Entity
+  entity: Entity
 }
