@@ -73,6 +73,13 @@ export const features = {
     lightBlocking: false,
     description: 'floor of a hub',
   },
+  player: {
+    character: '@',
+    diffuse: primary[0],
+    blocking: true,
+    lightBlocking: true,
+    description: 'you',
+  },
 }
 
 export function getFeature(world: TlbWorld, entity: number): Feature | undefined {

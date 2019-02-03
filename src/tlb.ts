@@ -13,9 +13,7 @@ import { AgeComponent } from './components/age'
 import { RegionComponent } from './components/region'
 
 import { Agent } from './systems/agent'
-import { ViewportFocus } from './systems/viewport-focus'
 
-import { Render } from './resources/render'
 import { WorldMap } from './resources/world-map'
 import { Viewport } from './resources/viewport'
 import { Vector } from './spatial'
@@ -23,10 +21,11 @@ import { Vector } from './spatial'
 import { Random } from './random'
 import { Uniform } from './random/distributions'
 
-import { RotRenderer } from './renderer/renderer'
 import { Input } from './resources/input'
 import { FreeModeControl } from './systems/free-mode-control'
 import { RegionCreator } from './systems/region-creator'
+import { PlayerControl } from './systems/player-control'
+import { Renderer } from './renderer/renderer'
 
 export type ComponentName =
   | 'active'
@@ -36,13 +35,16 @@ export type ComponentName =
   | 'feature'
   | 'free-mode-anchor'
   | 'ground'
-  | 'in-viewport'
+  | 'in-viewport-character'
+  | 'in-viewport-tile'
   | 'parent'
+  | 'player'
   | 'position'
   | 'region'
+  | 'spawn'
   | 'viewport-focus'
-export type SystemName = 'agent' | 'free-mode-control' | 'region-creator' | 'viewport-focus'
-export type ResourceName = 'input' | 'map' | 'render' | 'viewport'
+export type SystemName = 'agent' | 'free-mode-control' | 'player-control' | 'region-creator'
+export type ResourceName = 'input' | 'map' | 'viewport'
 
 export type TlbWorld = World<ComponentName, SystemName, ResourceName>
 export type TlbResource = Resource<ComponentName, SystemName, ResourceName>
@@ -56,24 +58,26 @@ export function registerComponents<S, R>(world: World<ComponentName, S, R>): voi
   world.registerComponentStorage('feature', new MapStorage<FeatureComponent>())
   world.registerComponentStorage('free-mode-anchor', new SingletonStorage())
   world.registerComponentStorage('ground', new MapStorage<GroundComponent>())
-  world.registerComponentStorage('in-viewport', new SetStorage())
+  world.registerComponentStorage('in-viewport-character', new SetStorage())
+  world.registerComponentStorage('in-viewport-tile', new SetStorage())
   world.registerComponentStorage('parent', new MapStorage<ParentComponent>())
+  world.registerComponentStorage('player', new SingletonStorage())
   world.registerComponentStorage('position', new VectorStorage<PositionComponent>())
   world.registerComponentStorage('region', new MapStorage<RegionComponent>())
+  world.registerComponentStorage('spawn', new SingletonStorage())
   world.registerComponentStorage('viewport-focus', new SingletonStorage())
 }
 
-export function registerResources(world: World<ComponentName, SystemName, ResourceName>): void {
-  world.registerResource(new Render(new RotRenderer()))
+export function registerResources(world: World<ComponentName, SystemName, ResourceName>, renderer: Renderer): void {
   world.registerResource(new WorldMap(new Vector(128, 128)))
   world.registerResource(new Viewport())
-  world.registerResource(new Input())
+  world.registerResource(new Input(e => renderer.eventToPosition(e)))
 }
 
 export function registerSystems(world: World<ComponentName, SystemName, ResourceName>): void {
   const uniform = new Uniform('some seed')
   world.registerSystem('agent', new Agent(new Random(uniform)))
   world.registerSystem('free-mode-control', new FreeModeControl())
-  world.registerSystem('viewport-focus', new ViewportFocus())
+  world.registerSystem('player-control', new PlayerControl())
   world.registerSystem('region-creator', new RegionCreator(new Random(uniform)))
 }

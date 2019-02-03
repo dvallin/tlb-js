@@ -1,20 +1,13 @@
 import * as ROT from 'rot-js'
 import { Input } from '../../src/resources/input'
-import { TlbWorld } from '../../src/tlb'
-import { World } from '../../src/ecs/world'
-import { Render } from '../../src/resources/render'
-import { mockRenderer } from '../mocks'
-import { Renderer } from '../../src/renderer/renderer'
+import { Vector } from '../../src/spatial'
 
 describe('Input', () => {
   let input: Input
-  let world: TlbWorld
-  let renderer: Renderer
+  let eventToPosition: jest.Mock<{}>
   beforeEach(() => {
-    input = new Input()
-    world = new World()
-    renderer = mockRenderer()
-    world.registerResource(new Render(renderer))
+    eventToPosition = jest.fn()
+    input = new Input(eventToPosition)
   })
 
   describe('key down', () => {
@@ -23,7 +16,7 @@ describe('Input', () => {
       keyEvent('keydown', ROT.VK_0)
 
       // when
-      input.update(world)
+      input.update()
 
       // then
       expect(input.keyDown.has(ROT.VK_0)).toBeTruthy()
@@ -34,7 +27,7 @@ describe('Input', () => {
       keyEvent('keydown', ROT.VK_0)
 
       // when
-      input.update(world)
+      input.update()
 
       // then
       expect(input.keyPressed.has(ROT.VK_0)).toBeTruthy()
@@ -45,8 +38,8 @@ describe('Input', () => {
       keyEvent('keydown', ROT.VK_0)
 
       // when
-      input.update(world)
-      input.update(world)
+      input.update()
+      input.update()
 
       // then
       expect(input.keyPressed.has(ROT.VK_0)).toBeFalsy()
@@ -61,7 +54,7 @@ describe('Input', () => {
       keyEvent('keyup', ROT.VK_0)
 
       // when
-      input.update(world)
+      input.update()
 
       // then
       expect(input.keyDown.has(ROT.VK_0)).toBeFalsy()
@@ -73,7 +66,7 @@ describe('Input', () => {
       keyEvent('keyup', ROT.VK_0)
 
       // when
-      input.update(world)
+      input.update()
 
       // then
       expect(input.keyReleased.has(ROT.VK_0)).toBeTruthy()
@@ -85,8 +78,8 @@ describe('Input', () => {
       keyEvent('keyup', ROT.VK_0)
 
       // when
-      input.update(world)
-      input.update(world)
+      input.update()
+      input.update()
 
       // then
       expect(input.keyReleased.has(ROT.VK_0)).toBeFalsy()
@@ -97,11 +90,11 @@ describe('Input', () => {
   describe('pressed mouse button', () => {
     it('registers mouse down', () => {
       // given
-      renderer.eventToPosition = jest.fn().mockReturnValue({ x: 42, y: 43 })
+      eventToPosition.mockReturnValue({ x: 42, y: 43 })
       mouseEvent('mousedown', 1)
 
       // when
-      input.update(world)
+      input.update()
 
       // then
       expect(input.mouseDown).toBeTruthy()
@@ -109,11 +102,11 @@ describe('Input', () => {
 
     it('registers mouse position', () => {
       // given
-      renderer.eventToPosition = jest.fn().mockReturnValue({ x: 42, y: 43 })
+      eventToPosition.mockReturnValue({ x: 42, y: 43 })
       mouseEvent('mousedown', 1)
 
       // when
-      input.update(world)
+      input.update()
 
       // then
       expect(input.position).toEqual({ x: 42, y: 43 })
@@ -121,11 +114,11 @@ describe('Input', () => {
 
     it('does not register mouse down if position is outside world ', () => {
       // given
-      renderer.eventToPosition = jest.fn().mockReturnValue(undefined)
+      eventToPosition.mockReturnValue(undefined)
       mouseEvent('mousedown', 1)
 
       // when
-      input.update(world)
+      input.update()
 
       // then
       expect(input.mouseDown).toBeFalsy()
@@ -134,11 +127,11 @@ describe('Input', () => {
 
     it('registers mousepressed', () => {
       // given
-      renderer.eventToPosition = jest.fn().mockReturnValue({ x: 32, y: 32 })
+      eventToPosition.mockReturnValue({ x: 32, y: 32 })
       mouseEvent('mousedown', 1)
 
       // when
-      input.update(world)
+      input.update()
 
       // then
       expect(input.mousePressed).toBeTruthy()
@@ -146,12 +139,12 @@ describe('Input', () => {
 
     it('unregisters mousepressed', () => {
       // given
-      renderer.eventToPosition = jest.fn().mockReturnValue({ x: 32, y: 32 })
+      eventToPosition.mockReturnValue({ x: 32, y: 32 })
       mouseEvent('mousedown', 1)
 
       // when
-      input.update(world)
-      input.update(world)
+      input.update()
+      input.update()
 
       // then
       expect(input.mousePressed).toBeFalsy()
@@ -163,11 +156,11 @@ describe('Input', () => {
     it('unregisters mouse down', () => {
       // given
       input.mouseDown = true
-      renderer.eventToPosition = jest.fn().mockReturnValue({ x: 42, y: 43 })
+      eventToPosition.mockReturnValue({ x: 42, y: 43 })
       mouseEvent('mousemove', 0)
 
       // when
-      input.update(world)
+      input.update()
 
       // then
       expect(input.mouseDown).toBeFalsy()
@@ -175,11 +168,11 @@ describe('Input', () => {
 
     it('registers mouse position', () => {
       // given
-      renderer.eventToPosition = jest.fn().mockReturnValue({ x: 42, y: 43 })
+      eventToPosition.mockReturnValue({ x: 42, y: 43 })
       mouseEvent('mousemove', 0)
 
       // when
-      input.update(world)
+      input.update()
 
       // then
       expect(input.position).toEqual({ x: 42, y: 43 })
@@ -188,11 +181,11 @@ describe('Input', () => {
     it('unregsiters mouse down if position is outside world ', () => {
       // given
       input.mouseDown = true
-      renderer.eventToPosition = jest.fn().mockReturnValue(undefined)
+      eventToPosition.mockReturnValue(undefined)
       mouseEvent('mousemove', 0)
 
       // when
-      input.update(world)
+      input.update()
 
       // then
       expect(input.mouseDown).toBeFalsy()
@@ -202,11 +195,11 @@ describe('Input', () => {
     it('registers mousereleased', () => {
       // given
       input.mouseDown = true
-      renderer.eventToPosition = jest.fn().mockReturnValue({ x: 32, y: 32 })
+      eventToPosition.mockReturnValue({ x: 32, y: 32 })
       mouseEvent('mousemove', 0)
 
       // when
-      input.update(world)
+      input.update()
 
       // then
       expect(input.mouseReleased).toBeTruthy()
@@ -215,16 +208,51 @@ describe('Input', () => {
     it('unregisters mouseReleased', () => {
       // given
       input.mouseDown = true
-      renderer.eventToPosition = jest.fn().mockReturnValue({ x: 32, y: 32 })
+      eventToPosition.mockReturnValue({ x: 32, y: 32 })
       mouseEvent('mousemove', 0)
 
       // when
-      input.update(world)
-      input.update(world)
+      input.update()
+      input.update()
 
       // then
       expect(input.mouseReleased).toBeFalsy()
       expect(input.mouseDown).toBeFalsy()
+    })
+  })
+
+  describe('createMovementDelta', () => {
+    it('moves left on h', () => {
+      input.keyDown.add(ROT.VK_H)
+      expect(input.createMovementDelta()).toEqual(new Vector(-1, 0))
+    })
+
+    it('moves right on l', () => {
+      input.keyDown.add(ROT.VK_L)
+      expect(input.createMovementDelta()).toEqual(new Vector(1, 0))
+    })
+
+    it('moves down on j', () => {
+      input.keyDown.add(ROT.VK_J)
+      expect(input.createMovementDelta()).toEqual(new Vector(0, 1))
+    })
+
+    it('moves up on k', () => {
+      input.keyDown.add(ROT.VK_K)
+      expect(input.createMovementDelta()).toEqual(new Vector(0, -1))
+    })
+
+    it('normalizes movement', () => {
+      input.keyDown.add(ROT.VK_H)
+      input.keyDown.add(ROT.VK_K)
+      expect(input.createMovementDelta()).toEqual(new Vector(-1, -1).normalize())
+    })
+
+    it('cancels out movement', () => {
+      input.keyDown.add(ROT.VK_H)
+      input.keyDown.add(ROT.VK_L)
+      input.keyDown.add(ROT.VK_J)
+      expect(input.createMovementDelta()).toEqual(new Vector(0, 1))
     })
   })
 })

@@ -1,6 +1,7 @@
-import { TlbResource, ResourceName, TlbWorld } from '../tlb'
+import { TlbResource, ResourceName } from '../tlb'
+import { Vector } from '../spatial'
 import { Position } from '../renderer/position'
-import { Render } from './render'
+import { VK_H, VK_J, VK_K, VK_L } from 'rot-js'
 
 export class Input implements TlbResource {
   public readonly kind: ResourceName = 'input'
@@ -18,24 +19,23 @@ export class Input implements TlbResource {
   private mouseEvent: MouseEvent | undefined = undefined
   private keyEvents: KeyboardEvent[] = []
 
-  public constructor() {
+  public constructor(public readonly eventToPosition: (event: UIEvent) => Position | undefined) {
     document.addEventListener('mousedown', e => (this.mouseEvent = e))
     document.addEventListener('mousemove', e => (this.mouseEvent = e))
     document.addEventListener('keydown', e => this.keyEvents.push(e))
     document.addEventListener('keyup', e => this.keyEvents.push(e))
   }
 
-  public update(world: TlbWorld): void {
-    this.handleMouseEvent(world)
+  public update(): void {
+    this.handleMouseEvent()
     this.handleKeyboardEvents()
   }
 
-  private handleMouseEvent(world: TlbWorld): void {
+  private handleMouseEvent(): void {
     this.mouseReleased = false
     this.mousePressed = false
     if (this.mouseEvent) {
-      const render = world.resources.get('render') as Render
-      this.position = render.eventToPosition(this.mouseEvent)
+      this.position = this.eventToPosition(this.mouseEvent)
       const pressed = this.mouseEvent.buttons > 0
       if (pressed) {
         if (this.position) {
@@ -63,5 +63,22 @@ export class Input implements TlbResource {
       }
     }
     this.keyEvents = []
+  }
+
+  public createMovementDelta(): Vector {
+    let delta = new Vector(0, 0)
+    if (this.keyDown.has(VK_H)) {
+      delta = delta.add(Vector.fromDirection('left'))
+    }
+    if (this.keyDown.has(VK_J)) {
+      delta = delta.add(Vector.fromDirection('down'))
+    }
+    if (this.keyDown.has(VK_K)) {
+      delta = delta.add(Vector.fromDirection('up'))
+    }
+    if (this.keyDown.has(VK_L)) {
+      delta = delta.add(Vector.fromDirection('right'))
+    }
+    return delta.normalize()
   }
 }

@@ -26,7 +26,8 @@ export function mockMap(world: TlbWorld, boundary: Vector = new Vector(42, 41)):
     update: jest.fn(),
     isValid: jest.fn(),
     isShapeFree: jest.fn(),
-    featureMatches: jest.fn(),
+    isTileBlocking: jest.fn(),
+    tileMatches: jest.fn(),
     shapeHasAll: jest.fn(),
     shapeHasSome: jest.fn(),
     tiles: {
@@ -35,12 +36,11 @@ export function mockMap(world: TlbWorld, boundary: Vector = new Vector(42, 41)):
       setAll: jest.fn(),
       remove: jest.fn(),
     },
-    items: {
+    characters: {
       get: jest.fn(),
       set: jest.fn(),
-      add: jest.fn(),
-      addAll: jest.fn(),
-      retain: jest.fn(),
+      setAll: jest.fn(),
+      remove: jest.fn(),
     },
   }
   world.registerResource(map)
@@ -49,6 +49,7 @@ export function mockMap(world: TlbWorld, boundary: Vector = new Vector(42, 41)):
 
 export function mockRenderer(): Renderer {
   return {
+    render: jest.fn(),
     clear: jest.fn(),
     eventToPosition: jest.fn(),
     drawable: jest.fn(),

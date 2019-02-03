@@ -19,6 +19,10 @@ describe('Union', () => {
       expect(union.grow()).toEqual(new Union(shape1.grow(), shape2.grow()))
     })
 
+    it('shrinks shapes individually', () => {
+      expect(union.shrink()).toEqual(new Union(shape1.shrink(), shape2.shrink()))
+    })
+
     it('iterates', () => {
       const elements: Vector[] = []
       union.foreach(f => elements.push(f))

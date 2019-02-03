@@ -2,9 +2,15 @@ import { RotRenderer } from '../../src/renderer/renderer'
 
 import { Display } from 'rot-js'
 import * as rot from 'rot-js'
-import { getInstances } from '../mocks'
+import { getInstances, mockComponent, mockImplementation } from '../mocks'
 import { Color } from '../../src/renderer/color'
 import { Drawable } from '../../src/renderer/drawable'
+import { TlbWorld } from '../../src/tlb'
+import { World } from '../../src/ecs/world'
+import { Viewport } from '../../src/resources/viewport'
+import { Vector } from '../../src/spatial'
+import { features } from '../../src/components/feature'
+import { Storage } from '../../src/ecs/storage'
 
 class C extends Color {
   public rgb: string
@@ -54,6 +60,69 @@ describe('RotRenderer', () => {
     expect(renderer.eventToPosition(event)).toEqual({ x: 1, y: 2 })
     expect(renderer.eventToPosition(event)).toBeUndefined()
     expect(renderer.eventToPosition(event)).toBeUndefined()
+  })
+
+  describe('render', () => {
+    let world: TlbWorld
+    let featureStorage: Storage<{}>
+    let positions: Storage<{}>
+    let inViewportCharacter: Storage<{}>
+    let inViewportTile: Storage<{}>
+    beforeEach(() => {
+      world = new World()
+      world.registerResource(new Viewport())
+      featureStorage = mockComponent(world, 'feature')
+      positions = mockComponent(world, 'position')
+      inViewportCharacter = mockComponent(world, 'in-viewport-character')
+      inViewportTile = mockComponent(world, 'in-viewport-tile')
+
+      renderer.character = jest.fn()
+      renderer.clear = jest.fn()
+    })
+
+    it('clears the screen', () => {
+      renderer.render(world)
+
+      expect(renderer.clear).toHaveBeenCalledTimes(1)
+    })
+
+    it('calls foreach on tiles and characters', () => {
+      renderer.render(world)
+
+      expect(inViewportTile.foreach).toHaveBeenCalledTimes(1)
+      expect(inViewportCharacter.foreach).toHaveBeenCalledTimes(1)
+    })
+
+    it('does not render entities without position and feature', () => {
+      mockImplementation(inViewportCharacter.foreach, (f: (entity: number, value: {}) => void) => f(42, {}))
+      mockImplementation(inViewportTile.foreach, (f: (entity: number, value: {}) => void) => f(42, {}))
+
+      renderer.render(world)
+
+      expect(renderer.character).toHaveBeenCalledTimes(0)
+    })
+
+    it('renders each in viewport tile', () => {
+      mockImplementation(inViewportTile.foreach, (f: (entity: number, value: {}) => void) => f(42, {}))
+      mockImplementation(featureStorage.get, () => ({ type: 'wall' }))
+      mockImplementation(positions.get, () => ({ position: new Vector(2, 43) }))
+
+      renderer.render(world)
+
+      expect(renderer.character).toHaveBeenCalledTimes(1)
+      expect(renderer.character).toHaveBeenCalledWith(features.wall.character, { x: 2, y: 43 }, features.wall.diffuse)
+    })
+
+    it('renders each in viewport character', () => {
+      mockImplementation(inViewportCharacter.foreach, (f: (entity: number, value: {}) => void) => f(42, {}))
+      mockImplementation(featureStorage.get, () => ({ type: 'player' }))
+      mockImplementation(positions.get, () => ({ position: new Vector(2, 43) }))
+
+      renderer.render(world)
+
+      expect(renderer.character).toHaveBeenCalledTimes(1)
+      expect(renderer.character).toHaveBeenCalledWith(features.player.character, { x: 1.5, y: 42.75 }, features.player.diffuse)
+    })
   })
 
   describe('drawable', () => {

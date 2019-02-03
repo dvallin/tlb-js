@@ -6,6 +6,7 @@ describe('Rectangle', () => {
   const empty = new Rectangle(0, 0, 0, 0)
   const single = new Rectangle(0, 0, 1, 1)
   const twoByThree = new Rectangle(0, 0, 2, 3)
+  const threeByTwo = new Rectangle(0, 0, 3, 2)
 
   shapeTest(new Rectangle(1, 1, 2, 2))
 
@@ -90,6 +91,38 @@ describe('Rectangle', () => {
     })
   })
 
+  describe('centers', () => {
+    it('returns center', () => {
+      expect(empty.center).toEqual(new Vector(-1, -1))
+      expect(single.center).toEqual(new Vector(0, 0))
+      expect(twoByThree.center).toEqual(new Vector(0, 1))
+    })
+
+    it('returns centerLeft', () => {
+      expect(empty.centerLeft).toEqual(new Vector(0, -1))
+      expect(single.centerLeft).toEqual(new Vector(0, 0))
+      expect(twoByThree.centerLeft).toEqual(new Vector(0, 1))
+    })
+
+    it('returns centerRight', () => {
+      expect(empty.centerRight).toEqual(new Vector(-1, -1))
+      expect(single.centerRight).toEqual(new Vector(0, 0))
+      expect(twoByThree.centerRight).toEqual(new Vector(1, 1))
+    })
+
+    it('returns centerBottom', () => {
+      expect(empty.centerBottom).toEqual(new Vector(-1, -1))
+      expect(single.centerBottom).toEqual(new Vector(0, 0))
+      expect(twoByThree.centerBottom).toEqual(new Vector(0, 2))
+    })
+
+    it('returns centerTop', () => {
+      expect(empty.centerTop).toEqual(new Vector(-1, 0))
+      expect(single.centerTop).toEqual(new Vector(0, 0))
+      expect(twoByThree.centerTop).toEqual(new Vector(0, 0))
+    })
+  })
+
   describe('all', () => {
     it('breaks when false is returned', () => {
       const large = new Rectangle(0, 0, 1000, 1000)
@@ -144,6 +177,16 @@ describe('Rectangle', () => {
       expect(empty.grow()).toEqual(new Rectangle(-1, -1, 2, 2))
       expect(single.grow()).toEqual(new Rectangle(-1, -1, 3, 3))
       expect(twoByThree.grow()).toEqual(new Rectangle(-1, -1, 4, 5))
+    })
+  })
+
+  describe('shrink', () => {
+    it('shrink by one in all direction', () => {
+      expect(empty.shrink()).toEqual(empty)
+      expect(single.shrink()).toEqual(empty)
+      expect(twoByThree.shrink()).toEqual(new Rectangle(0, 1, 0, 1))
+      expect(twoByThree.shrink().shrink()).toEqual(new Rectangle(0, 1, 0, 0))
+      expect(threeByTwo.shrink().shrink()).toEqual(new Rectangle(1, 0, 0, 0))
     })
   })
 })

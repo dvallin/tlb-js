@@ -43,19 +43,29 @@ export class Rectangle extends AbstractShape {
   }
 
   public get center(): Vector {
-    const cx = (this.right + this.left) / 2
-    const cy = (this.bottom + this.top) / 2
+    const cx = (this.left + this.right) / 2
+    const cy = (this.top + this.bottom) / 2
     return new Vector(Math.floor(cx), Math.floor(cy))
   }
 
   public get centerLeft(): Vector {
-    const cy = (this.bottom + this.top) / 2
+    const cy = (this.top + this.bottom) / 2
     return new Vector(this.left, Math.floor(cy))
   }
 
   public get centerRight(): Vector {
-    const cy = (this.bottom + this.top) / 2
+    const cy = (this.top + this.bottom) / 2
     return new Vector(this.right, Math.floor(cy))
+  }
+
+  public get centerTop(): Vector {
+    const cx = (this.left + this.right) / 2
+    return new Vector(Math.floor(cx), this.top)
+  }
+
+  public get centerBottom(): Vector {
+    const cx = (this.left + this.right) / 2
+    return new Vector(Math.floor(cx), this.bottom)
   }
 
   public plus(other: Rectangle): Rectangle {
@@ -84,7 +94,9 @@ export class Rectangle extends AbstractShape {
   }
 
   public shrink(cells: number = 1): Rectangle {
-    return new Rectangle(this.x + cells, this.y + cells, this.width - 2 * cells, this.height - 2 * cells)
+    const w = this.width - 2 * cells
+    const h = this.height - 2 * cells
+    return new Rectangle(w > 0 ? this.x + cells : this.x, h > 0 ? this.y + cells : this.y, w > 0 ? w : 0, h > 0 ? h : 0)
   }
 
   public all(f: (position: Vector) => boolean): boolean {

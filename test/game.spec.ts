@@ -2,6 +2,7 @@ import { Game } from '../src/game'
 import { World } from '../src/ecs/world'
 import { ComponentName, ResourceName, SystemName } from '../src/tlb'
 import { State } from '../src/game-states/state'
+import { mockRenderer } from './mocks'
 
 describe('Game', () => {
   let game: Game
@@ -13,24 +14,24 @@ describe('Game', () => {
     game = new Game(world)
     mockState = {
       start: jest.fn(),
+      stop: jest.fn(),
       isDone: jest.fn(),
       isFrameLocked: jest.fn(),
     }
     game.states.push(mockState)
+    game.renderer = mockRenderer()
   })
 
   it('counts frames and sets timing values', () => {
     game.execute()
     expect(game.frames).toEqual(1)
     expect(game.started).toBeGreaterThan(0)
-    expect(game.compute).toBeGreaterThan(0)
     expect(game.fps).toBeGreaterThan(0)
     expect(game.mspf).toBeGreaterThan(0)
 
     jest.runOnlyPendingTimers()
 
     expect(game.frames).toEqual(2)
-    expect(game.compute).toBeGreaterThan(0)
     expect(game.started).toBeGreaterThan(0)
     expect(game.fps).toBeGreaterThan(0)
     expect(game.mspf).toBeGreaterThan(0)

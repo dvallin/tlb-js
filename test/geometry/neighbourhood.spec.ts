@@ -80,6 +80,13 @@ describe('Neighbourhood', () => {
         expect(l1.grow()).toEqual(new Neighbourhood(0, 0, 2))
       })
     })
+
+    describe('shrink', () => {
+      it('shrink by one in all direction', () => {
+        expect(empty.shrink()).toEqual(empty)
+        expect(new Neighbourhood(0, 0, 2).shrink()).toEqual(l1)
+      })
+    })
   })
 
   describe('all', () => {

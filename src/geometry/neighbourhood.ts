@@ -31,7 +31,7 @@ export class Neighbourhood extends AbstractShape {
   }
 
   public shrink(cells: number = 1): Neighbourhood {
-    return new Neighbourhood(this.x, this.y, this.size - cells)
+    return new Neighbourhood(this.x, this.y, this.size > 0 ? this.size - cells : 0)
   }
 
   public all(f: (position: Vector) => boolean): boolean {

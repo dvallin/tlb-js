@@ -1,12 +1,14 @@
 import { Running } from '../../src/game-states/running'
 import { World } from '../../src/ecs/world'
-import { TlbWorld, registerSystems, registerComponents } from '../../src/tlb'
+import { TlbWorld, registerSystems, registerComponents, registerResources } from '../../src/tlb'
 import { Vector } from '../../src/spatial'
+import { mockRenderer } from '../mocks'
 
 describe('Running', () => {
   let world: TlbWorld
   beforeEach(() => {
     world = new World()
+    registerResources(world, mockRenderer())
     registerSystems(world)
     registerComponents(world)
   })
@@ -20,21 +22,38 @@ describe('Running', () => {
   })
 
   describe('start', () => {
-    beforeEach(() => {
-      new Running().start(world)
-    })
+    beforeEach(() => {})
 
     it('starts systems', () => {
+      new Running().start(world)
+
       expect(world.activeSystems).toContain('free-mode-control')
-      expect(world.activeSystems).toContain('viewport-focus')
     })
 
     it('creates viewport anchored as free mode', () => {
+      new Running().start(world)
+
       expect(world.entityCount).toBe(1)
       expect(world.getComponent(0, 'free-mode-anchor')).toBeDefined()
       expect(world.getComponent(0, 'viewport-focus')).toBeDefined()
       expect(world.getComponent(0, 'position')).toEqual({
         position: new Vector(20, 20),
+      })
+    })
+
+    it('creates player if spawn points exist', () => {
+      world
+        .createEntity()
+        .withComponent('spawn', {})
+        .withComponent('position', { position: new Vector(1, 2) })
+
+      new Running().start(world)
+
+      expect(world.entityCount).toBe(2)
+      expect(world.getComponent(1, 'player')).toBeDefined()
+      expect(world.getComponent(1, 'viewport-focus')).toBeDefined()
+      expect(world.getComponent(1, 'position')).toEqual({
+        position: new Vector(1, 2),
       })
     })
   })

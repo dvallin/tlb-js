@@ -45,7 +45,7 @@ export class SingletonStorage implements Storage<{}> {
   private datum: number | undefined = undefined
 
   public size(): number {
-    return this.datum ? 1 : 0
+    return this.datum !== undefined ? 1 : 0
   }
 
   public insert(entity: number, {  }: {}): void {

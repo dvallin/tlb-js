@@ -4,18 +4,22 @@ import { State } from './game-states/state'
 import { Running } from './game-states/running'
 import { MapCreation } from './game-states/map-creation'
 
+import { RotRenderer, Renderer } from './renderer/renderer'
+
 export class Game {
-  public compute: number = 0
-  public render: number = 0
+  public computeTime: number = 0
+  public renderTime: number = 0
   public started: number = 0
   public frames: number = 0
   public states: State[] = []
+
+  public renderer: Renderer = new RotRenderer()
 
   public constructor(private readonly world: TlbWorld = new World(), private readonly targetFps: number = 60) {}
 
   public init(): void {
     registerComponents(this.world)
-    registerResources(this.world)
+    registerResources(this.world, this.renderer)
     registerSystems(this.world)
     const running = new Running()
     const mapCreation = new MapCreation()
@@ -32,12 +36,13 @@ export class Game {
     const state = this.states[this.states.length - 1]
     let msLeft = 1000 / this.targetFps
 
-    // update all resources (io, clipping, rendering, etc...)
+    // update all resources (io, clipping, etc...) and render afterwards
     const startRender = Date.now()
     this.world.updateResources()
+    this.renderer.render(this.world)
     const renderDelta = Date.now() - startRender
     msLeft -= renderDelta
-    this.render += renderDelta
+    this.renderTime += renderDelta
 
     // execute the world
     while (true) {
@@ -45,7 +50,7 @@ export class Game {
       this.world.updateSystems()
       const delta = Date.now() - start
       msLeft -= delta
-      this.compute += delta
+      this.computeTime += delta
 
       if (state.isFrameLocked() || state.isDone(this.world) || msLeft < delta) {
         break
@@ -53,6 +58,7 @@ export class Game {
     }
 
     if (state.isDone(this.world)) {
+      state.stop(this.world)
       this.states.pop()
       if (this.states.length === 0) {
         return
@@ -66,8 +72,8 @@ export class Game {
       console.log(`(computation, rendering) = (${this.mscpf.toFixed(2)}, ${this.msrpf.toFixed(2)}) ms`)
       console.log(`Entities: ${this.world.entityCount}`)
       this.frames = 0
-      this.compute = 0
-      this.render = 0
+      this.computeTime = 0
+      this.renderTime = 0
       this.started = Date.now()
     }
 
@@ -79,15 +85,15 @@ export class Game {
   }
 
   public get mspf(): number {
-    return (this.compute + this.render) / this.frames
+    return (this.computeTime + this.renderTime) / this.frames
   }
 
   public get msrpf(): number {
-    return this.render / this.frames
+    return this.renderTime / this.frames
   }
 
   public get mscpf(): number {
-    return this.compute / this.frames
+    return this.computeTime / this.frames
   }
 
   private enterState(): void {

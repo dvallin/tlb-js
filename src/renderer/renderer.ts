@@ -5,7 +5,15 @@ import { Position } from './position'
 import { Color } from './color'
 import { Drawable } from './drawable'
 
+import { Viewport } from '../resources/viewport'
+import { TlbWorld } from '../tlb'
+import { getFeature } from '../components/feature'
+import { PositionComponent } from '../components/position'
+import { Entity } from '../ecs/entity'
+
 export interface Renderer {
+  render(world: TlbWorld): void
+
   clear(): void
   eventToPosition(e: UIEvent): Position | undefined
 
@@ -32,6 +40,22 @@ export class RotRenderer implements Renderer {
 
   public clear(): void {
     this.display.clear()
+  }
+
+  public render(world: TlbWorld): void {
+    this.clear()
+    const viewport = world.getResource<Viewport>('viewport')
+    world.getStorage('in-viewport-tile').foreach(entity => this.renderFeature(world, viewport, entity, false))
+    world.getStorage('in-viewport-character').foreach(entity => this.renderFeature(world, viewport, entity, true))
+  }
+
+  public renderFeature(world: TlbWorld, viewport: Viewport, entity: Entity, centered: boolean): void {
+    const feature = getFeature(world, entity)
+    const position = world.getComponent<PositionComponent>(entity, 'position')
+    if (feature && position) {
+      const displayPosition = viewport.toDisplay(position.position, centered)
+      this.character(feature.character, displayPosition, feature.diffuse)
+    }
   }
 
   public eventToPosition(e: UIEvent): Position | undefined {
