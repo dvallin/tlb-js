@@ -48,6 +48,16 @@ export class Rectangle extends AbstractShape {
     return new Vector(Math.floor(cx), Math.floor(cy))
   }
 
+  public get centerLeft(): Vector {
+    const cy = (this.bottom + this.top) / 2
+    return new Vector(this.left, Math.floor(cy))
+  }
+
+  public get centerRight(): Vector {
+    const cy = (this.bottom + this.top) / 2
+    return new Vector(this.right, Math.floor(cy))
+  }
+
   public plus(other: Rectangle): Rectangle {
     return Rectangle.fromBounds(
       Math.min(this.left, other.left),

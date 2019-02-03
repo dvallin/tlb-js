@@ -8,7 +8,7 @@ describe('registerComponents', () => {
 
     registerComponents(world)
 
-    expect(world.registerComponentStorage).toHaveBeenCalledTimes(13)
+    expect(world.registerComponentStorage).toHaveBeenCalledTimes(12)
   })
 })
 

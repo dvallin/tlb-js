@@ -318,6 +318,7 @@ describe('Agent', () => {
       const state: PositionedAgent = {
         position: { position: new Vector(1, 2) },
         agent: { actions: [], direction: 'up', width: 2, generation: 1 },
+        region: undefined,
       }
       const room: Room = {
         shape: new Rectangle(3, 4, 1, 1),
@@ -338,12 +339,13 @@ describe('Agent', () => {
       const state: PositionedAgent = {
         position: { position: new Vector(1, 2) },
         agent: { actions: [], direction: 'up', width: 2, generation: 1 },
+        region: undefined,
       }
       const room: Room = {
         shape: new Rectangle(3, 4, 1, 1),
         entries: [],
         assets: [],
-        availableEntries: [{ position: new Vector(6, 7), direction: 'left' }],
+        availableEntries: [{ position: new Vector(6, 7), direction: 'left', width: 3 }],
         availableAssets: [],
       }
 
@@ -353,7 +355,7 @@ describe('Agent', () => {
       agent.buildRoom(world, state, map, room)
 
       expect(agent.spawnAgent).toHaveBeenCalledTimes(1)
-      expect(agent.spawnAgent).toHaveBeenCalledWith(world, new Vector(6, 7), 3, 'right', 2)
+      expect(agent.spawnAgent).toHaveBeenCalledWith(world, new Vector(6, 7), 3, 'right', 2, undefined)
     })
 
     it('does not spawn new agents if generation is too high', () => {
@@ -361,12 +363,13 @@ describe('Agent', () => {
       const state: PositionedAgent = {
         position: { position: new Vector(1, 2) },
         agent: { actions: [], direction: 'up', width: 2, generation: 10 },
+        region: undefined,
       }
       const room: Room = {
         shape: new Rectangle(3, 4, 1, 1),
         entries: [],
         assets: [],
-        availableEntries: [{ position: new Vector(6, 7), direction: 'left' }],
+        availableEntries: [{ position: new Vector(6, 7), direction: 'left', width: 3 }],
         availableAssets: [],
       }
 
@@ -383,12 +386,13 @@ describe('Agent', () => {
       const state: PositionedAgent = {
         position: { position: new Vector(1, 2) },
         agent: { actions: [], direction: 'up', width: 2, generation: 1 },
+        region: undefined,
       }
       const room: Room = {
         shape: new Rectangle(3, 4, 1, 1),
         entries: [],
         assets: [],
-        availableEntries: [{ position: new Vector(6, 7), direction: 'left' }],
+        availableEntries: [{ position: new Vector(6, 7), direction: 'left', width: 3 }],
         availableAssets: [],
       }
 
@@ -404,7 +408,8 @@ describe('Agent', () => {
       const map = mockMap(world)
       const state: PositionedAgent = {
         position: { position: new Vector(1, 2) },
-        agent: { actions: [], direction: 'up', width: 2, generation: 1 },
+        agent: { actions: [], direction: 'up', width: 2, generation: 1, allowedRegion: undefined },
+        region: undefined,
       }
       const room: Room = {
         shape: new Rectangle(3, 4, 1, 1),
@@ -472,7 +477,9 @@ function emptyState(): PositionedAgent {
       direction: 'up',
       width: 2,
       generation: 1,
+      allowedRegion: undefined,
     },
+    region: undefined,
   }
 }
 

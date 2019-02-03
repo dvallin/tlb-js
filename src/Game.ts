@@ -13,8 +13,16 @@ export class Game {
 
   public constructor(private readonly world: TlbWorld = new World(), private readonly targetFps: number = 60) {}
 
+  public init(): void {
+    registerComponents(this.world)
+    registerResources(this.world)
+    registerSystems(this.world)
+    const running = new Running()
+    const mapCreation = new MapCreation()
+    this.states = [running, mapCreation]
+  }
+
   public execute(): void {
-    this.init()
     this.enterState()
     this.started = Date.now()
     this.tick()
@@ -39,7 +47,7 @@ export class Game {
       msLeft -= delta
       this.compute += delta
 
-      if (state.isFrameLocked() || state.isDone(this.world) || msLeft > delta) {
+      if (state.isFrameLocked() || state.isDone(this.world) || msLeft < delta) {
         break
       }
     }
@@ -80,15 +88,6 @@ export class Game {
 
   public get mscpf(): number {
     return this.compute / this.frames
-  }
-
-  private init(): void {
-    registerComponents(this.world)
-    registerResources(this.world)
-    registerSystems(this.world)
-    const running = new Running()
-    const mapCreation = new MapCreation()
-    this.states = [running, mapCreation]
   }
 
   private enterState(): void {

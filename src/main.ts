@@ -1,2 +1,4 @@
 import { Game } from './game'
-new Game().execute()
+const game = new Game()
+game.init()
+game.execute()

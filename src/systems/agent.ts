@@ -13,10 +13,13 @@ import { RoomGenerator } from '../assets/room-generator'
 import { Room } from '../assets/rooms'
 import { dropAt } from '../array-utils'
 import { createDoor, AssetType, createAssetFromPosition } from '../components/asset'
+import { RegionComponent } from '../components/region'
+import { Shape } from '../geometry/shape'
 
 export interface PositionedAgent {
   position: PositionComponent
   agent: AgentComponent
+  region: RegionComponent | undefined
 }
 
 export class Agent implements TlbSystem {
@@ -24,14 +27,15 @@ export class Agent implements TlbSystem {
 
   public readonly roomGenerator: RoomGenerator
 
-  public constructor(public random: Random, private readonly maximumAge: number = 70, private readonly maximumGenerations: number = 5) {
+  public constructor(public random: Random, private readonly maximumAge: number = 40, private readonly maximumGenerations: number = 3) {
     this.roomGenerator = new RoomGenerator(random)
   }
 
   public update(world: TlbWorld, entity: number): void {
     const agent = world.getComponent<AgentComponent>(entity, 'agent')!
     const position = world.getComponent<PositionComponent>(entity, 'position')!
-    this.run(world, entity, { position, agent })
+    const region = agent.allowedRegion !== undefined ? world.getComponent<RegionComponent>(agent.allowedRegion, 'region') : undefined
+    this.run(world, entity, { position, agent, region })
   }
 
   public run(world: TlbWorld, entity: Entity, state: PositionedAgent): void {
@@ -66,7 +70,7 @@ export class Agent implements TlbSystem {
       return 'render'
     }
 
-    const forward = this.freeCells(world, map, state.position.position, state.agent.direction, state.agent.width)
+    const forward = this.freeCells(world, map, state, state.position.position, state.agent.direction, state.agent.width)
     if (movesSinceDirectionChange > state.agent.width && forward < 2) {
       return 'changeDirection'
     }
@@ -136,7 +140,7 @@ export class Agent implements TlbSystem {
 
     const entry = this.footprint(doorPosition, direction, doorWidth)
     const room = this.roomGenerator.generate(entry, direction)
-    if (map.isShapeFree(world, room.shape.grow())) {
+    if (this.isInRegion(state, room.shape) && map.isShapeFree(world, room.shape.grow())) {
       this.buildRoom(world, state, map, room)
     }
   }
@@ -155,7 +159,7 @@ export class Agent implements TlbSystem {
         if (map.isShapeFree(world, largerShape)) {
           dropAt(room.availableEntries, exitIndex)
           room.entries.push(this.footprint(exitSlot.position, agentDirection, exitWidth))
-          this.spawnAgent(world, exitSlot.position, exitWidth, agentDirection, state.agent.generation + 1)
+          this.spawnAgent(world, exitSlot.position, exitWidth, agentDirection, state.agent.generation + 1, state.agent.allowedRegion)
         }
       }
     }
@@ -191,7 +195,7 @@ export class Agent implements TlbSystem {
     const currentDirection = state.agent.direction
     const width = state.agent.width
     const footprint = this.footprint(state.position.position, currentDirection, width)
-    const forward = this.freeCells(world, map, state.position.position, currentDirection, width)
+    const forward = this.freeCells(world, map, state, state.position.position, currentDirection, width)
 
     let leftPosition = this.leftPosition(currentDirection, footprint)
     let rightPosition = this.rightPosition(currentDirection, footprint)
@@ -200,10 +204,10 @@ export class Agent implements TlbSystem {
     leftPosition = leftPosition.add(stepBack)
 
     const leftDirection = leftOf(currentDirection)
-    const left = this.freeCells(world, map, leftPosition, leftDirection, width)
+    const left = this.freeCells(world, map, state, leftPosition, leftDirection, width)
 
     const rightDirection = rightOf(currentDirection)
-    const right = this.freeCells(world, map, rightPosition, rightDirection, width)
+    const right = this.freeCells(world, map, state, rightPosition, rightDirection, width)
 
     let direction = currentDirection
     let position = state.position.position
@@ -245,12 +249,20 @@ export class Agent implements TlbSystem {
     return Vector.fromDirection(direction).mult(-length)
   }
 
-  public freeCells(world: TlbWorld, map: WorldMap, position: Vector, direction: Direction, width: number, maxSteps: number = 10): number {
+  public freeCells(
+    world: TlbWorld,
+    map: WorldMap,
+    state: PositionedAgent,
+    position: Vector,
+    direction: Direction,
+    width: number,
+    maxSteps: number = 10
+  ): number {
     const delta = Vector.fromDirection(direction)
     let steps = 0
     let nextPosition = position.add(delta)
     let positions = this.footprint(nextPosition, direction, width + 2)
-    while (map.isShapeFree(world, positions)) {
+    while (this.isInRegion(state, positions) && map.isShapeFree(world, positions)) {
       steps++
       nextPosition = nextPosition.add(delta)
       positions = this.footprint(nextPosition, direction, width + 2)
@@ -271,7 +283,18 @@ export class Agent implements TlbSystem {
     return Rectangle.fromBounds(left.x, right.x, left.y, right.y)
   }
 
-  public spawnAgent(world: TlbWorld, position: Vector, width: number, direction: Direction, generation: number): void {
+  private isInRegion(state: PositionedAgent, shape: Shape): boolean {
+    return state.region === undefined || state.region.shape.contains(shape)
+  }
+
+  public spawnAgent(
+    world: TlbWorld,
+    position: Vector,
+    width: number,
+    direction: Direction,
+    generation: number,
+    allowedRegion?: Entity
+  ): void {
     world
       .createEntity()
       .withComponent<AgentComponent>('agent', {
@@ -279,6 +302,7 @@ export class Agent implements TlbSystem {
         direction,
         width,
         generation,
+        allowedRegion,
       })
       .withComponent<PositionComponent>('position', {
         position,

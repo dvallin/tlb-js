@@ -29,6 +29,7 @@ export class RoomGenerator {
         availableEntries.push({
           position: e.position.add(translation),
           direction: e.direction,
+          width: 3,
         })
       }
     })

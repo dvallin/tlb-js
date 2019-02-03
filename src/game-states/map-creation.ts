@@ -12,10 +12,9 @@ export class MapCreation implements State {
     world
       .createEntity()
       .withComponent<RegionComponent>('region', {
-        shape: new Rectangle(0, 0, 255, 255),
+        shape: new Rectangle(0, 0, 50, 50),
         landmarks: [],
       })
-      .withComponent('root', {})
       .withComponent('active', {})
   }
 
@@ -28,6 +27,6 @@ export class MapCreation implements State {
   }
 
   public isFrameLocked(): boolean {
-    return false
+    return true
   }
 }

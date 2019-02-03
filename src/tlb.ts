@@ -40,7 +40,6 @@ export type ComponentName =
   | 'parent'
   | 'position'
   | 'region'
-  | 'root'
   | 'viewport-focus'
 export type SystemName = 'agent' | 'free-mode-control' | 'region-creator' | 'viewport-focus'
 export type ResourceName = 'input' | 'map' | 'render' | 'viewport'
@@ -61,7 +60,6 @@ export function registerComponents<S, R>(world: World<ComponentName, S, R>): voi
   world.registerComponentStorage('parent', new MapStorage<ParentComponent>())
   world.registerComponentStorage('position', new VectorStorage<PositionComponent>())
   world.registerComponentStorage('region', new MapStorage<RegionComponent>())
-  world.registerComponentStorage('root', new SetStorage())
   world.registerComponentStorage('viewport-focus', new SingletonStorage())
 }
 

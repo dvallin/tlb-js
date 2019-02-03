@@ -1,54 +1,88 @@
-import { ComponentName, TlbSystem, ResourceName, SystemName } from '../tlb'
-import { World } from '../ecs/world'
+import { ComponentName, TlbSystem, TlbWorld } from '../tlb'
 import { RegionComponent } from '../components/region'
 import { Rectangle } from '../geometry/rectangle'
-import { ParentComponent } from '../components/parent'
-import { Difference } from '../geometry/difference'
-import { Shape } from '../geometry/shape'
 import { LandmarkGenerator } from '../assets/landmark-generator'
 import { AgentComponent } from '../components/agent'
 import { PositionComponent } from '../components/position'
 import { Random } from '../random'
+import { Entity } from '../ecs/entity'
+import { EntrySlot } from '../assets/common'
+import { Shape } from '../geometry/shape'
+import { Landmark } from '../assets/landmarks'
+import { WorldMap } from '../resources/world-map'
+import { createFeature } from '../components/feature'
 
 export class RegionCreator implements TlbSystem {
-  public readonly components: ComponentName[] = ['region', 'root', 'active']
+  public readonly components: ComponentName[] = ['region', 'active']
 
   public readonly landmarkGenerator: LandmarkGenerator
   public constructor(public readonly random: Random) {
     this.landmarkGenerator = new LandmarkGenerator(random)
   }
 
-  public update(world: World<ComponentName, SystemName, ResourceName>, entity: number): void {
+  public update(world: TlbWorld, entity: number): void {
     const rootRegion = world.getComponent<RegionComponent>(entity, 'region')!
-    const landmark = this.landmarkGenerator.generate(rootRegion.shape.bounds().center)
-    rootRegion.landmarks = [landmark]
-    landmark.entries.forEach(entry => {
-      world
-        .createEntity()
-        .withComponent<AgentComponent>('agent', { actions: [], direction: entry.direction, width: entry.width, generation: 0 })
-        .withComponent<PositionComponent>('position', { position: entry.position })
-        .withComponent('active', {})
-    })
 
-    const subRegionShapes = this.growSubRegionShapes(rootRegion)
-    subRegionShapes.forEach(shape => this.addSubShape(world, entity, shape))
+    const leftLandmark = this.buildLeftLandmark(world, entity, rootRegion)
+    const centralLandmark = this.buildCentralLandmark(world, entity, rootRegion)
+    rootRegion.landmarks = [centralLandmark, leftLandmark]
+
     world.editEntity(entity).removeComponent('active')
   }
 
-  private addSubShape(world: World<ComponentName, SystemName, ResourceName>, entity: number, shape: Shape) {
-    world
-      .createEntity()
-      .withComponent<ParentComponent>('parent', { entity })
-      .withComponent<RegionComponent>('region', { shape, landmarks: [] })
+  public buildCentralLandmark(world: TlbWorld, entity: Entity, region: RegionComponent): Landmark {
+    const centralLandmark = this.landmarkGenerator.generate(region.shape.bounds().center)
+
+    centralLandmark.entries.forEach(entry => this.spawnAgent(world, entry, entity))
+
+    this.renderLandmark(world, centralLandmark)
+
+    return centralLandmark
   }
 
-  private growSubRegionShapes(rootRegion: RegionComponent): Shape[] {
-    const outerShape = rootRegion.shape.bounds().grow(rootRegion.shape.bounds().width / 2)
-    return [
-      Rectangle.fromBounds(outerShape.left, outerShape.center.x, outerShape.top, outerShape.center.y),
-      Rectangle.fromBounds(outerShape.center.x + 1, outerShape.right, outerShape.top, outerShape.center.y),
-      Rectangle.fromBounds(outerShape.left, outerShape.center.x, outerShape.center.y + 1, outerShape.bottom),
-      Rectangle.fromBounds(outerShape.center.x + 1, outerShape.right, outerShape.center.y + 1, outerShape.bottom),
-    ].map(shape => new Difference(shape, outerShape))
+  public buildLeftLandmark(world: TlbWorld, entity: Entity, region: RegionComponent): Landmark {
+    const rootBounds = region.shape.bounds()
+    const newRegion = this.createRegion(
+      world,
+      Rectangle.fromBounds(
+        rootBounds.right,
+        rootBounds.right + rootBounds.width,
+        rootBounds.top + rootBounds.width / 4,
+        rootBounds.bottom - rootBounds.width / 4
+      )
+    )
+
+    const leftLandmark = this.landmarkGenerator.generate(rootBounds.centerRight)
+    leftLandmark.entries = leftLandmark.entries.filter(entry => entry.direction === 'left' || entry.direction === 'right')
+    leftLandmark.entries.forEach(entry => {
+      const allowedRegion = entry.direction === 'left' ? entity : newRegion
+      this.spawnAgent(world, entry, allowedRegion)
+    })
+
+    this.renderLandmark(world, leftLandmark)
+    return leftLandmark
+  }
+
+  public createRegion(world: TlbWorld, shape: Shape): Entity {
+    return world.createEntity().withComponent<RegionComponent>('region', { shape: shape, landmarks: [] }).entity
+  }
+
+  public spawnAgent(world: TlbWorld, entry: EntrySlot, allowedRegion: Entity): void {
+    world
+      .createEntity()
+      .withComponent<AgentComponent>('agent', {
+        actions: [],
+        direction: entry.direction,
+        width: entry.width,
+        generation: 0,
+        allowedRegion,
+      })
+      .withComponent<PositionComponent>('position', { position: entry.position })
+      .withComponent('active', {})
+  }
+
+  public renderLandmark(world: TlbWorld, landmark: Landmark) {
+    const map = world.getResource<WorldMap>('map')!
+    landmark.shape.foreach(p => createFeature(world, map, p, 'hub'))
   }
 }
