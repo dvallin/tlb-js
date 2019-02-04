@@ -28,7 +28,7 @@ export class PlayerInteraction implements TlbSystem {
   private findTrigger(world: TlbWorld, map: WorldMap, shape: Shape): Entity | undefined {
     let trigger: Entity | undefined
     shape.some(p => {
-      const entity = map.tiles.get(p)
+      const entity = map.getTile(p)
       if (entity !== undefined) {
         if (world.getComponent(entity, 'trigger') !== undefined) {
           trigger = entity

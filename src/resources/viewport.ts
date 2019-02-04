@@ -31,11 +31,11 @@ export class Viewport implements TlbResource {
     for (let y = 0; y < this.boundaries.y; y++) {
       for (let x = 0; x < this.boundaries.x; x++) {
         const position = this.fromDisplay({ x, y })
-        const character = map.characters.get(position.floor())
+        const character = map.getCharacter(position.floor())
         if (character !== undefined) {
           world.editEntity(character).withComponent('in-viewport-character', {})
         }
-        const tile = map.tiles.get(position.floor())
+        const tile = map.getTile(position.floor())
         if (tile !== undefined) {
           world.editEntity(tile).withComponent('in-viewport-tile', {})
         }

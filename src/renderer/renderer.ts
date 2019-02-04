@@ -10,6 +10,7 @@ import { TlbWorld } from '../tlb'
 import { getFeature } from '../components/feature'
 import { PositionComponent } from '../components/position'
 import { Entity } from '../ecs/entity'
+import { WorldMap } from 'src/resources/world-map'
 
 export interface Renderer {
   render(world: TlbWorld): void
@@ -53,8 +54,11 @@ export class RotRenderer implements Renderer {
     const feature = getFeature(world, entity)
     const position = world.getComponent<PositionComponent>(entity, 'position')
     if (feature && position) {
-      const displayPosition = viewport.toDisplay(position.position, centered)
-      this.character(feature.character, displayPosition, feature.diffuse)
+      const map = world.getResource<WorldMap>('map')
+      if (map.isDiscovered(position.position.floor())) {
+        const displayPosition = viewport.toDisplay(position.position, centered)
+        this.character(feature.character, displayPosition, feature.diffuse)
+      }
     }
   }
 

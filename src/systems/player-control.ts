@@ -14,8 +14,8 @@ export class PlayerControl implements TlbSystem {
       const newPosition = position.position.add(delta.mult(0.13))
       const map = world.getResource<WorldMap>('map')
       if (!map.isTileBlocking(world, newPosition.floor())) {
-        map.characters.remove(position.position.floor())
-        map.characters.set(newPosition.floor(), entity)
+        map.removeCharacter(position.position.floor())
+        map.setCharacter(newPosition.floor(), entity)
         world.editEntity(entity).withComponent('position', { position: newPosition })
       }
     }

@@ -72,12 +72,12 @@ function putTile(world: TlbWorld, map: WorldMap, position: Vector, entity: Entit
     .withComponent<PositionComponent>('position', { position })
     .withComponent<FeatureComponent>('feature', { type })
     .withComponent<GroundComponent>('ground', { feature }).entity
-  map.tiles.set(position, tile)
+  map.setTile(position, tile)
   world.getComponent<ChildrenComponent>(entity, 'children')!.children.push(tile)
 }
 
 function removeGround(world: TlbWorld, map: WorldMap, position: Vector): FeatureType {
-  const entity = map.tiles.remove(position)
+  const entity = map.removeTile(position)
   if (entity === undefined) {
     throw new Error(`cannot build asset on missing ground at ${position.key}`)
   }

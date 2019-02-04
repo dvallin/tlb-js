@@ -4,8 +4,11 @@ import { AbstractState } from './state'
 import { RegionComponent } from '../components/region'
 
 import { Rectangle } from '../geometry/rectangle'
-import { Entity } from 'src/ecs/entity'
-import { PositionComponent } from 'src/components/position'
+import { Entity } from '../ecs/entity'
+import { PositionComponent } from '../components/position'
+import { WorldMap } from '../resources/world-map'
+import { Neighbourhood } from '../geometry/neighbourhood'
+import { createFeature } from '../components/feature'
 
 export class MapCreation extends AbstractState {
   private startRegion: Entity | undefined
@@ -35,9 +38,19 @@ export class MapCreation extends AbstractState {
         .withComponent<PositionComponent>('position', { position })
         .withComponent('spawn', {})
     }
+    this.fillWalls(world)
   }
 
   public isFrameLocked(): boolean {
     return false
+  }
+
+  private fillWalls(world: TlbWorld) {
+    const map = world.getResource<WorldMap>('map')
+    map.boundaries.grow().foreach(p => {
+      if (map.getTile(p) === undefined && map.isShapeBlocked(world, new Neighbourhood(p.x, p.y, 1))) {
+        createFeature(world, map, p, 'wall')
+      }
+    })
   }
 }

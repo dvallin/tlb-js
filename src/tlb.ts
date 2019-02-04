@@ -16,7 +16,6 @@ import { Agent } from './systems/agent'
 
 import { WorldMap } from './resources/world-map'
 import { Viewport } from './resources/viewport'
-import { Vector } from './spatial'
 
 import { Random } from './random'
 import { Uniform } from './random/distributions'
@@ -28,6 +27,9 @@ import { PlayerControl } from './systems/player-control'
 import { Renderer } from './renderer/renderer'
 import { Trigger } from './systems/trigger'
 import { PlayerInteraction } from './systems/player-interaction'
+import { FovComponent } from './components/fov'
+import { Fov } from './systems/fov'
+import { ShadowCaster } from './renderer/shadow-caster'
 
 export type ComponentName =
   | 'active'
@@ -36,6 +38,7 @@ export type ComponentName =
   | 'asset'
   | 'children'
   | 'feature'
+  | 'fov'
   | 'free-mode-anchor'
   | 'ground'
   | 'in-viewport-character'
@@ -47,7 +50,7 @@ export type ComponentName =
   | 'spawn'
   | 'trigger'
   | 'viewport-focus'
-export type SystemName = 'agent' | 'free-mode-control' | 'player-control' | 'player-interaction' | 'region-creator' | 'trigger'
+export type SystemName = 'agent' | 'fov' | 'free-mode-control' | 'player-control' | 'player-interaction' | 'region-creator' | 'trigger'
 export type ResourceName = 'input' | 'map' | 'viewport'
 
 export type TlbWorld = World<ComponentName, SystemName, ResourceName>
@@ -61,6 +64,7 @@ export function registerComponents<S, R>(world: World<ComponentName, S, R>): voi
   world.registerComponentStorage('asset', new MapStorage<AssetComponent>())
   world.registerComponentStorage('children', new MapStorage<ChildrenComponent>())
   world.registerComponentStorage('feature', new MapStorage<FeatureComponent>())
+  world.registerComponentStorage('fov', new MapStorage<FovComponent>())
   world.registerComponentStorage('free-mode-anchor', new SingletonStorage())
   world.registerComponentStorage('ground', new MapStorage<GroundComponent>())
   world.registerComponentStorage('in-viewport-character', new SetStorage())
@@ -75,17 +79,18 @@ export function registerComponents<S, R>(world: World<ComponentName, S, R>): voi
 }
 
 export function registerResources(world: World<ComponentName, SystemName, ResourceName>, renderer: Renderer): void {
-  world.registerResource(new WorldMap(new Vector(128, 128)))
+  world.registerResource(new WorldMap())
   world.registerResource(new Viewport())
   world.registerResource(new Input(e => renderer.eventToPosition(e)))
 }
 
-export function registerSystems(world: World<ComponentName, SystemName, ResourceName>): void {
+export function registerSystems(world: World<ComponentName, SystemName, ResourceName>, shadowCaster: ShadowCaster): void {
   const uniform = new Uniform('some seed')
   world.registerSystem('agent', new Agent(new Random(uniform)))
   world.registerSystem('free-mode-control', new FreeModeControl())
   world.registerSystem('player-control', new PlayerControl())
   world.registerSystem('player-interaction', new PlayerInteraction())
+  world.registerSystem('fov', new Fov(shadowCaster))
   world.registerSystem('region-creator', new RegionCreator(new Random(uniform)))
   world.registerSystem('trigger', new Trigger())
 }

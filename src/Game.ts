@@ -5,6 +5,7 @@ import { Running } from './game-states/running'
 import { MapCreation } from './game-states/map-creation'
 
 import { RotRenderer, Renderer } from './renderer/renderer'
+import { ShadowCaster, RotShadowCaster } from './renderer/shadow-caster'
 
 export class Game {
   public computeTime: number = 0
@@ -14,13 +15,14 @@ export class Game {
   public states: State[] = []
 
   public renderer: Renderer = new RotRenderer()
+  public shadowCaster: ShadowCaster = new RotShadowCaster()
 
   public constructor(private readonly world: TlbWorld = new World(), private readonly targetFps: number = 60) {}
 
   public init(): void {
     registerComponents(this.world)
     registerResources(this.world, this.renderer)
-    registerSystems(this.world)
+    registerSystems(this.world, this.shadowCaster)
     const running = new Running()
     const mapCreation = new MapCreation()
     this.states = [running, mapCreation]

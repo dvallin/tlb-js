@@ -4,10 +4,11 @@ import { Vector } from '../spatial'
 import { AbstractState } from './state'
 import { FeatureComponent } from 'src/components/feature'
 import { WorldMap } from 'src/resources/world-map'
+import { FovComponent } from 'src/components/fov'
 
 export class Running extends AbstractState {
   public constructor() {
-    super(['player-control', 'player-interaction', 'trigger', 'free-mode-control'])
+    super(['fov', 'player-control', 'player-interaction', 'trigger', 'free-mode-control'])
   }
 
   public start(world: TlbWorld): void {
@@ -22,8 +23,9 @@ export class Running extends AbstractState {
           .withComponent<{}>('player', {})
           .withComponent<{}>('viewport-focus', {})
           .withComponent<PositionComponent>('position', { position })
-          .withComponent<FeatureComponent>('feature', { type: 'player' }).entity
-        map.characters.set(position, player)
+          .withComponent<FeatureComponent>('feature', { type: 'player' })
+          .withComponent<FovComponent>('fov', { fov: [] }).entity
+        map.setCharacter(position, player)
       })
     } else {
       const position = new Vector(20, 20)

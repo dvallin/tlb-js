@@ -77,6 +77,15 @@ export class Rectangle extends AbstractShape {
     )
   }
 
+  public cover(other: Vector): Rectangle {
+    return Rectangle.fromBounds(
+      Math.min(this.left, other.x),
+      Math.max(this.right, other.x),
+      Math.min(this.top, other.y),
+      Math.max(this.bottom, other.y)
+    )
+  }
+
   public bounds(): Rectangle {
     return this
   }
