@@ -11,6 +11,7 @@ import { getFeature } from '../components/feature'
 import { PositionComponent } from '../components/position'
 import { Entity } from '../ecs/entity'
 import { WorldMap } from 'src/resources/world-map'
+import { LightingComponent } from 'src/components/light'
 
 export interface Renderer {
   render(world: TlbWorld): void
@@ -26,6 +27,8 @@ export interface Renderer {
 export class RotRenderer implements Renderer {
   public readonly display: ROT.Display
 
+  public ambientColor: Color
+
   public constructor() {
     const displayOptions: ROT.DisplayOptions = {
       width: 60,
@@ -35,6 +38,7 @@ export class RotRenderer implements Renderer {
       fontFamily: 'Lucida Console, Monaco, monospace',
       bg: gray[4].rgb,
     }
+    this.ambientColor = new Color([200, 200, 200])
     this.display = new ROT.Display(displayOptions)
     document.body.appendChild(this.display.getContainer())
   }
@@ -55,10 +59,25 @@ export class RotRenderer implements Renderer {
     const position = world.getComponent<PositionComponent>(entity, 'position')
     if (feature && position) {
       const map = world.getResource<WorldMap>('map')
-      if (map.isDiscovered(position.position.floor())) {
+      const p = position.position.floor()
+      if (map.isDiscovered(p)) {
+        let lighting = undefined
+        if (map.isVisible(p)) {
+          lighting = world.getComponent<LightingComponent>(entity, 'lighting')
+        }
         const displayPosition = viewport.toDisplay(position.position, centered)
-        this.character(feature.character, displayPosition, feature.diffuse)
+        this.character(feature.character, displayPosition, this.computeColor(this.ambientColor, feature.diffuse, lighting))
       }
+    }
+  }
+
+  public computeColor(ambientLight: Color, diffuse: Color, lighting: LightingComponent | undefined): Color {
+    if (lighting === undefined) {
+      return diffuse.multiply(ambientLight)
+    } else {
+      let totalLight = ambientLight
+      lighting.incomingLight.forEach(diffuseLight => (totalLight = totalLight.add(diffuseLight)))
+      return diffuse.multiply(totalLight)
     }
   }
 

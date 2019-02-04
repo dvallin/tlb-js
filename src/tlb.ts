@@ -29,7 +29,9 @@ import { Trigger } from './systems/trigger'
 import { PlayerInteraction } from './systems/player-interaction'
 import { FovComponent } from './components/fov'
 import { Fov } from './systems/fov'
-import { ShadowCaster } from './renderer/shadow-caster'
+import { RayCaster } from './renderer/ray-caster'
+import { Light } from './systems/light'
+import { LightingComponent, LightComponent } from './components/light'
 
 export type ComponentName =
   | 'active'
@@ -43,6 +45,8 @@ export type ComponentName =
   | 'ground'
   | 'in-viewport-character'
   | 'in-viewport-tile'
+  | 'light'
+  | 'lighting'
   | 'parent'
   | 'player'
   | 'position'
@@ -50,7 +54,15 @@ export type ComponentName =
   | 'spawn'
   | 'trigger'
   | 'viewport-focus'
-export type SystemName = 'agent' | 'fov' | 'free-mode-control' | 'player-control' | 'player-interaction' | 'region-creator' | 'trigger'
+export type SystemName =
+  | 'agent'
+  | 'fov'
+  | 'free-mode-control'
+  | 'light'
+  | 'player-control'
+  | 'player-interaction'
+  | 'region-creator'
+  | 'trigger'
 export type ResourceName = 'input' | 'map' | 'viewport'
 
 export type TlbWorld = World<ComponentName, SystemName, ResourceName>
@@ -63,12 +75,14 @@ export function registerComponents<S, R>(world: World<ComponentName, S, R>): voi
   world.registerComponentStorage('agent', new MapStorage<AgentComponent>())
   world.registerComponentStorage('asset', new MapStorage<AssetComponent>())
   world.registerComponentStorage('children', new MapStorage<ChildrenComponent>())
-  world.registerComponentStorage('feature', new MapStorage<FeatureComponent>())
+  world.registerComponentStorage('feature', new VectorStorage<FeatureComponent>())
   world.registerComponentStorage('fov', new MapStorage<FovComponent>())
   world.registerComponentStorage('free-mode-anchor', new SingletonStorage())
   world.registerComponentStorage('ground', new MapStorage<GroundComponent>())
   world.registerComponentStorage('in-viewport-character', new SetStorage())
   world.registerComponentStorage('in-viewport-tile', new SetStorage())
+  world.registerComponentStorage('light', new MapStorage<LightComponent>())
+  world.registerComponentStorage('lighting', new VectorStorage<LightingComponent>())
   world.registerComponentStorage('parent', new MapStorage<ParentComponent>())
   world.registerComponentStorage('player', new SingletonStorage())
   world.registerComponentStorage('position', new VectorStorage<PositionComponent>())
@@ -84,13 +98,14 @@ export function registerResources(world: World<ComponentName, SystemName, Resour
   world.registerResource(new Input(e => renderer.eventToPosition(e)))
 }
 
-export function registerSystems(world: World<ComponentName, SystemName, ResourceName>, shadowCaster: ShadowCaster): void {
+export function registerSystems(world: World<ComponentName, SystemName, ResourceName>, rayCaster: RayCaster): void {
   const uniform = new Uniform('some seed')
   world.registerSystem('agent', new Agent(new Random(uniform)))
   world.registerSystem('free-mode-control', new FreeModeControl())
+  world.registerSystem('light', new Light(rayCaster))
   world.registerSystem('player-control', new PlayerControl())
   world.registerSystem('player-interaction', new PlayerInteraction())
-  world.registerSystem('fov', new Fov(shadowCaster))
+  world.registerSystem('fov', new Fov(rayCaster))
   world.registerSystem('region-creator', new RegionCreator(new Random(uniform)))
   world.registerSystem('trigger', new Trigger())
 }

@@ -15,6 +15,8 @@ import { dropAt } from '../array-utils'
 import { createDoor, AssetType, createAssetFromPosition } from '../components/asset'
 import { RegionComponent } from '../components/region'
 import { Shape } from '../geometry/shape'
+import { LightComponent } from '../components/light'
+import { Color } from '../renderer/color'
 
 export interface PositionedAgent {
   position: PositionComponent
@@ -159,6 +161,7 @@ export class Agent implements TlbSystem {
         if (map.isShapeFree(world, largerShape)) {
           dropAt(room.availableEntries, exitIndex)
           room.entries.push(this.footprint(exitSlot.position, agentDirection, exitWidth))
+          this.spawnLight(world, room.shape.bounds().center)
           this.spawnAgent(world, exitSlot.position, exitWidth, agentDirection, state.agent.generation + 1, state.agent.allowedRegion)
         }
       }
@@ -307,5 +310,13 @@ export class Agent implements TlbSystem {
       .withComponent<PositionComponent>('position', {
         position,
       })
+  }
+
+  public spawnLight(world: TlbWorld, position: Vector): void {
+    world
+      .createEntity()
+      .withComponent<LightComponent>('light', { color: new Color([255, 255, 255]) })
+      .withComponent<PositionComponent>('position', { position })
+      .withComponent('active', {})
   }
 }

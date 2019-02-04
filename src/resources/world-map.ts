@@ -66,6 +66,9 @@ export class WorldMap implements TlbResource {
   public isDiscovered(position: Vector): boolean {
     return this.discovered.has(position)
   }
+  public isVisible(position: Vector): boolean {
+    return this.visible.has(position)
+  }
 
   public isLightBlocking(world: TlbWorld, position: Vector): boolean {
     return this.tileMatches(world, position, f => {
