@@ -5,7 +5,7 @@ import { WorldMap } from '../resources/world-map'
 import { Shape } from '../geometry/shape'
 
 import { FeatureType, FeatureComponent, features } from './feature'
-import { ParentComponent } from './parent'
+import { ParentComponent, ChildrenComponent } from './relation'
 import { GroundComponent } from './ground'
 import { PositionComponent } from './position'
 import { Rectangle } from '../geometry/rectangle'
@@ -57,18 +57,23 @@ export function createAssetFromPosition(world: TlbWorld, map: WorldMap, position
 }
 
 function createAsset(world: TlbWorld, type: AssetType): Entity {
-  return world.createEntity().withComponent<AssetComponent>('asset', { type }).entity
+  return world
+    .createEntity()
+    .withComponent<AssetComponent>('asset', { type })
+    .withComponent('trigger', {})
+    .withComponent('children', { children: [] }).entity
 }
 
 function putTile(world: TlbWorld, map: WorldMap, position: Vector, entity: Entity, type: FeatureType): void {
   const feature = removeGround(world, map, position)
   const tile = world
     .createEntity()
+    .withComponent<ParentComponent>('parent', { entity })
     .withComponent<PositionComponent>('position', { position })
     .withComponent<FeatureComponent>('feature', { type })
-    .withComponent<ParentComponent>('parent', { entity })
     .withComponent<GroundComponent>('ground', { feature }).entity
   map.tiles.set(position, tile)
+  world.getComponent<ChildrenComponent>(entity, 'children')!.children.push(tile)
 }
 
 function removeGround(world: TlbWorld, map: WorldMap, position: Vector): FeatureType {

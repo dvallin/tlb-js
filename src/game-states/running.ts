@@ -7,7 +7,7 @@ import { WorldMap } from 'src/resources/world-map'
 
 export class Running extends AbstractState {
   public constructor() {
-    super(['player-control', 'free-mode-control'])
+    super(['player-control', 'player-interaction', 'trigger', 'free-mode-control'])
   }
 
   public start(world: TlbWorld): void {

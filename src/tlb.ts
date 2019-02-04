@@ -7,7 +7,7 @@ import { AgentComponent } from './components/agent'
 import { AssetComponent } from './components/asset'
 import { FeatureComponent } from './components/feature'
 import { GroundComponent } from './components/ground'
-import { ParentComponent } from './components/parent'
+import { ParentComponent, ChildrenComponent } from './components/relation'
 import { PositionComponent } from './components/position'
 import { AgeComponent } from './components/age'
 import { RegionComponent } from './components/region'
@@ -26,12 +26,15 @@ import { FreeModeControl } from './systems/free-mode-control'
 import { RegionCreator } from './systems/region-creator'
 import { PlayerControl } from './systems/player-control'
 import { Renderer } from './renderer/renderer'
+import { Trigger } from './systems/trigger'
+import { PlayerInteraction } from './systems/player-interaction'
 
 export type ComponentName =
   | 'active'
   | 'age'
   | 'agent'
   | 'asset'
+  | 'children'
   | 'feature'
   | 'free-mode-anchor'
   | 'ground'
@@ -42,8 +45,9 @@ export type ComponentName =
   | 'position'
   | 'region'
   | 'spawn'
+  | 'trigger'
   | 'viewport-focus'
-export type SystemName = 'agent' | 'free-mode-control' | 'player-control' | 'region-creator'
+export type SystemName = 'agent' | 'free-mode-control' | 'player-control' | 'player-interaction' | 'region-creator' | 'trigger'
 export type ResourceName = 'input' | 'map' | 'viewport'
 
 export type TlbWorld = World<ComponentName, SystemName, ResourceName>
@@ -55,6 +59,7 @@ export function registerComponents<S, R>(world: World<ComponentName, S, R>): voi
   world.registerComponentStorage('age', new MapStorage<AgeComponent>())
   world.registerComponentStorage('agent', new MapStorage<AgentComponent>())
   world.registerComponentStorage('asset', new MapStorage<AssetComponent>())
+  world.registerComponentStorage('children', new MapStorage<ChildrenComponent>())
   world.registerComponentStorage('feature', new MapStorage<FeatureComponent>())
   world.registerComponentStorage('free-mode-anchor', new SingletonStorage())
   world.registerComponentStorage('ground', new MapStorage<GroundComponent>())
@@ -65,6 +70,7 @@ export function registerComponents<S, R>(world: World<ComponentName, S, R>): voi
   world.registerComponentStorage('position', new VectorStorage<PositionComponent>())
   world.registerComponentStorage('region', new MapStorage<RegionComponent>())
   world.registerComponentStorage('spawn', new SingletonStorage())
+  world.registerComponentStorage('trigger', new SetStorage())
   world.registerComponentStorage('viewport-focus', new SingletonStorage())
 }
 
@@ -79,5 +85,7 @@ export function registerSystems(world: World<ComponentName, SystemName, Resource
   world.registerSystem('agent', new Agent(new Random(uniform)))
   world.registerSystem('free-mode-control', new FreeModeControl())
   world.registerSystem('player-control', new PlayerControl())
+  world.registerSystem('player-interaction', new PlayerInteraction())
   world.registerSystem('region-creator', new RegionCreator(new Random(uniform)))
+  world.registerSystem('trigger', new Trigger())
 }

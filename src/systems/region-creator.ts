@@ -13,7 +13,7 @@ import { WorldMap } from '../resources/world-map'
 import { createFeature } from '../components/feature'
 
 export class RegionCreator implements TlbSystem {
-  public readonly components: ComponentName[] = ['region', 'active']
+  public readonly components: ComponentName[] = ['active', 'region']
 
   public readonly landmarkGenerator: LandmarkGenerator
   public constructor(public readonly random: Random) {

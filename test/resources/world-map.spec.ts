@@ -29,8 +29,6 @@ describe('WorldMap', () => {
     })
   })
 
-  describe('isTileBlocking', () => {})
-
   describe('tile based queries', () => {
     let map: WorldMap
     let world: TlbWorld

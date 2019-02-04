@@ -3,6 +3,8 @@ import { Vector } from '../spatial'
 import { Position } from '../renderer/position'
 import { TlbWorld, ResourceName, TlbResource } from '../tlb'
 import { PositionComponent } from 'src/components/position'
+import { Input } from './input'
+import { VK_G } from 'rot-js'
 
 export class Viewport implements TlbResource {
   public readonly kind: ResourceName = 'viewport'
@@ -13,6 +15,11 @@ export class Viewport implements TlbResource {
   public constructor(public readonly boundaries: Vector = new Vector(60, 40)) {}
 
   public update(world: TlbWorld): void {
+    const input = world.getResource<Input>('input')
+    if (input.keyPressed.has(VK_G)) {
+      this.gridLocked = !this.gridLocked
+    }
+
     world.components.get('viewport-focus')!.foreach(focus => {
       const position = world.getComponent<PositionComponent>(focus, 'position')!
       this.focus(position.position)
