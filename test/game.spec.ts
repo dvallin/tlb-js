@@ -1,23 +1,39 @@
-import { Game } from "../src/Game"
+import { Game } from '../src/game'
+import { World } from '../src/ecs/world'
+import { ComponentName, ResourceName, SystemName } from '../src/tlb'
+import { State } from '../src/game-states/state'
+import { mockRenderer } from './mocks'
 
-describe("Game", () => {
-    it("locks onto a fixed framerate", () => {
-        jest.useFakeTimers()
-        const game: Game = new Game({
-            framerate: 10
-        })
-        const spy = jest.spyOn(game, "run")
-        game.tick = jest.fn()
+describe('Game', () => {
+  let game: Game
+  let world: World<ComponentName, SystemName, ResourceName>
+  let mockState: State
+  beforeEach(() => {
+    jest.useFakeTimers()
+    world = new World()
+    game = new Game(world)
+    mockState = {
+      start: jest.fn(),
+      stop: jest.fn(),
+      isDone: jest.fn(),
+      isFrameLocked: jest.fn(),
+    }
+    game.states.push(mockState)
+    game.renderer = mockRenderer()
+  })
 
-        game.run()
-        jest.advanceTimersByTime(100)
-        jest.advanceTimersByTime(100)
-        jest.advanceTimersByTime(100)
-        jest.advanceTimersByTime(100)
-        jest.advanceTimersByTime(100)
-        jest.advanceTimersByTime(100)
-        jest.advanceTimersByTime(100)
+  it('counts frames and sets timing values', () => {
+    game.execute()
+    expect(game.frames).toEqual(1)
+    expect(game.started).toBeGreaterThan(0)
+    expect(game.fps).toBeGreaterThan(0)
+    expect(game.mspf).toBeGreaterThan(0)
 
-        expect(spy).toHaveBeenCalledTimes(8)
-    })
+    jest.runOnlyPendingTimers()
+
+    expect(game.frames).toEqual(2)
+    expect(game.started).toBeGreaterThan(0)
+    expect(game.fps).toBeGreaterThan(0)
+    expect(game.mspf).toBeGreaterThan(0)
+  })
 })

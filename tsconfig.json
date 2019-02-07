@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
-        "target": "esnext",
-        "module": "esnext",
+        "target": "es6",
+        "module": "es6",
         "moduleResolution": "node",
         "outDir": "dist",
         "declaration": true,
@@ -14,11 +14,6 @@
         "noImplicitReturns": true,
         "noFallthroughCasesInSwitch": true,
         "baseUrl": ".",
-        "paths": {
-            "@/*": [
-                "src/*"
-            ]
-        },
         "typeRoots": [
             "node_modules/@types"
         ],

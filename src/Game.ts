@@ -1,105 +1,114 @@
-import { Display } from "rot-js"
-import * as ROT from "rot-js"
+import { World } from './ecs/world'
+import { TlbWorld, registerComponents, registerSystems, registerResources } from './tlb'
+import { State } from './game-states/state'
+import { Running } from './game-states/running'
+import { MapCreation } from './game-states/map-creation'
 
-import { World } from "mogwai-ecs/lib"
-
-import { GameSystem } from "@/systems/GameSystem"
-import { gray } from "@/rendering/palettes"
-import { init } from "@/random";
-
-export interface GameSettings {
-    framerate: number
-    screen_width: number,
-    screen_height: number,
-
-    map_width: number,
-    map_height: number,
-
-    seed: string
-}
-
-export function defaultSettings(): GameSettings {
-    return {
-        framerate: 30,
-        screen_width: 60,
-        screen_height: 40,
-
-        // TODO: Where to get these parameters from?
-        map_width: 2 * 98,
-        map_height: 2 * 61,
-
-        seed: Date.now().toString()
-    }
-}
+import { RotRenderer, Renderer } from './renderer/renderer'
+import { RayCaster, RotRayCaster } from './renderer/ray-caster'
 
 export class Game {
-    public static fromSettings(settings: Partial<GameSettings>): Game {
-        const definiteSettings = Object.assign(defaultSettings(), settings)
+  public computeTime: number = 0
+  public renderTime: number = 0
+  public started: number = 0
+  public frames: number = 0
+  public states: State[] = []
 
-        const displayOptions: ROT.DisplayOptions = {
-            width: definiteSettings.screen_width,
-            height: definiteSettings.screen_height,
-            forceSquareRatio: true,
-            fontSize: 17,
-            fontFamily: "Lucida Console, Monaco, monospace",
-            bg: gray[4].rgb
-        }
-        const display = new ROT.Display(displayOptions)
-        const world = new World()
+  public renderer: Renderer = new RotRenderer()
+  public rayCaster: RayCaster = new RotRayCaster()
 
-        return new Game(definiteSettings, display, world)
+  public constructor(private readonly world: TlbWorld = new World(), private readonly targetFps: number = 60) {}
+
+  public init(): void {
+    registerComponents(this.world)
+    registerResources(this.world, this.renderer)
+    registerSystems(this.world, this.rayCaster, s => this.pushState(s))
+    const running = new Running()
+    const mapCreation = new MapCreation()
+    this.states = [running, mapCreation]
+  }
+
+  public execute(): void {
+    this.enterState()
+    this.started = Date.now()
+    this.tick()
+  }
+
+  private tick(): void {
+    const state = this.states[this.states.length - 1]
+    let msLeft = 1000 / this.targetFps
+
+    // update all resources (io, clipping, etc...) and render afterwards
+    const startRender = Date.now()
+    this.world.updateResources()
+    this.renderer.render(this.world)
+    const renderDelta = Date.now() - startRender
+    msLeft -= renderDelta
+    this.renderTime += renderDelta
+
+    // execute the world
+    while (true) {
+      const start = Date.now()
+      this.world.updateSystems()
+      const delta = Date.now() - start
+      msLeft -= delta
+      this.computeTime += delta
+
+      if (state.isFrameLocked() || state.isDone(this.world) || msLeft < delta) {
+        break
+      }
     }
 
-    private systems: GameSystem[]
-
-    constructor(
-        public readonly settings: GameSettings,
-        public readonly display: Display,
-        public readonly world: World
-
-    ) {
-        init(settings.seed)
-        this.systems = []
+    if (state.isDone(this.world)) {
+      state.stop(this.world)
+      this.states.pop()
+      if (this.states.length === 0) {
+        return
+      }
+      this.enterState()
     }
 
-    public addGameSystem(system: GameSystem): void {
-        system.register(this.world)
-        this.systems.push(system)
+    this.frames++
+    if (this.frames % 100 === 0) {
+      console.log(`${this.mspf.toFixed(2)} ms per frame @${this.fps.toFixed(1)} FPS`)
+      console.log(`(computation, rendering) = (${this.mscpf.toFixed(2)}, ${this.msrpf.toFixed(2)}) ms`)
+      console.log(`Entities: ${this.world.entityCount}`)
+      this.frames = 0
+      this.computeTime = 0
+      this.renderTime = 0
+      this.started = Date.now()
     }
 
-    public build(): void {
-        document.body.appendChild(this.display.getContainer())
-        this.systems.forEach(system =>
-            system.build(this.world)
-        )
-    }
+    setTimeout(() => this.tick(), msLeft)
+  }
 
-    public run(): void {
-        const next = Date.now() + (1000 / this.settings.framerate!)
-        this.tick()
-        const untilNextFrame = next - Date.now()
-        setTimeout(() => this.run(), untilNextFrame)
-    }
+  public get fps(): number {
+    return this.frames / ((Date.now() - this.started) / 1000)
+  }
 
-    public tick(): void {
-        this.world.run()
-        this.display.clear()
+  public get mspf(): number {
+    return (this.computeTime + this.renderTime) / this.frames
+  }
 
-        const systemsByLayer: GameSystem[][] = []
-        this.systems.forEach(system => {
-            const layer = systemsByLayer[system.renderLayer] || []
-            layer.push(system)
-            systemsByLayer[system.renderLayer] = layer
-        })
-        systemsByLayer.forEach(layer => {
-            layer.forEach(system =>
-                system.render(this.world, this.display)
-            )
-        })
-        systemsByLayer.forEach(layer => {
-            layer.forEach(system =>
-                system.afterRender(this.world)
-            )
-        })
-    }
+  public get msrpf(): number {
+    return this.renderTime / this.frames
+  }
+
+  public get mscpf(): number {
+    return this.computeTime / this.frames
+  }
+
+  private pushState(state: State): void {
+    this.leaveState()
+    this.states.push(state)
+    this.enterState()
+  }
+
+  private leaveState(): void {
+    this.states[this.states.length - 1].stop(this.world)
+  }
+
+  private enterState(): void {
+    this.states[this.states.length - 1].start(this.world)
+  }
 }
