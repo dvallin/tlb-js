@@ -7,7 +7,7 @@ import { Rectangle } from '../geometry/rectangle'
 import { Entity } from '../ecs/entity'
 import { PositionComponent } from '../components/position'
 import { WorldMap } from '../resources/world-map'
-import { Neighbourhood } from '../geometry/neighbourhood'
+import { FunctionalShape } from '../geometry/functional-shape'
 import { createFeature } from '../components/feature'
 
 export class MapCreation extends AbstractState {
@@ -48,7 +48,7 @@ export class MapCreation extends AbstractState {
   private fillWalls(world: TlbWorld) {
     const map = world.getResource<WorldMap>('map')
     map.boundaries.grow().foreach(p => {
-      if (map.getTile(p) === undefined && map.isShapeBlocked(world, new Neighbourhood(p.x, p.y, 1))) {
+      if (map.getTile(p) === undefined && map.isShapeBlocked(world, FunctionalShape.LN(p, 1))) {
         createFeature(world, map, p, 'wall')
       }
     })

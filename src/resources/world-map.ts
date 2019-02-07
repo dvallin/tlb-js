@@ -1,4 +1,4 @@
-import { DiscreteSpace, Vector, Space } from '../spatial'
+import { DiscreteSpace, Vector, Space, StackedSpace, DiscreteStackedSpace } from '../spatial'
 import { Entity } from '../ecs/entity'
 import { ResourceName, TlbResource, TlbWorld } from '../tlb'
 import { FeatureComponent, features } from '../components/feature'
@@ -6,6 +6,7 @@ import { Shape } from '../geometry/shape'
 import { SetSpace, DiscreteSetSpace } from '../spatial/set-space'
 import { FovComponent } from '../components/fov'
 import { Rectangle } from '../geometry/rectangle'
+import { FunctionalShape } from '../geometry/functional-shape'
 
 export class WorldMap implements TlbResource {
   public readonly kind: ResourceName = 'map'
@@ -18,17 +19,29 @@ export class WorldMap implements TlbResource {
   public visible: SetSpace = new DiscreteSetSpace()
   public readonly discovered: SetSpace = new DiscreteSetSpace()
 
+  public lights: StackedSpace<Entity> = new DiscreteStackedSpace<Entity>()
+
   public constructor() {}
 
   public update(world: TlbWorld): void {
     this.visible = new DiscreteSetSpace()
+    const visibleLights = new Set<Entity>()
     world.components.get('player')!.foreach(player => {
       const fov = world.getComponent<FovComponent>(player, 'fov')
       if (fov !== undefined) {
         fov.fov.forEach(p => {
           this.visible.set(p)
           this.discovered.set(p)
+          this.lights.get(p).forEach(v => visibleLights.add(v))
         })
+      }
+    })
+    world.components.get('light')!.foreach(l => {
+      const light = world.editEntity(l)
+      if (visibleLights.has(l)) {
+        light.removeComponent('active')
+      } else {
+        light.withComponent('active', {})
       }
     })
   }
@@ -54,13 +67,8 @@ export class WorldMap implements TlbResource {
     return this.characters.remove(position)
   }
 
-  public isTileBlocking(world: TlbWorld, position: Vector): boolean {
-    return this.tileMatches(world, position, f => {
-      if (f === undefined) {
-        return true
-      }
-      return features[f.type].blocking
-    })
+  public addLight(position: Vector, entity: Entity): void {
+    this.lights.addAll(FunctionalShape.L2(position, 10, true), entity)
   }
 
   public isDiscovered(position: Vector): boolean {
@@ -70,17 +78,41 @@ export class WorldMap implements TlbResource {
     return this.visible.has(position)
   }
 
-  public isLightBlocking(world: TlbWorld, position: Vector): boolean {
+  public isTileBlocking(world: TlbWorld, position: Vector): boolean {
     return this.tileMatches(world, position, f => {
       if (f === undefined) {
         return true
       }
-      return features[f.type].lightBlocking
+      return features[f.type].blocking
     })
   }
 
+  public isLightBlocking(world: TlbWorld, position: Vector): boolean {
+    return (
+      this.tileMatches(world, position, (f: FeatureComponent | undefined) => {
+        if (f === undefined) {
+          return true
+        }
+        return features[f.type].lightBlocking
+      }) ||
+      this.characterMatches(world, position, (f: FeatureComponent | undefined) => {
+        if (f === undefined) {
+          return false
+        }
+        return features[f.type].lightBlocking
+      })
+    )
+  }
+
   public tileMatches(world: TlbWorld, position: Vector, predicate: (f: FeatureComponent | undefined) => boolean): boolean {
-    const entity = this.tiles.get(position)
+    return this.featureMatches(world, this.tiles.get(position), predicate)
+  }
+
+  public characterMatches(world: TlbWorld, position: Vector, predicate: (f: FeatureComponent | undefined) => boolean): boolean {
+    return this.featureMatches(world, this.characters.get(position), predicate)
+  }
+
+  public featureMatches(world: TlbWorld, entity: Entity | undefined, predicate: (f: FeatureComponent | undefined) => boolean): boolean {
     let feature: FeatureComponent | undefined
     if (entity !== undefined) {
       feature = world.getComponent<FeatureComponent>(entity, 'feature')

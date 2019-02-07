@@ -8,7 +8,7 @@ import { createFeature } from '../components/feature'
 import { leftOf, rightOf, Direction, oppositeOf } from '../spatial/direction'
 import { Random } from '../random'
 import { Rectangle } from '../geometry/rectangle'
-import { Neighbourhood } from '../geometry/neighbourhood'
+import { FunctionalShape } from '../geometry/functional-shape'
 import { RoomGenerator } from '../assets/room-generator'
 import { Room } from '../assets/rooms'
 import { dropAt } from '../array-utils'
@@ -161,7 +161,7 @@ export class Agent implements TlbSystem {
         if (map.isShapeFree(world, largerShape)) {
           dropAt(room.availableEntries, exitIndex)
           room.entries.push(this.footprint(exitSlot.position, agentDirection, exitWidth))
-          this.spawnLight(world, room.shape.bounds().center)
+          this.spawnLight(world, map, room.shape.bounds().center)
           this.spawnAgent(world, exitSlot.position, exitWidth, agentDirection, state.agent.generation + 1, state.agent.allowedRegion)
         }
       }
@@ -176,7 +176,7 @@ export class Agent implements TlbSystem {
     while (remainingAssets-- > 0 && room.availableAssets.length > 0) {
       const assetIndex = this.random.integerBetween(0, room.availableAssets.length - 1)
       const assetSlot = room.availableAssets[assetIndex]
-      const hasWall = map.shapeHasSome(world, Neighbourhood.L1(assetSlot.position), f => f === undefined || f.type === 'wall')
+      const hasWall = map.shapeHasSome(world, FunctionalShape.LN(assetSlot.position), f => f === undefined || f.type === 'wall')
 
       const possibleAssets: AssetType[] = []
       if (hasWall) {
@@ -312,11 +312,12 @@ export class Agent implements TlbSystem {
       })
   }
 
-  public spawnLight(world: TlbWorld, position: Vector): void {
-    world
+  public spawnLight(world: TlbWorld, map: WorldMap, position: Vector): void {
+    const entity = world
       .createEntity()
       .withComponent<LightComponent>('light', { color: new Color([255, 255, 255]) })
       .withComponent<PositionComponent>('position', { position })
-      .withComponent('active', {})
+      .withComponent('active', {}).entity
+    map.addLight(position, entity)
   }
 }

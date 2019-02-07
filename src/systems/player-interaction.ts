@@ -4,7 +4,7 @@ import { ComponentName, TlbSystem, TlbWorld } from '../tlb'
 import { PositionComponent } from '../components/position'
 import { Input } from '../resources/input'
 import { WorldMap } from '../resources/world-map'
-import { Neighbourhood } from '../geometry/neighbourhood'
+import { FunctionalShape } from '../geometry/functional-shape'
 import { Shape } from '../geometry/shape'
 import { Entity } from 'src/ecs/entity'
 import { ParentComponent } from 'src/components/relation'
@@ -17,7 +17,8 @@ export class PlayerInteraction implements TlbSystem {
     if (input.keyPressed.has(VK_E)) {
       const map = world.getResource<WorldMap>('map')
       const position = world.getComponent<PositionComponent>(entity, 'position')!
-      const neighbourhood = Neighbourhood.L1(position.position.floor(), 1)
+      const neighbourhood = FunctionalShape.LN(position.position.floor(), 1, true)
+
       const trigger = this.findTrigger(world, map, neighbourhood)
       if (trigger !== undefined) {
         world.editEntity(trigger).withComponent('active', {})

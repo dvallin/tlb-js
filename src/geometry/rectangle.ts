@@ -6,6 +6,10 @@ export class Rectangle extends AbstractShape {
     return new Rectangle(left, top, right - left + 1, bottom - top + 1)
   }
 
+  public static centerAt(x: number, y: number, size: number): Rectangle {
+    return new Rectangle(x - size, y - size, 2 * size + 1, 2 * size + 1)
+  }
+
   public constructor(public readonly x: number, public readonly y: number, public readonly width: number, public readonly height: number) {
     super()
   }

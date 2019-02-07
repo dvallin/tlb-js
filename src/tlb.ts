@@ -29,9 +29,11 @@ import { Trigger } from './systems/trigger'
 import { PlayerInteraction } from './systems/player-interaction'
 import { FovComponent } from './components/fov'
 import { Fov } from './systems/fov'
+import { Npc } from './systems/npc'
 import { RayCaster } from './renderer/ray-caster'
 import { Light } from './systems/light'
 import { LightingComponent, LightComponent } from './components/light'
+import { State } from './game-states/state'
 
 export type ComponentName =
   | 'active'
@@ -47,6 +49,7 @@ export type ComponentName =
   | 'in-viewport-tile'
   | 'light'
   | 'lighting'
+  | 'npc'
   | 'parent'
   | 'player'
   | 'position'
@@ -59,6 +62,7 @@ export type SystemName =
   | 'fov'
   | 'free-mode-control'
   | 'light'
+  | 'npc'
   | 'player-control'
   | 'player-interaction'
   | 'region-creator'
@@ -85,6 +89,7 @@ export function registerComponents<S, R>(world: World<ComponentName, S, R>): voi
   world.registerComponentStorage('lighting', new VectorStorage<LightingComponent>())
   world.registerComponentStorage('parent', new MapStorage<ParentComponent>())
   world.registerComponentStorage('player', new SingletonStorage())
+  world.registerComponentStorage('npc', new SingletonStorage())
   world.registerComponentStorage('position', new VectorStorage<PositionComponent>())
   world.registerComponentStorage('region', new MapStorage<RegionComponent>())
   world.registerComponentStorage('spawn', new SingletonStorage())
@@ -98,7 +103,11 @@ export function registerResources(world: World<ComponentName, SystemName, Resour
   world.registerResource(new Input(e => renderer.eventToPosition(e)))
 }
 
-export function registerSystems(world: World<ComponentName, SystemName, ResourceName>, rayCaster: RayCaster): void {
+export function registerSystems(
+  world: World<ComponentName, SystemName, ResourceName>,
+  rayCaster: RayCaster,
+  pushState: (s: State) => void
+): void {
   const uniform = new Uniform('some seed')
   world.registerSystem('agent', new Agent(new Random(uniform)))
   world.registerSystem('free-mode-control', new FreeModeControl())
@@ -106,6 +115,7 @@ export function registerSystems(world: World<ComponentName, SystemName, Resource
   world.registerSystem('player-control', new PlayerControl())
   world.registerSystem('player-interaction', new PlayerInteraction())
   world.registerSystem('fov', new Fov(rayCaster))
+  world.registerSystem('npc', new Npc(pushState))
   world.registerSystem('region-creator', new RegionCreator(new Random(uniform)))
   world.registerSystem('trigger', new Trigger())
 }

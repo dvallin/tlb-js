@@ -22,6 +22,7 @@ export class RotRayCaster implements RayCaster {
     const lighting = new Lighting((x, y) => (map.isLightBlocking(world, new Vector(x, y)) ? 0.0 : 1.0), { passes: 1 })
     lighting.setLight(origin.x, origin.y, color.color)
     lighting.setFOV(fov)
+    lighting.setOptions({ range: 10 })
     lighting.compute((x: number, y: number, c: [number, number, number]) => {
       callback(new Vector(x, y), new Color(c))
     })

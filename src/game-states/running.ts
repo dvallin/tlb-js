@@ -8,7 +8,7 @@ import { FovComponent } from 'src/components/fov'
 
 export class Running extends AbstractState {
   public constructor() {
-    super(['fov', 'light', 'player-control', 'player-interaction', 'trigger', 'free-mode-control'])
+    super(['fov', 'light', 'player-control', 'player-interaction', 'npc', 'trigger', 'free-mode-control'])
   }
 
   public start(world: TlbWorld): void {

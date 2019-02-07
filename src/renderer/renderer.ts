@@ -3,7 +3,6 @@ import * as ROT from 'rot-js'
 import { gray } from './palettes'
 import { Position } from './position'
 import { Color } from './color'
-import { Drawable } from './drawable'
 
 import { Viewport } from '../resources/viewport'
 import { TlbWorld } from '../tlb'
@@ -19,7 +18,6 @@ export interface Renderer {
   clear(): void
   eventToPosition(e: UIEvent): Position | undefined
 
-  drawable(drawable: Drawable, position: Position, bg?: Color): void
   character(character: string, position: Position, fg: Color, bg?: Color): void
   text(text: string, position: Position, fg: Color, bg?: Color): void
 }
@@ -52,6 +50,7 @@ export class RotRenderer implements Renderer {
     const viewport = world.getResource<Viewport>('viewport')
     world.getStorage('in-viewport-tile').foreach(entity => this.renderFeature(world, viewport, entity, false))
     world.getStorage('in-viewport-character').foreach(entity => this.renderFeature(world, viewport, entity, true))
+    world.components.get('lighting')!.clear()
   }
 
   public renderFeature(world: TlbWorld, viewport: Viewport, entity: Entity, centered: boolean): void {
@@ -87,12 +86,6 @@ export class RotRenderer implements Renderer {
       return { x: p[0], y: p[1] }
     }
     return undefined
-  }
-
-  public drawable(drawable: Drawable, position: Position, bg?: Color): void {
-    const fgRgb = drawable.color
-    const bgRgb = bg ? bg.rgb : undefined
-    this.display.draw(position.x, position.y, drawable.character[0], fgRgb, bgRgb)
   }
 
   public character(character: string, position: Position, fg: Color, bg?: Color): void {

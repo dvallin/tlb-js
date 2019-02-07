@@ -22,7 +22,7 @@ export class Game {
   public init(): void {
     registerComponents(this.world)
     registerResources(this.world, this.renderer)
-    registerSystems(this.world, this.rayCaster)
+    registerSystems(this.world, this.rayCaster, s => this.pushState(s))
     const running = new Running()
     const mapCreation = new MapCreation()
     this.states = [running, mapCreation]
@@ -98,8 +98,17 @@ export class Game {
     return this.computeTime / this.frames
   }
 
+  private pushState(state: State): void {
+    this.leaveState()
+    this.states.push(state)
+    this.enterState()
+  }
+
+  private leaveState(): void {
+    this.states[this.states.length - 1].stop(this.world)
+  }
+
   private enterState(): void {
-    const nextState = this.states[this.states.length - 1]
-    nextState.start(this.world)
+    this.states[this.states.length - 1].start(this.world)
   }
 }
