@@ -8,7 +8,35 @@ import { FovComponent } from '../components/fov'
 import { Rectangle } from '../geometry/rectangle'
 import { FunctionalShape } from '../geometry/functional-shape'
 
-export class WorldMap implements TlbResource {
+export interface WorldMap {
+  boundaries: Rectangle
+
+  setTile(position: Vector, entity: Entity): void
+  getTile(position: Vector): Entity | undefined
+  removeTile(position: Vector): Entity | undefined
+
+  setCharacter(position: Vector, entity: Entity): void
+  getCharacter(position: Vector): Entity | undefined
+  removeCharacter(position: Vector): Entity | undefined
+  addLight(position: Vector, entity: Entity): void
+
+  isDiscovered(position: Vector): boolean
+  isVisible(position: Vector): boolean
+
+  isTileBlocking(world: TlbWorld, position: Vector): boolean
+  isLightBlocking(world: TlbWorld, position: Vector): boolean
+
+  tileMatches(world: TlbWorld, position: Vector, predicate: (f: FeatureComponent | undefined) => boolean): boolean
+  characterMatches(world: TlbWorld, position: Vector, predicate: (f: FeatureComponent | undefined) => boolean): boolean
+  featureMatches(world: TlbWorld, entity: Entity | undefined, predicate: (f: FeatureComponent | undefined) => boolean): boolean
+
+  isShapeFree(world: TlbWorld, shape: Shape): boolean
+  isShapeBlocked(world: TlbWorld, shape: Shape): boolean
+  shapeHasAll(world: TlbWorld, shape: Shape, predicate: (f: FeatureComponent | undefined) => boolean): boolean
+  shapeHasSome(world: TlbWorld, shape: Shape, predicate: (f: FeatureComponent | undefined) => boolean): boolean
+}
+
+export class WorldMapResource implements TlbResource, WorldMap {
   public readonly kind: ResourceName = 'map'
 
   public readonly tiles: Space<Entity> = new DiscreteSpace<Entity>()
@@ -50,18 +78,19 @@ export class WorldMap implements TlbResource {
     this.tiles.set(position, entity)
     this.boundaries = this.boundaries.cover(position)
   }
+  public getTile(position: Vector): Entity | undefined {
+    return this.tiles.get(position)
+  }
+  public removeTile(position: Vector): Entity | undefined {
+    return this.tiles.remove(position)
+  }
+
   public setCharacter(position: Vector, entity: Entity): void {
     this.characters.set(position, entity)
     this.boundaries = this.boundaries.cover(position)
   }
-  public getTile(position: Vector): Entity | undefined {
-    return this.tiles.get(position)
-  }
   public getCharacter(position: Vector): Entity | undefined {
     return this.characters.get(position)
-  }
-  public removeTile(position: Vector): Entity | undefined {
-    return this.tiles.remove(position)
   }
   public removeCharacter(position: Vector): Entity | undefined {
     return this.characters.remove(position)

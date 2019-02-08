@@ -3,7 +3,7 @@ import { PositionComponent } from '../components/position'
 import { Vector } from '../spatial'
 import { AbstractState } from './state'
 import { FeatureComponent } from 'src/components/feature'
-import { WorldMap } from 'src/resources/world-map'
+import { WorldMap, WorldMapResource } from 'src/resources/world-map'
 import { FovComponent } from 'src/components/fov'
 
 export class Running extends AbstractState {
@@ -15,7 +15,7 @@ export class Running extends AbstractState {
     super.start(world)
     const spawns = world.components.get('spawn')!
     if (spawns.size() === 1) {
-      const map = world.getResource<WorldMap>('map')
+      const map: WorldMap = world.getResource<WorldMapResource>('map')
       spawns.foreach(spawn => {
         const position = world.getComponent<PositionComponent>(spawn, 'position')!.position
         const player = world

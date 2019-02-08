@@ -4,6 +4,7 @@ import { World } from '../../src/ecs/world'
 import { TlbWorld, registerComponents, registerResources } from '../../src/tlb'
 import { WorldMap } from '../../src/resources/world-map'
 import { FeatureComponent } from '../../src/components/feature'
+import { mockRenderer } from '../mocks'
 
 describe('createAssetFromPosition', () => {
   let world: TlbWorld
@@ -12,7 +13,7 @@ describe('createAssetFromPosition', () => {
     jest.clearAllMocks()
     world = new World()
     registerComponents(world)
-    registerResources(world)
+    registerResources(world, mockRenderer())
     map = world.getResource('map')
   })
 

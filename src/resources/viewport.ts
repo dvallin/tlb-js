@@ -1,12 +1,18 @@
-import { WorldMap } from './world-map'
+import { WorldMap, WorldMapResource } from './world-map'
 import { Vector } from '../spatial'
 import { Position } from '../renderer/position'
 import { TlbWorld, ResourceName, TlbResource } from '../tlb'
 import { PositionComponent } from 'src/components/position'
-import { Input } from './input'
-import { VK_G } from 'rot-js'
+import { Input, InputResource } from './input'
+import { KEYS } from 'rot-js'
 
-export class Viewport implements TlbResource {
+export interface Viewport {
+  fromDisplay(p: Position): Vector
+  toDisplay(p: Vector, centered: boolean): Position
+  focus(position: Vector): void
+}
+
+export class ViewportResource implements TlbResource, Viewport {
   public readonly kind: ResourceName = 'viewport'
 
   public gridLocked: boolean = false
@@ -15,8 +21,8 @@ export class Viewport implements TlbResource {
   public constructor(public readonly boundaries: Vector = new Vector(60, 40)) {}
 
   public update(world: TlbWorld): void {
-    const input = world.getResource<Input>('input')
-    if (input.keyPressed.has(VK_G)) {
+    const input: Input = world.getResource<InputResource>('input')
+    if (input.keyPressed.has(KEYS.VK_G)) {
       this.gridLocked = !this.gridLocked
     }
 
@@ -27,7 +33,7 @@ export class Viewport implements TlbResource {
 
     world.getStorage('in-viewport-character')!.clear()
     world.getStorage('in-viewport-tile')!.clear()
-    const map = world.getResource<WorldMap>('map')
+    const map: WorldMap = world.getResource<WorldMapResource>('map')
     for (let y = 0; y < this.boundaries.y; y++) {
       for (let x = 0; x < this.boundaries.x; x++) {
         const position = this.fromDisplay({ x, y })

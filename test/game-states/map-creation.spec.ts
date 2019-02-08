@@ -1,7 +1,7 @@
 import { MapCreation } from '../../src/game-states/map-creation'
 import { World } from '../../src/ecs/world'
 import { TlbWorld, registerSystems, registerComponents, registerResources } from '../../src/tlb'
-import { mockRenderer } from '../mocks'
+import { mockRenderer, mockRayCaster } from '../mocks'
 import { RegionComponent } from '../../src/components/region'
 import { Rectangle } from '../../src/geometry/rectangle'
 
@@ -10,7 +10,7 @@ describe('MapCreation', () => {
   beforeEach(() => {
     world = new World()
     registerResources(world, mockRenderer())
-    registerSystems(world)
+    registerSystems(world, mockRayCaster(), jest.fn())
     registerComponents(world)
   })
 
@@ -64,7 +64,6 @@ describe('MapCreation', () => {
     })
 
     it('creates a spawn point at first landmark', () => {
-      expect(world.entityCount).toBe(2)
       expect(world.getComponent(1, 'spawn')).toBeDefined()
       expect(world.getComponent(1, 'position')).toEqual({ position: shape.center })
     })

@@ -5,6 +5,7 @@ import { Input } from '../../src/resources/input'
 import { VectorStorage } from '../../src/ecs/storage'
 import { Vector } from '../../src/spatial'
 import { PositionComponent } from '../../src/components/position'
+import { mockInput } from '../mocks'
 
 describe('FreeModeControl', () => {
   let system: FreeModeControl
@@ -13,8 +14,7 @@ describe('FreeModeControl', () => {
   beforeEach(() => {
     system = new FreeModeControl()
     world = new World()
-    input = new Input(jest.fn())
-    world.registerResource(input)
+    input = mockInput(world)
     world.registerComponentStorage('position', new VectorStorage<PositionComponent>())
     world.createEntity().withComponent('position', { position: new Vector(2, 3) })
   })

@@ -1,13 +1,13 @@
 import * as ROT from 'rot-js'
-import { Input } from '../../src/resources/input'
+import { InputResource } from '../../src/resources/input'
 import { Vector } from '../../src/spatial'
 
 describe('Input', () => {
-  let input: Input
+  let input: InputResource
   let eventToPosition: jest.Mock<{}>
   beforeEach(() => {
     eventToPosition = jest.fn()
-    input = new Input(eventToPosition)
+    input = new InputResource(eventToPosition)
   })
 
   describe('key down', () => {

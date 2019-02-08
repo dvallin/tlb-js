@@ -1,15 +1,15 @@
-import * as ROT from 'rot-js'
+import { Display } from 'rot-js'
 
 import { gray } from './palettes'
 import { Position } from './position'
 import { Color } from './color'
 
-import { Viewport } from '../resources/viewport'
+import { Viewport, ViewportResource } from '../resources/viewport'
 import { TlbWorld } from '../tlb'
 import { getFeature } from '../components/feature'
 import { PositionComponent } from '../components/position'
 import { Entity } from '../ecs/entity'
-import { WorldMap } from 'src/resources/world-map'
+import { WorldMap, WorldMapResource } from 'src/resources/world-map'
 import { LightingComponent } from 'src/components/light'
 
 export interface Renderer {
@@ -23,12 +23,12 @@ export interface Renderer {
 }
 
 export class RotRenderer implements Renderer {
-  public readonly display: ROT.Display
+  public readonly display: Display
 
   public ambientColor: Color
 
   public constructor() {
-    const displayOptions: ROT.DisplayOptions = {
+    const displayOptions = {
       width: 60,
       height: 40,
       forceSquareRatio: true,
@@ -37,8 +37,8 @@ export class RotRenderer implements Renderer {
       bg: gray[4].rgb,
     }
     this.ambientColor = new Color([200, 200, 200])
-    this.display = new ROT.Display(displayOptions)
-    document.body.appendChild(this.display.getContainer())
+    this.display = new Display(displayOptions)
+    document.body.appendChild(this.display.getContainer() as Node)
   }
 
   public clear(): void {
@@ -47,7 +47,7 @@ export class RotRenderer implements Renderer {
 
   public render(world: TlbWorld): void {
     this.clear()
-    const viewport = world.getResource<Viewport>('viewport')
+    const viewport: Viewport = world.getResource<ViewportResource>('viewport')
     world.getStorage('in-viewport-tile').foreach(entity => this.renderFeature(world, viewport, entity, false))
     world.getStorage('in-viewport-character').foreach(entity => this.renderFeature(world, viewport, entity, true))
     world.components.get('lighting')!.clear()
@@ -57,7 +57,7 @@ export class RotRenderer implements Renderer {
     const feature = getFeature(world, entity)
     const position = world.getComponent<PositionComponent>(entity, 'position')
     if (feature && position) {
-      const map = world.getResource<WorldMap>('map')
+      const map: WorldMap = world.getResource<WorldMapResource>('map')
       const p = position.position.floor()
       if (map.isDiscovered(p)) {
         let lighting = undefined
@@ -80,7 +80,7 @@ export class RotRenderer implements Renderer {
     }
   }
 
-  public eventToPosition(e: UIEvent): Position | undefined {
+  public eventToPosition(e: TouchEvent | MouseEvent): Position | undefined {
     const p = this.display.eventToPosition(e) as [number, number]
     if (typeof p === 'object') {
       return { x: p[0], y: p[1] }
@@ -91,14 +91,14 @@ export class RotRenderer implements Renderer {
   public character(character: string, position: Position, fg: Color, bg?: Color): void {
     const fgRgb = fg.rgb
     const bgRgb = bg ? bg.rgb : undefined
-    this.display.draw(position.x, position.y, character[0], fgRgb, bgRgb)
+    this.display.draw(position.x, position.y, character[0], fgRgb, bgRgb || null)
   }
 
   public text(text: string, position: Position, fg: Color, bg?: Color): void {
     const fgRgb = fg.rgb
     const bgRgb = bg ? bg.rgb : undefined
     for (let idx = 0; idx < text.length; idx++) {
-      this.display.draw(position.x + idx, position.y, text[idx], fgRgb, bgRgb)
+      this.display.draw(position.x + idx, position.y, text[idx], fgRgb, bgRgb || null)
     }
   }
 }

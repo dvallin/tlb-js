@@ -1,6 +1,6 @@
 import { TlbWorld, ComponentName, TlbSystem } from '../tlb'
 import { Vector } from '../spatial'
-import { WorldMap } from '../resources/world-map'
+import { WorldMap, WorldMapResource } from '../resources/world-map'
 import { AgentComponent, Action } from '../components/agent'
 import { PositionComponent } from '../components/position'
 import { Entity } from '../ecs/entity'
@@ -66,7 +66,7 @@ export class Agent implements TlbSystem {
     }
 
     const footprint = this.footprint(state.position.position, state.agent.direction, state.agent.width)
-    const map = world.getResource<WorldMap>('map')
+    const map: WorldMap = world.getResource<WorldMapResource>('map')
     const canRender = map.isShapeFree(world, footprint)
     if (canRender) {
       return 'render'
@@ -121,13 +121,13 @@ export class Agent implements TlbSystem {
   }
 
   public render(world: TlbWorld, state: PositionedAgent): void {
-    const map = world.getResource<WorldMap>('map')
+    const map: WorldMap = world.getResource<WorldMapResource>('map')
     const footprint = this.footprint(state.position.position, state.agent.direction, state.agent.width)
     footprint.foreach(position => createFeature(world, map, position, 'corridor'))
   }
 
   public createRoom(world: TlbWorld, state: PositionedAgent): void {
-    const map = world.getResource<WorldMap>('map')
+    const map: WorldMap = world.getResource<WorldMapResource>('map')
     const currentDirection = state.agent.direction
     const width = state.agent.width
     const footprint = this.footprint(state.position.position, currentDirection, width)
@@ -194,7 +194,7 @@ export class Agent implements TlbSystem {
   }
 
   public changeDirection(world: TlbWorld, state: PositionedAgent): { direction: Direction; position: Vector } {
-    const map = world.getResource<WorldMap>('map')
+    const map: WorldMap = world.getResource<WorldMapResource>('map')
     const currentDirection = state.agent.direction
     const width = state.agent.width
     const footprint = this.footprint(state.position.position, currentDirection, width)

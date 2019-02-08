@@ -2,7 +2,8 @@ import * as rot from 'rot-js'
 
 export class Color {
   public static fromHex(hex: string): Color {
-    return new Color(rot.Color.fromString(hex))
+    const color = rot.Color.fromString(hex)
+    return new Color([color[0], color[1], color[2]])
   }
 
   public readonly rgb: string

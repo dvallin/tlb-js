@@ -1,9 +1,21 @@
 import { TlbResource, ResourceName } from '../tlb'
 import { Vector } from '../spatial'
 import { Position } from '../renderer/position'
-import { VK_H, VK_J, VK_K, VK_L } from 'rot-js'
+import { KEYS } from 'rot-js'
 
-export class Input implements TlbResource {
+export interface Input {
+  mouseDown: boolean
+  mousePressed: boolean
+  mouseReleased: boolean
+
+  keyDown: Set<number>
+  keyPressed: Set<number>
+  keyReleased: Set<number>
+
+  createMovementDelta(): Vector
+}
+
+export class InputResource implements TlbResource, Input {
   public readonly kind: ResourceName = 'input'
 
   public position: Position | undefined = undefined
@@ -29,6 +41,23 @@ export class Input implements TlbResource {
   public update(): void {
     this.handleMouseEvent()
     this.handleKeyboardEvents()
+  }
+
+  public createMovementDelta(): Vector {
+    let delta = new Vector(0, 0)
+    if (this.keyDown.has(KEYS.VK_H)) {
+      delta = delta.add(Vector.fromDirection('left'))
+    }
+    if (this.keyDown.has(KEYS.VK_J)) {
+      delta = delta.add(Vector.fromDirection('down'))
+    }
+    if (this.keyDown.has(KEYS.VK_K)) {
+      delta = delta.add(Vector.fromDirection('up'))
+    }
+    if (this.keyDown.has(KEYS.VK_L)) {
+      delta = delta.add(Vector.fromDirection('right'))
+    }
+    return delta.normalize()
   }
 
   private handleMouseEvent(): void {
@@ -63,22 +92,5 @@ export class Input implements TlbResource {
       }
     }
     this.keyEvents = []
-  }
-
-  public createMovementDelta(): Vector {
-    let delta = new Vector(0, 0)
-    if (this.keyDown.has(VK_H)) {
-      delta = delta.add(Vector.fromDirection('left'))
-    }
-    if (this.keyDown.has(VK_J)) {
-      delta = delta.add(Vector.fromDirection('down'))
-    }
-    if (this.keyDown.has(VK_K)) {
-      delta = delta.add(Vector.fromDirection('up'))
-    }
-    if (this.keyDown.has(VK_L)) {
-      delta = delta.add(Vector.fromDirection('right'))
-    }
-    return delta.normalize()
   }
 }

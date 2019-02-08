@@ -14,13 +14,13 @@ import { RegionComponent } from './components/region'
 
 import { Agent } from './systems/agent'
 
-import { WorldMap } from './resources/world-map'
-import { Viewport } from './resources/viewport'
+import { WorldMapResource } from './resources/world-map'
+import { ViewportResource } from './resources/viewport'
 
 import { Random } from './random'
 import { Uniform } from './random/distributions'
 
-import { Input } from './resources/input'
+import { InputResource } from './resources/input'
 import { FreeModeControl } from './systems/free-mode-control'
 import { RegionCreator } from './systems/region-creator'
 import { PlayerControl } from './systems/player-control'
@@ -98,9 +98,9 @@ export function registerComponents<S, R>(world: World<ComponentName, S, R>): voi
 }
 
 export function registerResources(world: World<ComponentName, SystemName, ResourceName>, renderer: Renderer): void {
-  world.registerResource(new WorldMap())
-  world.registerResource(new Viewport())
-  world.registerResource(new Input(e => renderer.eventToPosition(e)))
+  world.registerResource(new WorldMapResource())
+  world.registerResource(new ViewportResource())
+  world.registerResource(new InputResource(e => renderer.eventToPosition(e)))
 }
 
 export function registerSystems(

@@ -1,6 +1,6 @@
 import { registerComponents, registerResources, registerSystems, ComponentName, SystemName, ResourceName } from '../src/tlb'
 import { World } from '../src/ecs/world'
-import { mockRenderer } from './mocks'
+import { mockRenderer, mockRayCaster } from './mocks'
 
 describe('registerComponents', () => {
   it('registers all components', () => {
@@ -9,7 +9,7 @@ describe('registerComponents', () => {
 
     registerComponents(world)
 
-    expect(world.registerComponentStorage).toHaveBeenCalledTimes(15)
+    expect(world.registerComponentStorage).toHaveBeenCalledTimes(21)
   })
 })
 
@@ -18,9 +18,9 @@ describe('registerResources', () => {
     const world = new World<ComponentName, SystemName, ResourceName>()
     world.registerSystem = jest.fn()
 
-    registerSystems(world)
+    registerSystems(world, mockRayCaster(), jest.fn())
 
-    expect(world.registerSystem).toHaveBeenCalledTimes(4)
+    expect(world.registerSystem).toHaveBeenCalledTimes(9)
   })
 })
 
