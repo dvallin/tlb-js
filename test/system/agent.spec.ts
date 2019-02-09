@@ -280,8 +280,8 @@ describe('Agent', () => {
     it('creates room if map is free', () => {
       random.integerBetween = jest
         .fn()
-        .mockRejectedValueOnce(2)
-        .mockRejectedValueOnce(0)
+        .mockReturnValueOnce(2)
+        .mockReturnValueOnce(0)
       random.decision = jest.fn().mockReturnValue(false)
       map.isShapeFree = jest.fn().mockReturnValue(true)
       agent.buildRoom = jest.fn()
@@ -310,9 +310,14 @@ describe('Agent', () => {
       random = mockRandom()
       agent = new Agent(random)
       agent.spawnAgent = jest.fn()
+      mockComponent(world, 'position')
+
       mockComponent(world, 'light')
       mockComponent(world, 'active')
-      mockComponent(world, 'position')
+
+      mockComponent(world, 'feature')
+      mockComponent(world, 'npc')
+      mockComponent(world, 'fov')
     })
 
     it('creates tiles for each cell in the shape', () => {
@@ -329,6 +334,7 @@ describe('Agent', () => {
         availableEntries: [],
         availableAssets: [],
       }
+      mockReturnValue(random.insideRectangle, new Vector(4, 5))
 
       agent.buildRoom(world, state, map, room)
 
@@ -351,7 +357,8 @@ describe('Agent', () => {
         availableAssets: [],
       }
 
-      mockReturnValues(random.integerBetween, 1, 0, 3)
+      mockReturnValues(random.integerBetween, 255, 255, 255, 1, 0, 3)
+      mockReturnValue(random.insideRectangle, new Vector(4, 5))
       mockReturnValue(map.isShapeFree, true)
 
       agent.buildRoom(world, state, map, room)
@@ -375,7 +382,8 @@ describe('Agent', () => {
         availableAssets: [],
       }
 
-      mockReturnValues(random.integerBetween, 1, 0, 3)
+      mockReturnValues(random.integerBetween, 255, 255, 255, 1, 0, 3)
+      mockReturnValue(random.insideRectangle, new Vector(4, 5))
       mockReturnValue(map.isShapeFree, true)
 
       agent.buildRoom(world, state, map, room)
@@ -398,7 +406,8 @@ describe('Agent', () => {
         availableAssets: [],
       }
 
-      mockReturnValues(random.integerBetween, 1, 0, 3)
+      mockReturnValues(random.integerBetween, 255, 255, 255, 1, 0, 3)
+      mockReturnValue(random.insideRectangle, new Vector(4, 5))
       mockReturnValue(map.isShapeFree, false)
 
       agent.buildRoom(world, state, map, room)
@@ -420,6 +429,7 @@ describe('Agent', () => {
         availableEntries: [],
         availableAssets: [],
       }
+      mockReturnValue(random.insideRectangle, new Vector(4, 5))
 
       agent.buildRoom(world, state, map, room)
       expect(mockCreateFeature).toHaveBeenCalledTimes(2)

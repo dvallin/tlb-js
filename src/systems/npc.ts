@@ -6,7 +6,7 @@ import { Vector } from '../spatial'
 import { Fighting } from '../game-states/fighting'
 
 export class Npc implements TlbSystem {
-  public readonly components: ComponentName[] = ['fov', 'npc']
+  public readonly components: ComponentName[] = ['npc', 'fov']
 
   public constructor(public readonly pushState: (state: State) => void) {}
 

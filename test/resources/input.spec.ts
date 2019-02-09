@@ -1,96 +1,97 @@
-import * as ROT from 'rot-js'
+import { KEYS } from 'rot-js'
 import { InputResource } from '../../src/resources/input'
+import { Position } from '../../src/renderer/position'
 import { Vector } from '../../src/spatial'
 
 describe('Input', () => {
   let input: InputResource
-  let eventToPosition: jest.Mock<{}>
+  let position: Position | undefined
   beforeEach(() => {
-    eventToPosition = jest.fn()
-    input = new InputResource(eventToPosition)
+    position = undefined
+    input = new InputResource(() => position)
   })
 
   describe('key down', () => {
     it('registers as keydown', () => {
       // given
-      keyEvent('keydown', ROT.VK_0)
+      keyEvent('keydown', KEYS.VK_0)
 
       // when
       input.update()
 
       // then
-      expect(input.keyDown.has(ROT.VK_0)).toBeTruthy()
+      expect(input.keyDown.has(KEYS.VK_0)).toBeTruthy()
     })
 
     it('registers as keypressed', () => {
       // given
-      keyEvent('keydown', ROT.VK_0)
+      keyEvent('keydown', KEYS.VK_0)
 
       // when
       input.update()
 
       // then
-      expect(input.keyPressed.has(ROT.VK_0)).toBeTruthy()
+      expect(input.keyPressed.has(KEYS.VK_0)).toBeTruthy()
     })
 
     it('resets keypressed', () => {
       // given
-      keyEvent('keydown', ROT.VK_0)
+      keyEvent('keydown', KEYS.VK_0)
 
       // when
       input.update()
       input.update()
 
       // then
-      expect(input.keyPressed.has(ROT.VK_0)).toBeFalsy()
-      expect(input.keyDown.has(ROT.VK_0)).toBeTruthy()
+      expect(input.keyPressed.has(KEYS.VK_0)).toBeFalsy()
+      expect(input.keyDown.has(KEYS.VK_0)).toBeTruthy()
     })
   })
 
   describe('key up', () => {
     it('resets keydown', () => {
       // given
-      input.keyDown.add(ROT.VK_0)
-      keyEvent('keyup', ROT.VK_0)
+      input.keyDown.add(KEYS.VK_0)
+      keyEvent('keyup', KEYS.VK_0)
 
       // when
       input.update()
 
       // then
-      expect(input.keyDown.has(ROT.VK_0)).toBeFalsy()
+      expect(input.keyDown.has(KEYS.VK_0)).toBeFalsy()
     })
 
     it('registers as keyreleased', () => {
       // given
-      input.keyDown.add(ROT.VK_0)
-      keyEvent('keyup', ROT.VK_0)
+      input.keyDown.add(KEYS.VK_0)
+      keyEvent('keyup', KEYS.VK_0)
 
       // when
       input.update()
 
       // then
-      expect(input.keyReleased.has(ROT.VK_0)).toBeTruthy()
+      expect(input.keyReleased.has(KEYS.VK_0)).toBeTruthy()
     })
 
     it('resets keyreleased', () => {
       // given
-      input.keyDown.add(ROT.VK_0)
-      keyEvent('keyup', ROT.VK_0)
+      input.keyDown.add(KEYS.VK_0)
+      keyEvent('keyup', KEYS.VK_0)
 
       // when
       input.update()
       input.update()
 
       // then
-      expect(input.keyReleased.has(ROT.VK_0)).toBeFalsy()
-      expect(input.keyDown.has(ROT.VK_0)).toBeFalsy()
+      expect(input.keyReleased.has(KEYS.VK_0)).toBeFalsy()
+      expect(input.keyDown.has(KEYS.VK_0)).toBeFalsy()
     })
   })
 
   describe('pressed mouse button', () => {
     it('registers mouse down', () => {
       // given
-      eventToPosition.mockReturnValue({ x: 42, y: 43 })
+      position = { x: 42, y: 43 }
       mouseEvent('mousedown', 1)
 
       // when
@@ -102,7 +103,7 @@ describe('Input', () => {
 
     it('registers mouse position', () => {
       // given
-      eventToPosition.mockReturnValue({ x: 42, y: 43 })
+      position = { x: 42, y: 43 }
       mouseEvent('mousedown', 1)
 
       // when
@@ -114,7 +115,6 @@ describe('Input', () => {
 
     it('does not register mouse down if position is outside world ', () => {
       // given
-      eventToPosition.mockReturnValue(undefined)
       mouseEvent('mousedown', 1)
 
       // when
@@ -127,7 +127,7 @@ describe('Input', () => {
 
     it('registers mousepressed', () => {
       // given
-      eventToPosition.mockReturnValue({ x: 32, y: 32 })
+      position = { x: 32, y: 32 }
       mouseEvent('mousedown', 1)
 
       // when
@@ -139,7 +139,7 @@ describe('Input', () => {
 
     it('unregisters mousepressed', () => {
       // given
-      eventToPosition.mockReturnValue({ x: 32, y: 32 })
+      position = { x: 32, y: 32 }
       mouseEvent('mousedown', 1)
 
       // when
@@ -156,7 +156,7 @@ describe('Input', () => {
     it('unregisters mouse down', () => {
       // given
       input.mouseDown = true
-      eventToPosition.mockReturnValue({ x: 42, y: 43 })
+      position = { x: 42, y: 43 }
       mouseEvent('mousemove', 0)
 
       // when
@@ -168,7 +168,7 @@ describe('Input', () => {
 
     it('registers mouse position', () => {
       // given
-      eventToPosition.mockReturnValue({ x: 42, y: 43 })
+      position = { x: 42, y: 43 }
       mouseEvent('mousemove', 0)
 
       // when
@@ -181,7 +181,6 @@ describe('Input', () => {
     it('unregsiters mouse down if position is outside world ', () => {
       // given
       input.mouseDown = true
-      eventToPosition.mockReturnValue(undefined)
       mouseEvent('mousemove', 0)
 
       // when
@@ -195,7 +194,7 @@ describe('Input', () => {
     it('registers mousereleased', () => {
       // given
       input.mouseDown = true
-      eventToPosition.mockReturnValue({ x: 32, y: 32 })
+      position = { x: 32, y: 32 }
       mouseEvent('mousemove', 0)
 
       // when
@@ -208,7 +207,7 @@ describe('Input', () => {
     it('unregisters mouseReleased', () => {
       // given
       input.mouseDown = true
-      eventToPosition.mockReturnValue({ x: 32, y: 32 })
+      position = { x: 32, y: 32 }
       mouseEvent('mousemove', 0)
 
       // when
@@ -223,35 +222,35 @@ describe('Input', () => {
 
   describe('createMovementDelta', () => {
     it('moves left on h', () => {
-      input.keyDown.add(ROT.VK_H)
+      input.keyDown.add(KEYS.VK_H)
       expect(input.createMovementDelta()).toEqual(new Vector(-1, 0))
     })
 
     it('moves right on l', () => {
-      input.keyDown.add(ROT.VK_L)
+      input.keyDown.add(KEYS.VK_L)
       expect(input.createMovementDelta()).toEqual(new Vector(1, 0))
     })
 
     it('moves down on j', () => {
-      input.keyDown.add(ROT.VK_J)
+      input.keyDown.add(KEYS.VK_J)
       expect(input.createMovementDelta()).toEqual(new Vector(0, 1))
     })
 
     it('moves up on k', () => {
-      input.keyDown.add(ROT.VK_K)
+      input.keyDown.add(KEYS.VK_K)
       expect(input.createMovementDelta()).toEqual(new Vector(0, -1))
     })
 
     it('normalizes movement', () => {
-      input.keyDown.add(ROT.VK_H)
-      input.keyDown.add(ROT.VK_K)
+      input.keyDown.add(KEYS.VK_H)
+      input.keyDown.add(KEYS.VK_K)
       expect(input.createMovementDelta()).toEqual(new Vector(-1, -1).normalize())
     })
 
     it('cancels out movement', () => {
-      input.keyDown.add(ROT.VK_H)
-      input.keyDown.add(ROT.VK_L)
-      input.keyDown.add(ROT.VK_J)
+      input.keyDown.add(KEYS.VK_H)
+      input.keyDown.add(KEYS.VK_L)
+      input.keyDown.add(KEYS.VK_J)
       expect(input.createMovementDelta()).toEqual(new Vector(0, 1))
     })
   })

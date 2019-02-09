@@ -36,17 +36,17 @@ describe('WorldMap', () => {
       })
     })
 
-    describe('isTileBlocking', () => {
+    describe('isBlocking', () => {
       it('missing tile is blocking', () => {
-        expect(map.isTileBlocking(world, new Vector(0, 0))).toBeTruthy()
+        expect(map.isBlocking(world, new Vector(0, 0))).toBeTruthy()
       })
 
       it('blocking tile blocks', () => {
-        expect(map.isTileBlocking(world, new Vector(1, 0))).toBeTruthy()
+        expect(map.isBlocking(world, new Vector(1, 0))).toBeTruthy()
       })
 
       it('non-blocking tile does not block', () => {
-        expect(map.isTileBlocking(world, new Vector(1, 1))).toBeFalsy()
+        expect(map.isBlocking(world, new Vector(1, 1))).toBeFalsy()
       })
     })
 

@@ -9,8 +9,8 @@ import { TlbWorld } from '../tlb'
 import { getFeature } from '../components/feature'
 import { PositionComponent } from '../components/position'
 import { Entity } from '../ecs/entity'
-import { WorldMap, WorldMapResource } from 'src/resources/world-map'
-import { LightingComponent } from 'src/components/light'
+import { WorldMap, WorldMapResource } from '../resources/world-map'
+import { LightingComponent } from '../components/light'
 
 export interface Renderer {
   render(world: TlbWorld): void
@@ -36,7 +36,7 @@ export class RotRenderer implements Renderer {
       fontFamily: 'Lucida Console, Monaco, monospace',
       bg: gray[4].rgb,
     }
-    this.ambientColor = new Color([200, 200, 200])
+    this.ambientColor = new Color([120, 120, 120])
     this.display = new Display(displayOptions)
     document.body.appendChild(this.display.getContainer() as Node)
   }
@@ -75,7 +75,9 @@ export class RotRenderer implements Renderer {
       return diffuse.multiply(ambientLight)
     } else {
       let totalLight = ambientLight
-      lighting.incomingLight.forEach(diffuseLight => (totalLight = totalLight.add(diffuseLight)))
+      lighting.incomingLight.forEach(incoming => {
+        totalLight = totalLight.add(incoming)
+      })
       return diffuse.multiply(totalLight)
     }
   }

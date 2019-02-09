@@ -59,7 +59,7 @@ export function mockMap(world: TlbWorld): WorldMapResource {
     isDiscovered: jest.fn(),
     isVisible: jest.fn(),
 
-    isTileBlocking: jest.fn(),
+    isBlocking: jest.fn(),
     isLightBlocking: jest.fn(),
 
     tileMatches: jest.fn(),
@@ -123,6 +123,7 @@ export function mockRandom(): Random {
     weightedDecision: jest.fn(),
     shuffle: jest.fn(),
     pick: jest.fn(),
+    insideRectangle: jest.fn(),
   }
 }
 
@@ -148,6 +149,6 @@ export function mockImplementation2<T, T2, O>(o: object, f: (input: T, input2: T
 }
 
 export function getInstances<T>(o: object): T[] {
-  const mock = o as jest.MockInstance<T>
+  const mock = o as jest.Mock<T>
   return mock.mock.instances
 }

@@ -89,7 +89,7 @@ export function registerComponents<S, R>(world: World<ComponentName, S, R>): voi
   world.registerComponentStorage('lighting', new VectorStorage<LightingComponent>())
   world.registerComponentStorage('parent', new MapStorage<ParentComponent>())
   world.registerComponentStorage('player', new SingletonStorage())
-  world.registerComponentStorage('npc', new SingletonStorage())
+  world.registerComponentStorage('npc', new SetStorage())
   world.registerComponentStorage('position', new VectorStorage<PositionComponent>())
   world.registerComponentStorage('region', new MapStorage<RegionComponent>())
   world.registerComponentStorage('spawn', new SingletonStorage())

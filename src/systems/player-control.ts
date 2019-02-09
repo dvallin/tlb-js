@@ -1,7 +1,7 @@
 import { ComponentName, TlbSystem, TlbWorld } from '../tlb'
 import { PositionComponent } from '../components/position'
 import { Input, InputResource } from '../resources/input'
-import { WorldMap, WorldMapResource } from 'src/resources/world-map'
+import { WorldMap, WorldMapResource } from '../resources/world-map'
 
 export class PlayerControl implements TlbSystem {
   public readonly components: ComponentName[] = ['player', 'position']
@@ -13,7 +13,7 @@ export class PlayerControl implements TlbSystem {
     if (delta.squaredLength() > 0) {
       const newPosition = position.position.add(delta.mult(0.13))
       const map: WorldMap = world.getResource<WorldMapResource>('map')
-      if (!map.isTileBlocking(world, newPosition.floor())) {
+      if (!map.isBlocking(world, newPosition.floor(), entity)) {
         map.removeCharacter(position.position.floor())
         map.setCharacter(newPosition.floor(), entity)
         world.editEntity(entity).withComponent('position', { position: newPosition })

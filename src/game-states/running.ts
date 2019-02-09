@@ -2,9 +2,9 @@ import { TlbWorld } from '../tlb'
 import { PositionComponent } from '../components/position'
 import { Vector } from '../spatial'
 import { AbstractState } from './state'
-import { FeatureComponent } from 'src/components/feature'
-import { WorldMap, WorldMapResource } from 'src/resources/world-map'
-import { FovComponent } from 'src/components/fov'
+import { FeatureComponent } from '../components/feature'
+import { WorldMap, WorldMapResource } from '../resources/world-map'
+import { FovComponent } from '../components/fov'
 
 export class Running extends AbstractState {
   public constructor() {

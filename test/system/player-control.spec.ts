@@ -24,7 +24,7 @@ describe('PlayerControl', () => {
 
   it('only adds delta if non blocking', () => {
     input.createMovementDelta = jest.fn().mockReturnValue(new Vector(-1, 0))
-    mockReturnValue(map.isTileBlocking, true)
+    mockReturnValue(map.isBlocking, true)
 
     system.update(world, 0)
 
@@ -34,7 +34,7 @@ describe('PlayerControl', () => {
   describe('movement allowed', () => {
     beforeEach(() => {
       input.createMovementDelta = jest.fn().mockReturnValue(new Vector(-1, 0))
-      mockReturnValue(map.isTileBlocking, false)
+      mockReturnValue(map.isBlocking, false)
 
       system.update(world, 0)
     })

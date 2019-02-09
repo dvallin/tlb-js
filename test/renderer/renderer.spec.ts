@@ -50,7 +50,7 @@ describe('RotRenderer', () => {
       .mockReturnValueOnce([1, 2])
       .mockReturnValueOnce(1)
       .mockReturnValueOnce(undefined)
-    const event = new UIEvent('click', {})
+    const event = new MouseEvent('click', {})
     expect(renderer.eventToPosition(event)).toEqual({ x: 1, y: 2 })
     expect(renderer.eventToPosition(event)).toBeUndefined()
     expect(renderer.eventToPosition(event)).toBeUndefined()
@@ -130,7 +130,7 @@ describe('RotRenderer', () => {
     it('without background', () => {
       renderer.character('c', { x: 1, y: 2 }, new C([255, 128, 0]))
       expect(display.draw).toHaveBeenCalledTimes(1)
-      expect(display.draw).toHaveBeenCalledWith(1, 2, 'c', '255,128,0', undefined)
+      expect(display.draw).toHaveBeenCalledWith(1, 2, 'c', '255,128,0', null)
     })
 
     it('with background', () => {
@@ -150,9 +150,9 @@ describe('RotRenderer', () => {
     it('without background', () => {
       renderer.text('abc', { x: 1, y: 2 }, new C([255, 128, 0]))
       expect(display.draw).toHaveBeenCalledTimes(3)
-      expect(display.draw).toHaveBeenCalledWith(1, 2, 'a', '255,128,0', undefined)
-      expect(display.draw).toHaveBeenCalledWith(2, 2, 'b', '255,128,0', undefined)
-      expect(display.draw).toHaveBeenCalledWith(3, 2, 'c', '255,128,0', undefined)
+      expect(display.draw).toHaveBeenCalledWith(1, 2, 'a', '255,128,0', null)
+      expect(display.draw).toHaveBeenCalledWith(2, 2, 'b', '255,128,0', null)
+      expect(display.draw).toHaveBeenCalledWith(3, 2, 'c', '255,128,0', null)
     })
 
     it('with background', () => {

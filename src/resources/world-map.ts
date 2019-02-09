@@ -23,7 +23,7 @@ export interface WorldMap {
   isDiscovered(position: Vector): boolean
   isVisible(position: Vector): boolean
 
-  isTileBlocking(world: TlbWorld, position: Vector): boolean
+  isBlocking(world: TlbWorld, position: Vector, self?: Entity | undefined): boolean
   isLightBlocking(world: TlbWorld, position: Vector): boolean
 
   tileMatches(world: TlbWorld, position: Vector, predicate: (f: FeatureComponent | undefined) => boolean): boolean
@@ -67,9 +67,9 @@ export class WorldMapResource implements TlbResource, WorldMap {
     world.components.get('light')!.foreach(l => {
       const light = world.editEntity(l)
       if (visibleLights.has(l)) {
-        light.removeComponent('active')
-      } else {
         light.withComponent('active', {})
+      } else {
+        light.removeComponent('active')
       }
     })
   }
@@ -97,7 +97,7 @@ export class WorldMapResource implements TlbResource, WorldMap {
   }
 
   public addLight(position: Vector, entity: Entity): void {
-    this.lights.addAll(FunctionalShape.L2(position, 10, true), entity)
+    this.lights.addAll(FunctionalShape.L2(position, 6, true), entity)
   }
 
   public isDiscovered(position: Vector): boolean {
@@ -107,13 +107,26 @@ export class WorldMapResource implements TlbResource, WorldMap {
     return this.visible.has(position)
   }
 
-  public isTileBlocking(world: TlbWorld, position: Vector): boolean {
-    return this.tileMatches(world, position, f => {
-      if (f === undefined) {
-        return true
-      }
-      return features[f.type].blocking
-    })
+  public isBlocking(world: TlbWorld, position: Vector, self?: Entity | undefined): boolean {
+    return (
+      this.tileMatches(world, position, f => {
+        if (f === undefined) {
+          return true
+        }
+        return features[f.type].blocking
+      }) ||
+      this.characterMatches(
+        world,
+        position,
+        (f: FeatureComponent | undefined) => {
+          if (f === undefined) {
+            return false
+          }
+          return features[f.type].blocking
+        },
+        self
+      )
+    )
   }
 
   public isLightBlocking(world: TlbWorld, position: Vector): boolean {
@@ -137,8 +150,17 @@ export class WorldMapResource implements TlbResource, WorldMap {
     return this.featureMatches(world, this.tiles.get(position), predicate)
   }
 
-  public characterMatches(world: TlbWorld, position: Vector, predicate: (f: FeatureComponent | undefined) => boolean): boolean {
-    return this.featureMatches(world, this.characters.get(position), predicate)
+  public characterMatches(
+    world: TlbWorld,
+    position: Vector,
+    predicate: (f: FeatureComponent | undefined) => boolean,
+    self?: Entity | undefined
+  ): boolean {
+    const character = this.characters.get(position)
+    if (character !== undefined && self !== undefined && self === character) {
+      return false
+    }
+    return this.featureMatches(world, character, predicate)
   }
 
   public featureMatches(world: TlbWorld, entity: Entity | undefined, predicate: (f: FeatureComponent | undefined) => boolean): boolean {

@@ -31,7 +31,7 @@ export class InputResource implements TlbResource, Input {
   private mouseEvent: MouseEvent | undefined = undefined
   private keyEvents: KeyboardEvent[] = []
 
-  public constructor(public readonly eventToPosition: (event: UIEvent) => Position | undefined) {
+  public constructor(public readonly eventToPosition: (event: MouseEvent | TouchEvent) => Position | undefined) {
     document.addEventListener('mousedown', e => (this.mouseEvent = e))
     document.addEventListener('mousemove', e => (this.mouseEvent = e))
     document.addEventListener('keydown', e => this.keyEvents.push(e))
