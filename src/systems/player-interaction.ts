@@ -6,8 +6,8 @@ import { Input, InputResource } from '../resources/input'
 import { WorldMap, WorldMapResource } from '../resources/world-map'
 import { FunctionalShape } from '../geometry/functional-shape'
 import { Shape } from '../geometry/shape'
-import { Entity } from 'src/ecs/entity'
-import { ParentComponent } from 'src/components/relation'
+import { Entity } from '../ecs/entity'
+import { ParentComponent } from '../components/relation'
 
 export class PlayerInteraction implements TlbSystem {
   public readonly components: ComponentName[] = ['player', 'position']
@@ -26,7 +26,7 @@ export class PlayerInteraction implements TlbSystem {
     }
   }
 
-  private findTrigger(world: TlbWorld, map: WorldMap, shape: Shape): Entity | undefined {
+  public findTrigger(world: TlbWorld, map: WorldMap, shape: Shape): Entity | undefined {
     let trigger: Entity | undefined
     shape.some(p => {
       const entity = map.getTile(p)

@@ -58,9 +58,9 @@ export class WorldMapResource implements TlbResource, WorldMap {
       const fov = world.getComponent<FovComponent>(player, 'fov')
       if (fov !== undefined) {
         fov.fov.forEach(p => {
-          this.visible.set(p)
-          this.discovered.set(p)
-          this.lights.get(p).forEach(v => visibleLights.add(v))
+          this.visible.set(p.position)
+          this.discovered.set(p.position)
+          this.lights.get(p.position).forEach(v => visibleLights.add(v))
         })
       }
     })

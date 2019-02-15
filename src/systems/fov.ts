@@ -12,6 +12,6 @@ export class Fov implements TlbSystem {
     const fov = world.getComponent<FovComponent>(entity, 'fov')!
     const position = world.getComponent<PositionComponent>(entity, 'position')!
     fov.fov = []
-    this.rayCaster.fov(world, position.position.floor(), p => fov.fov.push(p))
+    this.rayCaster.fov(world, position.position.floor(), (position, distance) => fov.fov.push({ position, distance }))
   }
 }

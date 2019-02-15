@@ -10,7 +10,7 @@ import { SetSpace } from '../src/spatial/set-space'
 import { Rectangle } from '../src/geometry/rectangle'
 import { Input } from '../src/resources/input'
 
-export function mockComponent(world: TlbWorld, component: ComponentName): Storage<{}> {
+export function mockComponent<T>(world: TlbWorld, component: ComponentName): Storage<T> {
   const storage = {
     insert: jest.fn(),
     get: jest.fn(),
@@ -148,7 +148,30 @@ export function mockImplementation2<T, T2, O>(o: object, f: (input: T, input2: T
   mock.mockImplementation(f)
 }
 
+export function mockImplementation3<T, T2, T3, O>(o: object, f: (input: T, input2: T2, input3: T3) => O): void {
+  const mock = o as jest.Mock
+  mock.mockImplementation(f)
+}
+
+export function mockImplementation4<T, T2, T3, T4, O>(o: object, f: (input: T, input2: T2, input3: T3, input4: T4) => O): void {
+  const mock = o as jest.Mock
+  mock.mockImplementation(f)
+}
+
+export function mockImplementation5<T, T2, T3, T4, T5, O>(
+  o: object,
+  f: (input: T, input2: T2, input3: T3, input4: T4, input5: T5) => O
+): void {
+  const mock = o as jest.Mock
+  mock.mockImplementation(f)
+}
+
 export function getInstances<T>(o: object): T[] {
   const mock = o as jest.Mock<T>
   return mock.mock.instances
+}
+
+export function callArgument<T>(o: object, call: number, argument: number): T {
+  const mock = o as jest.Mock<{}>
+  return mock.mock.calls[call][argument]
 }

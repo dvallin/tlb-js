@@ -159,6 +159,29 @@ describe('World', () => {
       expect(updated2).toHaveBeenCalledTimes(1)
       expect(updated2).toHaveBeenCalledWith(2)
     })
+
+    it('detects empty systems', () => {
+      world.registerSystem('system1', new S())
+      world.registerSystem('system2', new T())
+      world.enableSystem('system1')
+      world.enableSystem('system2')
+      world.createEntity().withComponent('component1', {})
+      world.updateSystems()
+
+      expect(world.emptySystems).not.toContain('system1')
+      expect(world.emptySystems).toContain('system2')
+    })
+
+    it('disables systems', () => {
+      world.registerSystem('system1', new S())
+      world.registerSystem('system2', new T())
+      world.enableSystem('system1')
+      world.enableSystem('system2')
+      world.disableSystem('system1')
+
+      expect(world.activeSystems).not.toContain('system1')
+      expect(world.activeSystems).toContain('system2')
+    })
   })
 
   describe('resources', () => {

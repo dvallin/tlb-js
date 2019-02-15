@@ -1,5 +1,8 @@
-import { Vector } from 'src/spatial'
+import { Vector } from '../spatial'
 
 export interface FovComponent {
-  fov: Vector[]
+  fov: {
+    position: Vector
+    distance: number
+  }[]
 }
