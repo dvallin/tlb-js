@@ -2,11 +2,10 @@ import { ComponentName, TlbSystem, TlbWorld } from '../tlb'
 import { PositionComponent } from '../components/position'
 import { FovComponent } from '../components/fov'
 import { State } from '../game-states/state'
-import { Vector } from '../spatial'
 import { Fighting } from '../game-states/fighting'
 
 export class Npc implements TlbSystem {
-  public readonly components: ComponentName[] = ['fov', 'npc']
+  public readonly components: ComponentName[] = ['npc', 'fov']
 
   public constructor(public readonly pushState: (state: State) => void) {}
 
@@ -16,8 +15,8 @@ export class Npc implements TlbSystem {
       const playerPosition = world.getComponent<PositionComponent>(player, 'position')
       if (playerPosition !== undefined) {
         const playerKey = playerPosition.position.floor().key
-        fov.fov.forEach((v: Vector) => {
-          if (playerKey === v.floor().key) {
+        fov.fov.forEach(f => {
+          if (playerKey === f.position.floor().key) {
             this.pushState(new Fighting())
           }
         })

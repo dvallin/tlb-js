@@ -2,14 +2,14 @@ import { Running } from '../../src/game-states/running'
 import { World } from '../../src/ecs/world'
 import { TlbWorld, registerSystems, registerComponents, registerResources } from '../../src/tlb'
 import { Vector } from '../../src/spatial'
-import { mockRenderer } from '../mocks'
+import { mockRenderer, mockRayCaster } from '../mocks'
 
 describe('Running', () => {
   let world: TlbWorld
   beforeEach(() => {
     world = new World()
     registerResources(world, mockRenderer())
-    registerSystems(world)
+    registerSystems(world, mockRayCaster(), jest.fn())
     registerComponents(world)
   })
 

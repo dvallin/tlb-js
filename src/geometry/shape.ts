@@ -4,7 +4,8 @@ import { Rectangle } from './rectangle'
 export interface Shape {
   bounds(): Rectangle
   containsVector(p: Vector): boolean
-  contains(p: Shape): boolean
+  contains(s: Shape): boolean
+  equals(s: Shape): boolean
   foreach(f: (p: Vector) => void): void
   all(f: (p: Vector) => boolean): boolean
   some(predicate: (p: Vector) => boolean): boolean
@@ -23,6 +24,9 @@ export abstract class AbstractShape implements Shape {
 
   public contains(s: Shape): boolean {
     return s.all(p => this.containsVector(p))
+  }
+  public equals(s: Shape): boolean {
+    return this.contains(s) && s.contains(this)
   }
 
   public foreach(f: (position: Vector) => void): void {

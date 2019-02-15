@@ -1,21 +1,21 @@
-import { VK_E } from 'rot-js'
+import { KEYS } from 'rot-js'
 
 import { ComponentName, TlbSystem, TlbWorld } from '../tlb'
 import { PositionComponent } from '../components/position'
-import { Input } from '../resources/input'
-import { WorldMap } from '../resources/world-map'
+import { Input, InputResource } from '../resources/input'
+import { WorldMap, WorldMapResource } from '../resources/world-map'
 import { FunctionalShape } from '../geometry/functional-shape'
 import { Shape } from '../geometry/shape'
-import { Entity } from 'src/ecs/entity'
-import { ParentComponent } from 'src/components/relation'
+import { Entity } from '../ecs/entity'
+import { ParentComponent } from '../components/relation'
 
 export class PlayerInteraction implements TlbSystem {
   public readonly components: ComponentName[] = ['player', 'position']
 
   public update(world: TlbWorld, entity: number): void {
-    const input = world.getResource<Input>('input')
-    if (input.keyPressed.has(VK_E)) {
-      const map = world.getResource<WorldMap>('map')
+    const input: Input = world.getResource<InputResource>('input')
+    if (input.keyPressed.has(KEYS.VK_E)) {
+      const map: WorldMap = world.getResource<WorldMapResource>('map')
       const position = world.getComponent<PositionComponent>(entity, 'position')!
       const neighbourhood = FunctionalShape.LN(position.position.floor(), 1, true)
 
@@ -26,7 +26,7 @@ export class PlayerInteraction implements TlbSystem {
     }
   }
 
-  private findTrigger(world: TlbWorld, map: WorldMap, shape: Shape): Entity | undefined {
+  public findTrigger(world: TlbWorld, map: WorldMap, shape: Shape): Entity | undefined {
     let trigger: Entity | undefined
     shape.some(p => {
       const entity = map.getTile(p)

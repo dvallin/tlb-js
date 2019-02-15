@@ -1,11 +1,16 @@
-import { Vector } from '../src/spatial/vector'
 import { Storage } from '../src/ecs/storage'
-import { WorldMap } from '../src/resources/world-map'
+import { WorldMapResource } from '../src/resources/world-map'
 import { Renderer } from '../src/renderer/renderer'
 import { ComponentName, TlbWorld, ResourceName } from '../src/tlb'
 import { Random } from '../src/random'
+import { RayCaster } from '../src/renderer/ray-caster'
+import { Space, StackedSpace } from '../src/spatial'
+import { Entity } from '../src/ecs/entity'
+import { SetSpace } from '../src/spatial/set-space'
+import { Rectangle } from '../src/geometry/rectangle'
+import { Input } from '../src/resources/input'
 
-export function mockComponent(world: TlbWorld, component: ComponentName): Storage<{}> {
+export function mockComponent<T>(world: TlbWorld, component: ComponentName): Storage<T> {
   const storage = {
     insert: jest.fn(),
     get: jest.fn(),
@@ -19,32 +24,84 @@ export function mockComponent(world: TlbWorld, component: ComponentName): Storag
   return storage
 }
 
-export function mockMap(world: TlbWorld, boundary: Vector = new Vector(42, 41)): WorldMap {
-  const map = {
+function mockSpace<T>(): Space<T> {
+  return { get: jest.fn(), set: jest.fn(), setAll: jest.fn(), remove: jest.fn() }
+}
+function mockSetSpace(): SetSpace {
+  return { has: jest.fn(), set: jest.fn(), setAll: jest.fn(), remove: jest.fn() }
+}
+function mockStackedSpace<T>(): StackedSpace<T> {
+  return { get: jest.fn(), set: jest.fn(), add: jest.fn(), addAll: jest.fn(), retain: jest.fn() }
+}
+
+export function mockMap(world: TlbWorld): WorldMapResource {
+  const map: WorldMapResource = {
     kind: 'map' as ResourceName,
-    boundary,
     update: jest.fn(),
-    isValid: jest.fn(),
-    isShapeFree: jest.fn(),
-    isTileBlocking: jest.fn(),
+
+    boundaries: new Rectangle(0, 0, 0, 0),
+    tiles: mockSpace<Entity>(),
+    characters: mockSpace<Entity>(),
+    visible: mockSetSpace(),
+    discovered: mockSetSpace(),
+    lights: mockStackedSpace<Entity>(),
+
+    setTile: jest.fn(),
+    getTile: jest.fn(),
+    removeTile: jest.fn(),
+
+    setCharacter: jest.fn(),
+    getCharacter: jest.fn(),
+    removeCharacter: jest.fn(),
+
+    addLight: jest.fn(),
+
+    isDiscovered: jest.fn(),
+    isVisible: jest.fn(),
+
+    isBlocking: jest.fn(),
+    isLightBlocking: jest.fn(),
+
     tileMatches: jest.fn(),
+    characterMatches: jest.fn(),
+    featureMatches: jest.fn(),
+
+    isShapeFree: jest.fn(),
+    isShapeBlocked: jest.fn(),
     shapeHasAll: jest.fn(),
     shapeHasSome: jest.fn(),
-    tiles: {
-      get: jest.fn(),
-      set: jest.fn(),
-      setAll: jest.fn(),
-      remove: jest.fn(),
-    },
-    characters: {
-      get: jest.fn(),
-      set: jest.fn(),
-      setAll: jest.fn(),
-      remove: jest.fn(),
-    },
   }
   world.registerResource(map)
   return map
+}
+
+export function mockInput(world: TlbWorld): Input {
+  const input = {
+    kind: 'input' as ResourceName,
+    position: { x: 0, y: 0 },
+    mouseDown: false,
+    mousePressed: false,
+    mouseReleased: false,
+    keyDown: new Set(),
+    keyPressed: new Set(),
+    keyReleased: new Set(),
+    mouseEvent: undefined,
+    keyEvents: [],
+    eventToPosition: jest.fn(),
+    update: jest.fn(),
+    handleKeyboardEvents: jest.fn(),
+    handleMouseEvent: jest.fn(),
+    createMovementDelta: jest.fn(),
+  }
+  world.registerResource(input)
+  return input
+}
+
+export function mockRayCaster(): RayCaster {
+  return {
+    fov: jest.fn(),
+    lighting: jest.fn(),
+  }
 }
 
 export function mockRenderer(): Renderer {
@@ -52,7 +109,6 @@ export function mockRenderer(): Renderer {
     render: jest.fn(),
     clear: jest.fn(),
     eventToPosition: jest.fn(),
-    drawable: jest.fn(),
     character: jest.fn(),
     text: jest.fn(),
   }
@@ -67,6 +123,7 @@ export function mockRandom(): Random {
     weightedDecision: jest.fn(),
     shuffle: jest.fn(),
     pick: jest.fn(),
+    insideRectangle: jest.fn(),
   }
 }
 
@@ -91,7 +148,30 @@ export function mockImplementation2<T, T2, O>(o: object, f: (input: T, input2: T
   mock.mockImplementation(f)
 }
 
+export function mockImplementation3<T, T2, T3, O>(o: object, f: (input: T, input2: T2, input3: T3) => O): void {
+  const mock = o as jest.Mock
+  mock.mockImplementation(f)
+}
+
+export function mockImplementation4<T, T2, T3, T4, O>(o: object, f: (input: T, input2: T2, input3: T3, input4: T4) => O): void {
+  const mock = o as jest.Mock
+  mock.mockImplementation(f)
+}
+
+export function mockImplementation5<T, T2, T3, T4, T5, O>(
+  o: object,
+  f: (input: T, input2: T2, input3: T3, input4: T4, input5: T5) => O
+): void {
+  const mock = o as jest.Mock
+  mock.mockImplementation(f)
+}
+
 export function getInstances<T>(o: object): T[] {
-  const mock = o as jest.MockInstance<T>
+  const mock = o as jest.Mock<T>
   return mock.mock.instances
+}
+
+export function callArgument<T>(o: object, call: number, argument: number): T {
+  const mock = o as jest.Mock<{}>
+  return mock.mock.calls[call][argument]
 }

@@ -80,6 +80,28 @@ export const features = {
     lightBlocking: true,
     description: 'you',
   },
+  guard: enemy('g', 'a guard'),
+  eliteGuard: eliteEnemy('g', 'a very strong guard'),
+}
+
+function enemy(character: string, description: string): Feature {
+  return {
+    character,
+    diffuse: primary[1],
+    blocking: true,
+    lightBlocking: true,
+    description,
+  }
+}
+
+function eliteEnemy(character: string, description: string): Feature {
+  return {
+    character,
+    diffuse: primary[3],
+    blocking: true,
+    lightBlocking: true,
+    description,
+  }
 }
 
 export function getFeature(world: TlbWorld, entity: number): Feature | undefined {

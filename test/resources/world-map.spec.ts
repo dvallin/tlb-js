@@ -1,4 +1,4 @@
-import { WorldMap } from '../../src/resources/world-map'
+import { WorldMap, WorldMapResource } from '../../src/resources/world-map'
 import { Vector } from '../../src/spatial/vector'
 import { TlbWorld } from '../../src/tlb'
 import { World } from '../../src/ecs/world'
@@ -9,31 +9,11 @@ import { Rectangle } from '../../src/geometry/rectangle'
 import { Difference } from '../../src/geometry/difference'
 
 describe('WorldMap', () => {
-  describe('isValid', () => {
-    it('checks that vector is in bounds', () => {
-      const map = new WorldMap(new Vector(20, 20))
-
-      expect(map.isValid(new Vector(20, 20))).toBeFalsy()
-      expect(map.isValid(new Vector(-20, -20))).toBeFalsy()
-
-      expect(map.isValid(new Vector(0, 0))).toBeTruthy()
-      expect(map.isValid(new Vector(-19, 19))).toBeTruthy()
-    })
-
-    it('throws on wrong dimension', () => {
-      const map = new WorldMap(new Vector(20, 20))
-
-      expect(() => map.isValid(new Vector())).toThrowError('dimension mismatch')
-      expect(() => map.isValid(new Vector(1))).toThrowError('dimension mismatch')
-      expect(() => map.isValid(new Vector(1, 2, 1))).toThrowError('dimension mismatch')
-    })
-  })
-
   describe('tile based queries', () => {
     let map: WorldMap
     let world: TlbWorld
     beforeEach(() => {
-      map = new WorldMap(new Vector(2, 2))
+      map = new WorldMapResource()
       world = new World()
 
       world.registerComponentStorage('position', new MapStorage<PositionComponent>())
@@ -56,17 +36,17 @@ describe('WorldMap', () => {
       })
     })
 
-    describe('isTileBlocking', () => {
+    describe('isBlocking', () => {
       it('missing tile is blocking', () => {
-        expect(map.isTileBlocking(world, new Vector(0, 0))).toBeTruthy()
+        expect(map.isBlocking(world, new Vector(0, 0))).toBeTruthy()
       })
 
       it('blocking tile blocks', () => {
-        expect(map.isTileBlocking(world, new Vector(1, 0))).toBeTruthy()
+        expect(map.isBlocking(world, new Vector(1, 0))).toBeTruthy()
       })
 
       it('non-blocking tile does not block', () => {
-        expect(map.isTileBlocking(world, new Vector(1, 1))).toBeFalsy()
+        expect(map.isBlocking(world, new Vector(1, 1))).toBeFalsy()
       })
     })
 

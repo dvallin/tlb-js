@@ -9,9 +9,9 @@ import { RayCaster, RotRayCaster } from './renderer/ray-caster'
 
 export class Game {
   public computeTime: number = 0
+  public frames: number = 0
   public renderTime: number = 0
   public started: number = 0
-  public frames: number = 0
   public states: State[] = []
 
   public renderer: Renderer = new RotRenderer()

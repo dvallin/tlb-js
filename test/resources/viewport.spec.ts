@@ -1,20 +1,20 @@
-import { Viewport } from '../../src/resources/viewport'
+import { ViewportResource } from '../../src/resources/viewport'
 
 import { World } from '../../src/ecs/world'
 import { TlbWorld } from '../../src/tlb'
 
-import { mockComponent, mockMap, mockImplementation } from '../mocks'
+import { mockComponent, mockMap, mockImplementation, mockInput } from '../mocks'
 import { Storage, MapStorage } from '../../src/ecs/storage'
-import { WorldMap } from '../../src/resources/world-map'
+import { WorldMapResource } from '../../src/resources/world-map'
 import { Vector } from '../../src/spatial/vector'
 import { PositionComponent } from '../../src/components/position'
 
 describe('Viewport', () => {
-  let viewport: Viewport
+  let viewport: ViewportResource
 
   let inViewportCharacter: Storage<{}>
   let inViewportTile: Storage<{}>
-  let map: WorldMap
+  let map: WorldMapResource
   let world: TlbWorld
   beforeEach(() => {
     world = new World()
@@ -22,11 +22,12 @@ describe('Viewport', () => {
     mockImplementation(map.tiles.get, (vector: Vector) => (vector.key === '1,1' ? 42 : undefined))
     inViewportCharacter = mockComponent(world, 'in-viewport-character')
     inViewportTile = mockComponent(world, 'in-viewport-tile')
+    mockInput(world)
 
     world.registerComponentStorage('viewport-focus', new MapStorage<{}>())
     world.registerComponentStorage('position', new MapStorage<PositionComponent>())
 
-    viewport = new Viewport()
+    viewport = new ViewportResource()
   })
 
   describe('update', () => {
@@ -48,7 +49,7 @@ describe('Viewport', () => {
     it('adds entities into the viewport', () => {
       viewport.update(world)
 
-      expect(map.tiles.get).toHaveBeenCalledTimes(60 * 40)
+      expect(map.getTile).toHaveBeenCalledTimes(60 * 40)
     })
 
     it('clears in viewport components', () => {
@@ -59,7 +60,7 @@ describe('Viewport', () => {
     })
 
     it('adds tiles into the viewport', () => {
-      mockImplementation(map.tiles.get, (vector: Vector) => (vector.key === '1,1' ? 42 : undefined))
+      mockImplementation(map.getTile, (vector: Vector) => (vector.key === '1,1' ? 42 : undefined))
 
       viewport.update(world)
 
@@ -67,7 +68,7 @@ describe('Viewport', () => {
     })
 
     it('adds characters into the viewport', () => {
-      mockImplementation(map.characters.get, (vector: Vector) => (vector.key === '1,1' ? 42 : undefined))
+      mockImplementation(map.getCharacter, (vector: Vector) => (vector.key === '1,1' ? 42 : undefined))
 
       viewport.update(world)
 

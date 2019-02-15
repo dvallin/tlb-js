@@ -2,15 +2,15 @@ import { RotRenderer } from '../../src/renderer/renderer'
 
 import { Display } from 'rot-js'
 import * as rot from 'rot-js'
-import { getInstances, mockComponent, mockImplementation } from '../mocks'
+import { getInstances, mockComponent, mockImplementation, mockMap } from '../mocks'
 import { Color } from '../../src/renderer/color'
-import { Drawable } from '../../src/renderer/drawable'
 import { TlbWorld } from '../../src/tlb'
 import { World } from '../../src/ecs/world'
-import { Viewport } from '../../src/resources/viewport'
+import { ViewportResource } from '../../src/resources/viewport'
 import { Vector } from '../../src/spatial'
 import { features } from '../../src/components/feature'
 import { Storage } from '../../src/ecs/storage'
+import { WorldMap } from '../../src/resources/world-map'
 
 class C extends Color {
   public rgb: string
@@ -18,12 +18,6 @@ class C extends Color {
   constructor(color: [number, number, number]) {
     super(color)
     this.rgb = color.join()
-  }
-}
-
-class D extends Drawable {
-  constructor(character: string) {
-    super(character, new C([255, 128, 0]))
   }
 }
 
@@ -56,7 +50,7 @@ describe('RotRenderer', () => {
       .mockReturnValueOnce([1, 2])
       .mockReturnValueOnce(1)
       .mockReturnValueOnce(undefined)
-    const event = new UIEvent('click', {})
+    const event = new MouseEvent('click', {})
     expect(renderer.eventToPosition(event)).toEqual({ x: 1, y: 2 })
     expect(renderer.eventToPosition(event)).toBeUndefined()
     expect(renderer.eventToPosition(event)).toBeUndefined()
@@ -64,17 +58,22 @@ describe('RotRenderer', () => {
 
   describe('render', () => {
     let world: TlbWorld
+    let map: WorldMap
     let featureStorage: Storage<{}>
     let positions: Storage<{}>
     let inViewportCharacter: Storage<{}>
     let inViewportTile: Storage<{}>
     beforeEach(() => {
       world = new World()
-      world.registerResource(new Viewport())
+
+      world.registerResource(new ViewportResource())
+
       featureStorage = mockComponent(world, 'feature')
       positions = mockComponent(world, 'position')
       inViewportCharacter = mockComponent(world, 'in-viewport-character')
       inViewportTile = mockComponent(world, 'in-viewport-tile')
+      mockComponent(world, 'lighting')
+      map = mockMap(world)
 
       renderer.character = jest.fn()
       renderer.clear = jest.fn()
@@ -106,6 +105,7 @@ describe('RotRenderer', () => {
       mockImplementation(inViewportTile.foreach, (f: (entity: number, value: {}) => void) => f(42, {}))
       mockImplementation(featureStorage.get, () => ({ type: 'wall' }))
       mockImplementation(positions.get, () => ({ position: new Vector(2, 43) }))
+      mockImplementation(map.isDiscovered, () => true)
 
       renderer.render(world)
 
@@ -117,6 +117,7 @@ describe('RotRenderer', () => {
       mockImplementation(inViewportCharacter.foreach, (f: (entity: number, value: {}) => void) => f(42, {}))
       mockImplementation(featureStorage.get, () => ({ type: 'player' }))
       mockImplementation(positions.get, () => ({ position: new Vector(2, 43) }))
+      mockImplementation(map.isDiscovered, () => true)
 
       renderer.render(world)
 
@@ -125,31 +126,11 @@ describe('RotRenderer', () => {
     })
   })
 
-  describe('drawable', () => {
-    it('without background', () => {
-      renderer.drawable(new D('c'), { x: 1, y: 2 })
-      expect(display.draw).toHaveBeenCalledTimes(1)
-      expect(display.draw).toHaveBeenCalledWith(1, 2, 'c', '255,128,0', undefined)
-    })
-
-    it('with background', () => {
-      renderer.drawable(new D('c'), { x: 1, y: 2 }, new C([0, 1, 2]))
-      expect(display.draw).toHaveBeenCalledTimes(1)
-      expect(display.draw).toHaveBeenCalledWith(1, 2, 'c', '255,128,0', '0,1,2')
-    })
-
-    it('draws only first character', () => {
-      renderer.drawable(new D('cde'), { x: 1, y: 2 }, new C([0, 1, 2]))
-      expect(display.draw).toHaveBeenCalledTimes(1)
-      expect(display.draw).toHaveBeenCalledWith(1, 2, 'c', '255,128,0', '0,1,2')
-    })
-  })
-
   describe('character', () => {
     it('without background', () => {
       renderer.character('c', { x: 1, y: 2 }, new C([255, 128, 0]))
       expect(display.draw).toHaveBeenCalledTimes(1)
-      expect(display.draw).toHaveBeenCalledWith(1, 2, 'c', '255,128,0', undefined)
+      expect(display.draw).toHaveBeenCalledWith(1, 2, 'c', '255,128,0', null)
     })
 
     it('with background', () => {
@@ -169,9 +150,9 @@ describe('RotRenderer', () => {
     it('without background', () => {
       renderer.text('abc', { x: 1, y: 2 }, new C([255, 128, 0]))
       expect(display.draw).toHaveBeenCalledTimes(3)
-      expect(display.draw).toHaveBeenCalledWith(1, 2, 'a', '255,128,0', undefined)
-      expect(display.draw).toHaveBeenCalledWith(2, 2, 'b', '255,128,0', undefined)
-      expect(display.draw).toHaveBeenCalledWith(3, 2, 'c', '255,128,0', undefined)
+      expect(display.draw).toHaveBeenCalledWith(1, 2, 'a', '255,128,0', null)
+      expect(display.draw).toHaveBeenCalledWith(2, 2, 'b', '255,128,0', null)
+      expect(display.draw).toHaveBeenCalledWith(3, 2, 'c', '255,128,0', null)
     })
 
     it('with background', () => {

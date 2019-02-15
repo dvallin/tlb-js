@@ -54,6 +54,6 @@ export class FunctionalShape extends AbstractShape {
   }
 
   public all(f: (position: Vector) => boolean): boolean {
-    return this.boundary.all(p => this.f(p) && f(p))
+    return this.boundary.all(p => !this.f(p) || f(p))
   }
 }

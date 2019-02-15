@@ -1,5 +1,5 @@
 import { Agent, PositionedAgent } from '../../src/systems/agent'
-import { Action, AgentComponent } from '../../src/components/agent'
+import { Action } from '../../src/components/agent'
 import { World } from '../../src/ecs/world'
 import { TlbWorld } from '../../src/tlb'
 
@@ -10,8 +10,7 @@ import { Direction } from '../../src/spatial/direction'
 import { Rectangle } from '../../src/geometry/rectangle'
 import { Random } from '../../src/random'
 import { Room } from '../../src/assets/rooms'
-import { MapStorage } from '../../src/ecs/storage'
-import { PositionComponent } from '../../src/components/position'
+import { Storage } from '../../src/ecs/storage'
 import { FeatureType } from '../../src/components/feature'
 import { Shape } from '../../src/geometry/shape'
 
@@ -281,8 +280,8 @@ describe('Agent', () => {
     it('creates room if map is free', () => {
       random.integerBetween = jest
         .fn()
-        .mockRejectedValueOnce(2)
-        .mockRejectedValueOnce(0)
+        .mockReturnValueOnce(2)
+        .mockReturnValueOnce(0)
       random.decision = jest.fn().mockReturnValue(false)
       map.isShapeFree = jest.fn().mockReturnValue(true)
       agent.buildRoom = jest.fn()
@@ -304,13 +303,21 @@ describe('Agent', () => {
     })
   })
 
-  describe('buildRoon', () => {
+  describe('buildRoom', () => {
     let agent: Agent
     let random: Random
     beforeEach(() => {
       random = mockRandom()
       agent = new Agent(random)
       agent.spawnAgent = jest.fn()
+      mockComponent(world, 'position')
+
+      mockComponent(world, 'light')
+      mockComponent(world, 'active')
+
+      mockComponent(world, 'feature')
+      mockComponent(world, 'npc')
+      mockComponent(world, 'fov')
     })
 
     it('creates tiles for each cell in the shape', () => {
@@ -327,6 +334,7 @@ describe('Agent', () => {
         availableEntries: [],
         availableAssets: [],
       }
+      mockReturnValue(random.insideRectangle, new Vector(4, 5))
 
       agent.buildRoom(world, state, map, room)
 
@@ -349,7 +357,8 @@ describe('Agent', () => {
         availableAssets: [],
       }
 
-      mockReturnValues(random.integerBetween, 1, 0, 3)
+      mockReturnValues(random.integerBetween, 255, 255, 255, 1, 0, 3)
+      mockReturnValue(random.insideRectangle, new Vector(4, 5))
       mockReturnValue(map.isShapeFree, true)
 
       agent.buildRoom(world, state, map, room)
@@ -373,7 +382,8 @@ describe('Agent', () => {
         availableAssets: [],
       }
 
-      mockReturnValues(random.integerBetween, 1, 0, 3)
+      mockReturnValues(random.integerBetween, 255, 255, 255, 1, 0, 3)
+      mockReturnValue(random.insideRectangle, new Vector(4, 5))
       mockReturnValue(map.isShapeFree, true)
 
       agent.buildRoom(world, state, map, room)
@@ -396,7 +406,8 @@ describe('Agent', () => {
         availableAssets: [],
       }
 
-      mockReturnValues(random.integerBetween, 1, 0, 3)
+      mockReturnValues(random.integerBetween, 255, 255, 255, 1, 0, 3)
+      mockReturnValue(random.insideRectangle, new Vector(4, 5))
       mockReturnValue(map.isShapeFree, false)
 
       agent.buildRoom(world, state, map, room)
@@ -418,6 +429,7 @@ describe('Agent', () => {
         availableEntries: [],
         availableAssets: [],
       }
+      mockReturnValue(random.insideRectangle, new Vector(4, 5))
 
       agent.buildRoom(world, state, map, room)
       expect(mockCreateFeature).toHaveBeenCalledTimes(2)
@@ -458,13 +470,19 @@ describe('Agent', () => {
   })
 
   describe('spawn agent', () => {
+    let agentComponent: Storage<{}>
+    let positionComponent: Storage<{}>
+    beforeEach(() => {
+      agentComponent = mockComponent(world, 'agent')
+      positionComponent = mockComponent(world, 'position')
+    })
+
     it('spawns', () => {
-      world.registerComponentStorage('agent', new MapStorage<AgentComponent>())
-      world.registerComponentStorage('position', new MapStorage<PositionComponent>())
       const agent = new Agent(mockRandom())
       agent.spawnAgent(world, new Vector(1, 2), 3, 'left', 4)
-      expect(world.getComponent(0, 'agent')).toEqual({ actions: [], direction: 'left', width: 3, generation: 4 })
-      expect(world.getComponent(0, 'position')).toEqual({ position: new Vector(1, 2) })
+
+      expect(agentComponent.insert).toHaveBeenCalledWith(0, { actions: [], direction: 'left', width: 3, generation: 4 })
+      expect(positionComponent.insert).toHaveBeenCalledWith(0, { position: new Vector(1, 2) })
     })
   })
 })

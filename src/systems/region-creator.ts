@@ -9,7 +9,7 @@ import { Entity } from '../ecs/entity'
 import { EntrySlot } from '../assets/common'
 import { Shape } from '../geometry/shape'
 import { Landmark } from '../assets/landmarks'
-import { WorldMap } from '../resources/world-map'
+import { WorldMap, WorldMapResource } from '../resources/world-map'
 import { createFeature } from '../components/feature'
 
 export class RegionCreator implements TlbSystem {
@@ -82,7 +82,7 @@ export class RegionCreator implements TlbSystem {
   }
 
   public renderLandmark(world: TlbWorld, landmark: Landmark) {
-    const map = world.getResource<WorldMap>('map')!
+    const map: WorldMap = world.getResource<WorldMapResource>('map')!
     landmark.shape.foreach(p => createFeature(world, map, p, 'hub'))
   }
 }

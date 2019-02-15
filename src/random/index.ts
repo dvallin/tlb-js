@@ -1,4 +1,6 @@
 import { Distribution } from './distributions'
+import { Rectangle } from '../geometry/rectangle'
+import { Vector } from '../spatial'
 
 export class Random {
   public constructor(public readonly distribution: Distribution) {}
@@ -40,5 +42,9 @@ export class Random {
       array[i] = array[j]
       array[j] = t
     }
+  }
+
+  public insideRectangle(rectangle: Rectangle): Vector {
+    return new Vector(this.integerBetween(rectangle.left, rectangle.right), this.integerBetween(rectangle.top, rectangle.bottom))
   }
 }

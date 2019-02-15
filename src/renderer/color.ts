@@ -2,7 +2,7 @@ import * as rot from 'rot-js'
 
 export class Color {
   public static fromHex(hex: string): Color {
-    return new Color(rot.Color.fromString(hex))
+    return new Color(rot.Color.fromString(hex) as [number, number, number])
   }
 
   public readonly rgb: string
