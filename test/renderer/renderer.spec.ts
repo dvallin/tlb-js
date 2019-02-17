@@ -73,6 +73,7 @@ describe('RotRenderer', () => {
       inViewportCharacter = mockComponent(world, 'in-viewport-character')
       inViewportTile = mockComponent(world, 'in-viewport-tile')
       mockComponent(world, 'lighting')
+      mockComponent(world, 'overlay')
       map = mockMap(world)
 
       renderer.character = jest.fn()
@@ -110,7 +111,7 @@ describe('RotRenderer', () => {
       renderer.render(world)
 
       expect(renderer.character).toHaveBeenCalledTimes(1)
-      expect(renderer.character).toHaveBeenCalledWith(features.wall.character, { x: 2, y: 43 }, features.wall.diffuse)
+      expect(renderer.character).toHaveBeenCalledWith(features.wall.character, { x: 2, y: 43 }, features.wall.diffuse, undefined)
     })
 
     it('renders each in viewport character', () => {
@@ -122,7 +123,7 @@ describe('RotRenderer', () => {
       renderer.render(world)
 
       expect(renderer.character).toHaveBeenCalledTimes(1)
-      expect(renderer.character).toHaveBeenCalledWith(features.player.character, { x: 1.5, y: 42.75 }, features.player.diffuse)
+      expect(renderer.character).toHaveBeenCalledWith(features.player.character, { x: 1.5, y: 42.75 }, features.player.diffuse, undefined)
     })
   })
 

@@ -1,4 +1,4 @@
-import { RotRayCaster } from '../../src/renderer/ray-caster'
+import { Queries } from '../../src/renderer/queries'
 import { Vector } from '../../src/spatial'
 import { TlbWorld } from '../../src/tlb'
 import { WorldMap } from '../../src/resources/world-map'
@@ -20,7 +20,7 @@ describe('RotRayCaster', () => {
       return position.key !== '1,1' && position.key !== '1,2'
     })
 
-    new RotRayCaster().fov(world, new Vector(1, 1), callback)
+    new Queries().fov(world, new Vector(1, 1), callback)
 
     expect(callback).toHaveBeenCalledTimes(12)
     // non-light blocking
@@ -45,7 +45,7 @@ describe('RotRayCaster', () => {
       return position.key !== '1,1' && position.key !== '1,2'
     })
 
-    new RotRayCaster().lighting(world, new Vector(1, 1), new Color([123, 123, 123]), callback)
+    new Queries().lighting(world, new Vector(1, 1), new Color([123, 123, 123]), callback)
 
     expect(callback).toHaveBeenCalledTimes(12)
     // non-light blocking

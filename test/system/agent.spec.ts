@@ -318,6 +318,7 @@ describe('Agent', () => {
       mockComponent(world, 'feature')
       mockComponent(world, 'npc')
       mockComponent(world, 'fov')
+      mockComponent(world, 'character-stats')
     })
 
     it('creates tiles for each cell in the shape', () => {

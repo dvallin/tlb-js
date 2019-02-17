@@ -1,17 +1,17 @@
 import { Fov } from '../../src/systems/fov'
 import { TlbWorld } from '../../src/tlb'
 import { World } from '../../src/ecs/world'
-import { mockComponent, mockRayCaster, mockReturnValue, mockImplementation3, callArgument } from '../mocks'
+import { mockComponent, mockReturnValue, mockImplementation3, callArgument, mockQueries } from '../mocks'
 import { FovComponent } from '../../src/components/fov'
 import { Storage } from '../../src/ecs/storage'
 import { PositionComponent } from '../../src/components/position'
-import { RayCaster } from '../../src/renderer/ray-caster'
 import { Vector } from '../../src/spatial'
+import { Queries } from '../../src/renderer/queries'
 
 describe('Fov', () => {
   let world: TlbWorld
 
-  let rayCaster: RayCaster
+  let queries: Queries
   let fov: FovComponent
   let position: PositionComponent
   beforeEach(() => {
@@ -26,13 +26,13 @@ describe('Fov', () => {
     mockReturnValue<PositionComponent>(positions.get, position)
     mockReturnValue<FovComponent>(fovs.get, fov)
 
-    rayCaster = mockRayCaster()
-    mockImplementation3(rayCaster.fov, ({}, {}, callback: (pos: Vector, distance: number) => void) => {
+    queries = mockQueries()
+    mockImplementation3(queries.fov, ({}, {}, callback: (pos: Vector, distance: number) => void) => {
       callback(new Vector(1, 1), 2)
       callback(new Vector(0, 0), 1)
     })
 
-    new Fov(rayCaster).update(world, 0)
+    new Fov(queries).update(world, 0)
   })
 
   it('pushes all fov cells', () => {
@@ -40,6 +40,6 @@ describe('Fov', () => {
   })
 
   it('floors position', () => {
-    expect(callArgument(rayCaster.fov, 0, 1)).toEqual(new Vector(1, 1))
+    expect(callArgument(queries.fov, 0, 1)).toEqual(new Vector(1, 1))
   })
 })

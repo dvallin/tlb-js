@@ -5,7 +5,7 @@ import { Vector } from '../spatial'
 import { Color } from './color'
 import { bfs } from '../ecs/bfs'
 import { FunctionalShape } from '../geometry/functional-shape'
-import AStar from 'rot-js/lib/path/astar'
+import { Path } from 'rot-js'
 
 export interface QueryParameters {
   onlyDiscovered: boolean
@@ -57,7 +57,7 @@ export class Queries {
     const onlyDiscovered = params.onlyDiscovered || false
     const originFloor = origin.floor()
     const targetFloor = target.floor()
-    const algorithm = new AStar(
+    const algorithm = new Path.AStar(
       originFloor.x,
       originFloor.y,
       (x, y) => {

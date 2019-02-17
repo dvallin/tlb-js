@@ -3,7 +3,7 @@ import { WorldMapResource } from '../src/resources/world-map'
 import { Renderer } from '../src/renderer/renderer'
 import { ComponentName, TlbWorld, ResourceName } from '../src/tlb'
 import { Random } from '../src/random'
-import { RayCaster } from '../src/renderer/ray-caster'
+import { Queries } from '../src/renderer/queries'
 import { Space, StackedSpace } from '../src/spatial'
 import { Entity } from '../src/ecs/entity'
 import { SetSpace } from '../src/spatial/set-space'
@@ -97,10 +97,12 @@ export function mockInput(world: TlbWorld): Input {
   return input
 }
 
-export function mockRayCaster(): RayCaster {
+export function mockQueries(): Queries {
   return {
     fov: jest.fn(),
     lighting: jest.fn(),
+    explore: jest.fn(),
+    shortestPath: jest.fn(),
   }
 }
 
