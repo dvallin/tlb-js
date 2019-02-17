@@ -1,0 +1,45 @@
+import { Vector } from '../spatial'
+import { Shape } from '../geometry/shape'
+
+export function bfs(
+  origin: Vector,
+  neighbourhood: (target: Vector) => Shape,
+  visit: (target: Vector, depth: number) => void,
+  canVisit: (target: Vector, depth: number) => boolean
+): void {
+  const visited: Set<string> = new Set([origin.key])
+  let currentDepth: number = 1
+  let currentLayer: Vector[] = []
+  let nextLayer: Vector[] = []
+  putNeighboursIntoLayer(visited, neighbourhood(origin), currentLayer, n => canVisit(n, currentDepth))
+
+  while (true) {
+    const current = currentLayer.pop()
+    if (current !== undefined) {
+      visit(current, currentDepth)
+      putNeighboursIntoLayer(visited, neighbourhood(current), nextLayer, n => canVisit(n, currentDepth))
+    } else {
+      currentLayer = nextLayer
+      nextLayer = []
+      currentDepth++
+      if (currentLayer.length === 0) {
+        break
+      }
+    }
+  }
+}
+
+function putNeighboursIntoLayer(
+  visited: Set<string>,
+  neighbourhood: Shape,
+  layer: Vector[],
+  canVisit: (neighbour: Vector) => boolean
+): void {
+  neighbourhood.foreach(neighbour => {
+    const key = neighbour.key
+    if (!visited.has(key) && canVisit(neighbour)) {
+      layer.push(neighbour)
+      visited.add(key)
+    }
+  })
+}

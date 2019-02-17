@@ -5,6 +5,7 @@ import { AbstractState } from './state'
 import { FeatureComponent } from '../components/feature'
 import { WorldMap, WorldMapResource } from '../resources/world-map'
 import { FovComponent } from '../components/fov'
+import { CharacterStatsComponent, createCharacterStatsComponent } from '../components/character-stats'
 
 export class Running extends AbstractState {
   public constructor() {
@@ -24,7 +25,8 @@ export class Running extends AbstractState {
           .withComponent<{}>('viewport-focus', {})
           .withComponent<PositionComponent>('position', { position })
           .withComponent<FeatureComponent>('feature', { type: 'player' })
-          .withComponent<FovComponent>('fov', { fov: [] }).entity
+          .withComponent<FovComponent>('fov', { fov: [] })
+          .withComponent<CharacterStatsComponent>('character-stats', createCharacterStatsComponent('player')).entity
         map.setCharacter(position, player)
       })
     } else {

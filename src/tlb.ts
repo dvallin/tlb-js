@@ -3,16 +3,28 @@ import { VectorStorage, MapStorage, SetStorage, SingletonStorage } from './ecs/s
 import { System } from './ecs/system'
 import { Resource } from './ecs/resource'
 
+import { AgeComponent } from './components/age'
 import { AgentComponent } from './components/agent'
 import { AssetComponent } from './components/asset'
+import { CharacterStatsComponent } from './components/character-stats'
 import { FeatureComponent } from './components/feature'
+import { FovComponent } from './components/fov'
 import { GroundComponent } from './components/ground'
+import { LightingComponent, LightComponent } from './components/light'
 import { ParentComponent, ChildrenComponent } from './components/relation'
 import { PositionComponent } from './components/position'
-import { AgeComponent } from './components/age'
 import { RegionComponent } from './components/region'
 
 import { Agent } from './systems/agent'
+import { Fov } from './systems/fov'
+import { FreeModeControl } from './systems/free-mode-control'
+import { Light } from './systems/light'
+import { Npc } from './systems/npc'
+import { PlayerControl } from './systems/player-control'
+import { PlayerInteraction } from './systems/player-interaction'
+import { RegionCreator } from './systems/region-creator'
+import { PlayerRoundControl } from './systems/player-round-control'
+import { Trigger } from './systems/trigger'
 
 import { WorldMapResource } from './resources/world-map'
 import { ViewportResource } from './resources/viewport'
@@ -21,25 +33,18 @@ import { Random } from './random'
 import { Uniform } from './random/distributions'
 
 import { InputResource } from './resources/input'
-import { FreeModeControl } from './systems/free-mode-control'
-import { RegionCreator } from './systems/region-creator'
-import { PlayerControl } from './systems/player-control'
 import { Renderer } from './renderer/renderer'
-import { Trigger } from './systems/trigger'
-import { PlayerInteraction } from './systems/player-interaction'
-import { FovComponent } from './components/fov'
-import { Fov } from './systems/fov'
-import { Npc } from './systems/npc'
-import { RayCaster } from './renderer/ray-caster'
-import { Light } from './systems/light'
-import { LightingComponent, LightComponent } from './components/light'
+import { Queries } from './renderer/queries'
 import { State } from './game-states/state'
+import { OverlayComponent } from './components/overlay'
+import { TakeTurnComponent } from './components/rounds'
 
 export type ComponentName =
   | 'active'
   | 'age'
   | 'agent'
   | 'asset'
+  | 'character-stats'
   | 'children'
   | 'feature'
   | 'fov'
@@ -55,8 +60,12 @@ export type ComponentName =
   | 'position'
   | 'region'
   | 'spawn'
+  | 'take-turn'
+  | 'took-turn'
   | 'trigger'
+  | 'overlay'
   | 'viewport-focus'
+  | 'wait-turn'
 export type SystemName =
   | 'agent'
   | 'fov'
@@ -64,6 +73,7 @@ export type SystemName =
   | 'light'
   | 'npc'
   | 'player-control'
+  | 'player-round-control'
   | 'player-interaction'
   | 'region-creator'
   | 'trigger'
@@ -78,6 +88,7 @@ export function registerComponents<S, R>(world: World<ComponentName, S, R>): voi
   world.registerComponentStorage('age', new MapStorage<AgeComponent>())
   world.registerComponentStorage('agent', new MapStorage<AgentComponent>())
   world.registerComponentStorage('asset', new MapStorage<AssetComponent>())
+  world.registerComponentStorage('character-stats', new MapStorage<CharacterStatsComponent>())
   world.registerComponentStorage('children', new MapStorage<ChildrenComponent>())
   world.registerComponentStorage('feature', new VectorStorage<FeatureComponent>())
   world.registerComponentStorage('fov', new MapStorage<FovComponent>())
@@ -87,14 +98,18 @@ export function registerComponents<S, R>(world: World<ComponentName, S, R>): voi
   world.registerComponentStorage('in-viewport-tile', new SetStorage())
   world.registerComponentStorage('light', new MapStorage<LightComponent>())
   world.registerComponentStorage('lighting', new VectorStorage<LightingComponent>())
+  world.registerComponentStorage('npc', new SetStorage())
   world.registerComponentStorage('parent', new MapStorage<ParentComponent>())
   world.registerComponentStorage('player', new SingletonStorage())
-  world.registerComponentStorage('npc', new SetStorage())
   world.registerComponentStorage('position', new VectorStorage<PositionComponent>())
   world.registerComponentStorage('region', new MapStorage<RegionComponent>())
   world.registerComponentStorage('spawn', new SingletonStorage())
+  world.registerComponentStorage('take-turn', new MapStorage<TakeTurnComponent>())
+  world.registerComponentStorage('took-turn', new SetStorage())
   world.registerComponentStorage('trigger', new SetStorage())
+  world.registerComponentStorage('overlay', new MapStorage<OverlayComponent>())
   world.registerComponentStorage('viewport-focus', new SingletonStorage())
+  world.registerComponentStorage('wait-turn', new SetStorage())
 }
 
 export function registerResources(world: World<ComponentName, SystemName, ResourceName>, renderer: Renderer): void {
@@ -105,16 +120,17 @@ export function registerResources(world: World<ComponentName, SystemName, Resour
 
 export function registerSystems(
   world: World<ComponentName, SystemName, ResourceName>,
-  rayCaster: RayCaster,
+  queries: Queries,
   pushState: (s: State) => void
 ): void {
   const uniform = new Uniform('some seed')
   world.registerSystem('agent', new Agent(new Random(uniform)))
   world.registerSystem('free-mode-control', new FreeModeControl())
-  world.registerSystem('light', new Light(rayCaster))
+  world.registerSystem('light', new Light(queries))
   world.registerSystem('player-control', new PlayerControl())
+  world.registerSystem('player-round-control', new PlayerRoundControl(queries))
   world.registerSystem('player-interaction', new PlayerInteraction())
-  world.registerSystem('fov', new Fov(rayCaster))
+  world.registerSystem('fov', new Fov(queries))
   world.registerSystem('npc', new Npc(pushState))
   world.registerSystem('region-creator', new RegionCreator(new Random(uniform)))
   world.registerSystem('trigger', new Trigger())

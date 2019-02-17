@@ -5,7 +5,7 @@ import { Running } from './game-states/running'
 import { MapCreation } from './game-states/map-creation'
 
 import { RotRenderer, Renderer } from './renderer/renderer'
-import { RayCaster, RotRayCaster } from './renderer/ray-caster'
+import { Queries } from './renderer/queries'
 
 export class Game {
   public computeTime: number = 0
@@ -15,7 +15,7 @@ export class Game {
   public states: State[] = []
 
   public renderer: Renderer = new RotRenderer()
-  public rayCaster: RayCaster = new RotRayCaster()
+  public rayCaster = new Queries()
 
   public constructor(private readonly world: TlbWorld = new World(), private readonly targetFps: number = 60) {}
 

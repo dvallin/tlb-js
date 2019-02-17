@@ -11,6 +11,7 @@ import { PositionComponent } from '../components/position'
 import { Entity } from '../ecs/entity'
 import { WorldMap, WorldMapResource } from '../resources/world-map'
 import { LightingComponent } from '../components/light'
+import { OverlayComponent } from '../components/overlay'
 
 export interface Renderer {
   render(world: TlbWorld): void
@@ -51,6 +52,7 @@ export class RotRenderer implements Renderer {
     world.getStorage('in-viewport-tile').foreach(entity => this.renderFeature(world, viewport, entity, false))
     world.getStorage('in-viewport-character').foreach(entity => this.renderFeature(world, viewport, entity, true))
     world.components.get('lighting')!.clear()
+    world.components.get('overlay')!.clear()
   }
 
   public renderFeature(world: TlbWorld, viewport: Viewport, entity: Entity, centered: boolean): void {
@@ -64,8 +66,14 @@ export class RotRenderer implements Renderer {
         if (map.isVisible(p)) {
           lighting = world.getComponent<LightingComponent>(entity, 'lighting')
         }
+        const overlay = world.getComponent<OverlayComponent>(entity, 'overlay') || { background: undefined }
         const displayPosition = viewport.toDisplay(position.position, centered)
-        this.character(feature.character, displayPosition, this.computeColor(this.ambientColor, feature.diffuse, lighting))
+        this.character(
+          feature.character,
+          displayPosition,
+          this.computeColor(this.ambientColor, feature.diffuse, lighting),
+          overlay.background
+        )
       }
     }
   }

@@ -4,7 +4,7 @@ import { WorldMap, WorldMapResource } from '../resources/world-map'
 import { AgentComponent, Action } from '../components/agent'
 import { PositionComponent } from '../components/position'
 import { Entity } from '../ecs/entity'
-import { createFeature, FeatureComponent, FeatureType } from '../components/feature'
+import { createFeature, FeatureComponent } from '../components/feature'
 import { leftOf, rightOf, Direction, oppositeOf } from '../spatial/direction'
 import { Random } from '../random'
 import { Rectangle } from '../geometry/rectangle'
@@ -18,6 +18,7 @@ import { Shape } from '../geometry/shape'
 import { LightComponent } from '../components/light'
 import { Color } from '../renderer/color'
 import { FovComponent } from '../components/fov'
+import { createCharacterStatsComponent, CharacterStatsType, CharacterStatsComponent } from '../components/character-stats'
 
 export interface PositionedAgent {
   position: PositionComponent
@@ -325,14 +326,16 @@ export class Agent implements TlbSystem {
   }
 
   public spawnEnemy(world: TlbWorld, map: WorldMap, position: Vector): void {
-    const type = this.random.pick<FeatureType>(['guard', 'eliteGuard'])
-    const centeredPosition = new Vector(position.x + 0.5, position.y + 0.25)
+    const type = this.random.pick<CharacterStatsType>(['guard', 'eliteGuard'])
+    const offset = new Vector(0.5, 0.25)
+    const centeredPosition = new Vector(position.x, position.y).add(offset)
     const entity = world
       .createEntity()
       .withComponent('npc', {})
       .withComponent<FeatureComponent>('feature', { type })
       .withComponent<PositionComponent>('position', { position: centeredPosition })
-      .withComponent<FovComponent>('fov', { fov: [] }).entity
+      .withComponent<FovComponent>('fov', { fov: [] })
+      .withComponent<CharacterStatsComponent>('character-stats', createCharacterStatsComponent(type)).entity
     map.setCharacter(position, entity)
   }
 
