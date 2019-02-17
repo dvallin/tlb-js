@@ -55,6 +55,18 @@ export class Vector {
     return this.coordinates[index]
   }
 
+  public equals(other: Vector): boolean {
+    if (other.dimensions !== this.dimensions) {
+      return false
+    }
+    for (let i = 0; i < this.dimensions; i++) {
+      if (this.at(i) !== other.at(i)) {
+        return false
+      }
+    }
+    return true
+  }
+
   public add(other: Vector): Vector {
     Vector.assertHasSameDimensions(this, other)
     const result = []

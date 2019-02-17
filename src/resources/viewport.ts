@@ -2,7 +2,7 @@ import { WorldMap, WorldMapResource } from './world-map'
 import { Vector } from '../spatial'
 import { Position } from '../renderer/position'
 import { TlbWorld, ResourceName, TlbResource } from '../tlb'
-import { PositionComponent } from 'src/components/position'
+import { PositionComponent } from '../components/position'
 import { Input, InputResource } from './input'
 import { KEYS } from 'rot-js'
 

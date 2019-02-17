@@ -5,6 +5,7 @@ import { Vector } from '../spatial'
 import { Color } from './color'
 import { bfs } from '../ecs/bfs'
 import { FunctionalShape } from '../geometry/functional-shape'
+import AStar from 'rot-js/lib/path/astar'
 
 export interface QueryParameters {
   onlyDiscovered: boolean
@@ -48,5 +49,34 @@ export class Queries {
       }
       return onlyDiscovered ? map.isDiscovered(target) : true
     })
+  }
+
+  public shortestPath(world: TlbWorld, origin: Vector, target: Vector, params: Partial<QueryParameters>): Vector[] | undefined {
+    const map: WorldMap = world.getResource<WorldMapResource>('map')
+    const maximumDepth = params.maximumDepth || Number.MAX_SAFE_INTEGER
+    const onlyDiscovered = params.onlyDiscovered || false
+    const originFloor = origin.floor()
+    const targetFloor = target.floor()
+    const algorithm = new AStar(
+      originFloor.x,
+      originFloor.y,
+      (x, y) => {
+        const position = new Vector(x, y)
+        if (position.equals(originFloor)) {
+          return true
+        }
+        if (map.isBlocking(world, position)) {
+          return false
+        }
+        return onlyDiscovered ? map.isDiscovered(position) : true
+      },
+      { topology: 8 }
+    )
+    const path: Vector[] = []
+    algorithm.compute(targetFloor.x, targetFloor.y, (x, y) => path.push(new Vector(x, y)))
+    if (path.length - 2 <= maximumDepth) {
+      return path
+    }
+    return undefined
   }
 }

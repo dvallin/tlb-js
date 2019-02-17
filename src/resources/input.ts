@@ -4,6 +4,7 @@ import { Position } from '../renderer/position'
 import { KEYS } from 'rot-js'
 
 export interface Input {
+  position: Position | undefined
   mouseDown: boolean
   mousePressed: boolean
   mouseReleased: boolean
