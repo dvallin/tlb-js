@@ -48,7 +48,7 @@ export class MapCreation extends AbstractState {
   private fillWalls(world: TlbWorld) {
     const map: WorldMap = world.getResource<WorldMapResource>('map')
     map.boundaries.grow().foreach(p => {
-      if (map.getTile(p) === undefined && map.isShapeBlocked(world, FunctionalShape.LN(p, 1))) {
+      if (map.getTile(p) === undefined && map.isShapeBlocked(world, FunctionalShape.lN(p, 1))) {
         createFeature(world, map, p, 'wall')
       }
     })

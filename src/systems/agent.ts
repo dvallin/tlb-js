@@ -35,7 +35,7 @@ export class Agent implements TlbSystem {
     this.roomGenerator = new RoomGenerator(random)
   }
 
-  public update(world: TlbWorld, entity: number): void {
+  public update(world: TlbWorld, entity: Entity): void {
     const agent = world.getComponent<AgentComponent>(entity, 'agent')!
     const position = world.getComponent<PositionComponent>(entity, 'position')!
     const region = agent.allowedRegion !== undefined ? world.getComponent<RegionComponent>(agent.allowedRegion, 'region') : undefined
@@ -189,7 +189,7 @@ export class Agent implements TlbSystem {
     while (remainingAssets-- > 0 && room.availableAssets.length > 0) {
       const assetIndex = this.random.integerBetween(0, room.availableAssets.length - 1)
       const assetSlot = room.availableAssets[assetIndex]
-      const hasWall = map.shapeHasSome(world, FunctionalShape.LN(assetSlot.position), f => f === undefined || f.type === 'wall')
+      const hasWall = map.shapeHasSome(world, FunctionalShape.lN(assetSlot.position), f => f === undefined || f.type === 'wall')
 
       const possibleAssets: AssetType[] = []
       if (hasWall) {
@@ -327,8 +327,7 @@ export class Agent implements TlbSystem {
 
   public spawnEnemy(world: TlbWorld, map: WorldMap, position: Vector): void {
     const type = this.random.pick<CharacterStatsType>(['guard', 'eliteGuard'])
-    const offset = new Vector(0.5, 0.25)
-    const centeredPosition = new Vector(position.x, position.y).add(offset)
+    const centeredPosition = new Vector(position.x, position.y).center
     const entity = world
       .createEntity()
       .withComponent('npc', {})

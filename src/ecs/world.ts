@@ -29,7 +29,7 @@ export class World<C, S, R> {
     return this.resources.get(resource)! as T
   }
 
-  public getComponent<T extends object>(entity: number, component: C): T | undefined {
+  public getComponent<T extends object>(entity: Entity, component: C): T | undefined {
     const storage = this.getStorage<T>(component)
     if (storage !== undefined) {
       return storage.get(entity)
@@ -37,7 +37,7 @@ export class World<C, S, R> {
     return undefined
   }
 
-  public hasComponent(entity: number, component: C): boolean {
+  public hasComponent(entity: Entity, component: C): boolean {
     const storage = this.getStorage(component)
     if (storage !== undefined) {
       return storage.has(entity)
@@ -56,7 +56,7 @@ export class World<C, S, R> {
     return new EntityModifier(this, entity)
   }
 
-  public editEntity(entity: number): EntityModifier<C, S, R> {
+  public editEntity(entity: Entity): EntityModifier<C, S, R> {
     return new EntityModifier(this, entity)
   }
 

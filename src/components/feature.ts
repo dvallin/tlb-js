@@ -104,7 +104,7 @@ function eliteEnemy(character: string, description: string): Feature {
   }
 }
 
-export function getFeature(world: TlbWorld, entity: number): Feature | undefined {
+export function getFeature(world: TlbWorld, entity: Entity): Feature | undefined {
   const feature = world.getComponent<FeatureComponent>(entity, 'feature')
   if (feature) {
     return features[feature.type]

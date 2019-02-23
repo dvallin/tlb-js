@@ -46,7 +46,7 @@ describe('PlayerInteraction', () => {
       playerInteraction.update(world, 0)
 
       const searchShape = callArgument<Shape>(playerInteraction.findTrigger, 0, 2)
-      const expectedShape = FunctionalShape.LN(new Vector(1, 1), 1, true)
+      const expectedShape = FunctionalShape.lN(new Vector(1, 1), 1, true)
       expect(searchShape.equals(expectedShape)).toBeTruthy()
     })
 

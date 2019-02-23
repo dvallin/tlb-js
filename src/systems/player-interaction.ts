@@ -12,12 +12,12 @@ import { ParentComponent } from '../components/relation'
 export class PlayerInteraction implements TlbSystem {
   public readonly components: ComponentName[] = ['player', 'position']
 
-  public update(world: TlbWorld, entity: number): void {
+  public update(world: TlbWorld, entity: Entity): void {
     const input: Input = world.getResource<InputResource>('input')
     if (input.keyPressed.has(KEYS.VK_E)) {
       const map: WorldMap = world.getResource<WorldMapResource>('map')
       const position = world.getComponent<PositionComponent>(entity, 'position')!
-      const neighbourhood = FunctionalShape.LN(position.position.floor(), 1, true)
+      const neighbourhood = FunctionalShape.lN(position.position.floor(), 1, true)
 
       const trigger = this.findTrigger(world, map, neighbourhood)
       if (trigger !== undefined) {

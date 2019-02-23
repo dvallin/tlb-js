@@ -2,6 +2,7 @@ import { World } from '../../src/ecs/world'
 import { System } from '../../src/ecs/system'
 import { VectorStorage } from '../../src/ecs/storage'
 import { Resource } from '../../src/ecs/resource'
+import { Entity } from '../../src/ecs/entity'
 
 type ComponentName = 'component1' | 'component2'
 type ResourceName = 'resource1' | 'resource2'
@@ -96,7 +97,7 @@ describe('World', () => {
     const updated = jest.fn()
     class S implements System<ComponentName, SystemName, ResourceName> {
       public readonly components: ComponentName[] = ['component1']
-      public update({  }: World<ComponentName, SystemName, ResourceName>, entity: number): void {
+      public update({  }: World<ComponentName, SystemName, ResourceName>, entity: Entity): void {
         updated(entity)
       }
     }
@@ -104,7 +105,7 @@ describe('World', () => {
     const updated2 = jest.fn()
     class T implements System<ComponentName, SystemName, ResourceName> {
       public readonly components: ComponentName[] = ['component1', 'component2']
-      public update({  }: World<ComponentName, SystemName, ResourceName>, entity: number): void {
+      public update({  }: World<ComponentName, SystemName, ResourceName>, entity: Entity): void {
         updated2(entity)
       }
     }

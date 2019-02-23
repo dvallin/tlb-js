@@ -9,7 +9,7 @@ describe('registerComponents', () => {
 
     registerComponents(world)
 
-    expect(world.registerComponentStorage).toHaveBeenCalledTimes(26)
+    expect(world.registerComponentStorage).toHaveBeenCalledTimes(27)
   })
 })
 
@@ -20,7 +20,7 @@ describe('registerResources', () => {
 
     registerSystems(world, mockQueries(), jest.fn())
 
-    expect(world.registerSystem).toHaveBeenCalledTimes(10)
+    expect(world.registerSystem).toHaveBeenCalledTimes(11)
   })
 })
 

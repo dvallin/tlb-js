@@ -3,13 +3,13 @@ import { TlbWorld } from '../tlb'
 import { WorldMap, WorldMapResource } from '../resources/world-map'
 import { Vector } from '../spatial'
 import { Color } from './color'
-import { bfs } from '../ecs/bfs'
+import { bfs } from './bfs'
 import { FunctionalShape } from '../geometry/functional-shape'
-import { Path } from 'rot-js'
+import { astar, Path } from './astar'
 
 export interface QueryParameters {
   onlyDiscovered: boolean
-  maximumDepth: number
+  maximumCost: number
 }
 
 export class Queries {
@@ -41,9 +41,9 @@ export class Queries {
 
   public explore(world: TlbWorld, origin: Vector, visit: (pos: Vector, distance: number) => void, params: Partial<QueryParameters>): void {
     const map: WorldMap = world.getResource<WorldMapResource>('map')
-    const maximumDepth = params.maximumDepth || Number.MAX_SAFE_INTEGER
+    const maximumDepth = params.maximumCost || Number.MAX_SAFE_INTEGER
     const onlyDiscovered = params.onlyDiscovered || false
-    bfs(origin.floor(), target => FunctionalShape.LN(target, 1, false), visit, (target, depth) => {
+    bfs(origin.floor(), target => FunctionalShape.lN(target, 1, false), visit, (target, depth) => {
       if (depth >= maximumDepth || map.isBlocking(world, target)) {
         return false
       }
@@ -51,31 +51,30 @@ export class Queries {
     })
   }
 
-  public shortestPath(world: TlbWorld, origin: Vector, target: Vector, params: Partial<QueryParameters>): Vector[] | undefined {
+  public shortestPath(world: TlbWorld, origin: Vector, target: Vector, params: Partial<QueryParameters>): Path | undefined {
     const map: WorldMap = world.getResource<WorldMapResource>('map')
-    const maximumDepth = params.maximumDepth || Number.MAX_SAFE_INTEGER
     const onlyDiscovered = params.onlyDiscovered || false
     const originFloor = origin.floor()
     const targetFloor = target.floor()
-    const algorithm = new Path.AStar(
-      originFloor.x,
-      originFloor.y,
-      (x, y) => {
-        const position = new Vector(x, y)
-        if (position.equals(originFloor)) {
-          return true
+    const maximumCost = params.maximumCost || Number.MAX_SAFE_INTEGER
+    const path = astar(
+      originFloor,
+      targetFloor,
+      (current, neighbour) => {
+        if (map.isBlocking(world, neighbour)) {
+          return undefined
         }
-        if (map.isBlocking(world, position)) {
-          return false
+        if (onlyDiscovered && !map.isDiscovered(neighbour)) {
+          return undefined
         }
-        return onlyDiscovered ? map.isDiscovered(position) : true
+        return current.minus(neighbour).l1()
       },
-      { topology: 8 }
+      v => FunctionalShape.lN(v, 1, false),
+      v => targetFloor.minus(v).lN(),
+      maximumCost
     )
-    const path: Vector[] = []
-    algorithm.compute(targetFloor.x, targetFloor.y, (x, y) => path.push(new Vector(x, y)))
-    if (path.length - 2 <= maximumDepth) {
-      return path
+    if (path !== undefined && path.path.length - 1 <= maximumCost) {
+      return { path: path.path.slice(0, path.path.length - 1), cost: path.cost }
     }
     return undefined
   }

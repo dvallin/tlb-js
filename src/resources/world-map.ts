@@ -97,7 +97,7 @@ export class WorldMapResource implements TlbResource, WorldMap {
   }
 
   public addLight(position: Vector, entity: Entity): void {
-    this.lights.addAll(FunctionalShape.L2(position, 6, true), entity)
+    this.lights.addAll(FunctionalShape.l2(position, 6, true), entity)
   }
 
   public isDiscovered(position: Vector): boolean {

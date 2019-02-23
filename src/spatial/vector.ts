@@ -39,6 +39,10 @@ export class Vector {
     return this.coordinates.length
   }
 
+  public get center(): Vector {
+    return this.add(new Vector(0.5, 0.25))
+  }
+
   public get x(): number {
     return this.coordinates[0]
   }
@@ -138,7 +142,32 @@ export class Vector {
     return Math.sqrt(this.squaredLength())
   }
 
+  public l1(): number {
+    let l = 0
+    for (let i = 0; i < this.dimensions; i++) {
+      l += Math.abs(this.at(i))
+    }
+    return l
+  }
+
+  public lN(): number {
+    let l = 0
+    for (let i = 0; i < this.dimensions; i++) {
+      l = Math.max(l, Math.abs(this.at(i)))
+    }
+    return l
+  }
+
   public normalize(): Vector {
     return this.mult(1.0 / this.length())
+  }
+
+  public isNan(): boolean {
+    for (let i = 0; i < this.dimensions; i++) {
+      if (Number.isNaN(this.at(i))) {
+        return true
+      }
+    }
+    return false
   }
 }

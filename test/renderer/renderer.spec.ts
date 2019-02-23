@@ -11,6 +11,7 @@ import { Vector } from '../../src/spatial'
 import { features } from '../../src/components/feature'
 import { Storage } from '../../src/ecs/storage'
 import { WorldMap } from '../../src/resources/world-map'
+import { Entity } from '../../src/ecs/entity'
 
 class C extends Color {
   public rgb: string
@@ -94,8 +95,8 @@ describe('RotRenderer', () => {
     })
 
     it('does not render entities without position and feature', () => {
-      mockImplementation(inViewportCharacter.foreach, (f: (entity: number, value: {}) => void) => f(42, {}))
-      mockImplementation(inViewportTile.foreach, (f: (entity: number, value: {}) => void) => f(42, {}))
+      mockImplementation(inViewportCharacter.foreach, (f: (entity: Entity, value: {}) => void) => f(42, {}))
+      mockImplementation(inViewportTile.foreach, (f: (entity: Entity, value: {}) => void) => f(42, {}))
 
       renderer.render(world)
 
@@ -103,7 +104,7 @@ describe('RotRenderer', () => {
     })
 
     it('renders each in viewport tile', () => {
-      mockImplementation(inViewportTile.foreach, (f: (entity: number, value: {}) => void) => f(42, {}))
+      mockImplementation(inViewportTile.foreach, (f: (entity: Entity, value: {}) => void) => f(42, {}))
       mockImplementation(featureStorage.get, () => ({ type: 'wall' }))
       mockImplementation(positions.get, () => ({ position: new Vector(2, 43) }))
       mockImplementation(map.isDiscovered, () => true)
@@ -115,7 +116,7 @@ describe('RotRenderer', () => {
     })
 
     it('renders each in viewport character', () => {
-      mockImplementation(inViewportCharacter.foreach, (f: (entity: number, value: {}) => void) => f(42, {}))
+      mockImplementation(inViewportCharacter.foreach, (f: (entity: Entity, value: {}) => void) => f(42, {}))
       mockImplementation(featureStorage.get, () => ({ type: 'player' }))
       mockImplementation(positions.get, () => ({ position: new Vector(2, 43) }))
       mockImplementation(map.isDiscovered, () => true)

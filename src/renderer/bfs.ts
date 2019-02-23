@@ -11,13 +11,13 @@ export function bfs(
   let currentDepth: number = 1
   let currentLayer: Vector[] = []
   let nextLayer: Vector[] = []
-  putNeighboursIntoLayer(visited, neighbourhood(origin), currentLayer, n => canVisit(n, currentDepth))
+  putNeighboursIntoNextLayer(visited, neighbourhood(origin), currentLayer, n => canVisit(n, currentDepth))
 
   while (true) {
     const current = currentLayer.pop()
     if (current !== undefined) {
       visit(current, currentDepth)
-      putNeighboursIntoLayer(visited, neighbourhood(current), nextLayer, n => canVisit(n, currentDepth))
+      putNeighboursIntoNextLayer(visited, neighbourhood(current), nextLayer, n => canVisit(n, currentDepth))
     } else {
       currentLayer = nextLayer
       nextLayer = []
@@ -29,7 +29,7 @@ export function bfs(
   }
 }
 
-function putNeighboursIntoLayer(
+function putNeighboursIntoNextLayer(
   visited: Set<string>,
   neighbourhood: Shape,
   layer: Vector[],

@@ -3,13 +3,14 @@ import { PositionComponent } from '../components/position'
 import { FovComponent } from '../components/fov'
 import { State } from '../game-states/state'
 import { Fighting } from '../game-states/fighting'
+import { Entity } from '../ecs/entity'
 
 export class Npc implements TlbSystem {
   public readonly components: ComponentName[] = ['npc', 'fov']
 
   public constructor(public readonly pushState: (state: State) => void) {}
 
-  public update(world: TlbWorld, entity: number): void {
+  public update(world: TlbWorld, entity: Entity): void {
     const fov = world.getComponent<FovComponent>(entity, 'fov')!
     world.components.get('player')!.foreach(player => {
       const playerPosition = world.getComponent<PositionComponent>(player, 'position')

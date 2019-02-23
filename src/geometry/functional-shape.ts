@@ -3,16 +3,16 @@ import { Vector } from '../spatial'
 import { Rectangle } from './rectangle'
 
 export class FunctionalShape extends AbstractShape {
-  public static LN(position: Vector, size: number = 1, center: boolean = false): FunctionalShape {
-    return FunctionalShape.fromMeasure(position, size, center, d => Math.max(Math.abs(d.x), Math.abs(d.y)) <= size)
+  public static lN(position: Vector, size: number = 1, center: boolean = false): FunctionalShape {
+    return FunctionalShape.fromMeasure(position, size, center, d => d.lN() <= size)
   }
 
-  public static L1(position: Vector, size: number = 1, center: boolean = false): FunctionalShape {
-    return FunctionalShape.fromMeasure(position, size, center, d => Math.abs(d.x) + Math.abs(d.y) <= size)
+  public static l1(position: Vector, size: number = 1, center: boolean = false): FunctionalShape {
+    return FunctionalShape.fromMeasure(position, size, center, d => d.l1() <= size)
   }
 
-  public static L2(position: Vector, size: number = 1, center: boolean = false): FunctionalShape {
-    return FunctionalShape.fromMeasure(position, size, center, d => d.x * d.x + d.y * d.y <= size * size)
+  public static l2(position: Vector, size: number = 1, center: boolean = false): FunctionalShape {
+    return FunctionalShape.fromMeasure(position, size, center, d => d.squaredLength() <= size * size)
   }
 
   public static fromMeasure(position: Vector, size: number, center: boolean, measure: (d: Vector) => boolean) {
