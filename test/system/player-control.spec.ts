@@ -7,6 +7,7 @@ import { Vector } from '../../src/spatial'
 import { PositionComponent } from '../../src/components/position'
 import { WorldMapResource } from '../../src/resources/world-map'
 import { mockMap, mockReturnValue, mockInput } from '../mocks'
+import { CharacterStatsComponent, createCharacterStatsComponent } from '../../src/components/character-stats'
 
 describe('PlayerControl', () => {
   let system: PlayerControl
@@ -19,7 +20,11 @@ describe('PlayerControl', () => {
     input = mockInput(world)
     map = mockMap(world)
     world.registerComponentStorage('position', new VectorStorage<PositionComponent>())
-    world.createEntity().withComponent('position', { position: new Vector(2, 3) })
+    world.registerComponentStorage('character-stats', new VectorStorage<CharacterStatsComponent>())
+    world
+      .createEntity()
+      .withComponent('position', { position: new Vector(2, 3) })
+      .withComponent<CharacterStatsComponent>('character-stats', createCharacterStatsComponent('player'))
   })
 
   it('only adds delta if non blocking', () => {

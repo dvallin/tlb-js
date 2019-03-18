@@ -23,7 +23,7 @@ export const characterStats = {
     energy: 4,
     movement: 6,
     actions: 5,
-    defense: 10,
+    defense: 4,
     aim: 10,
   },
   guard: {
@@ -31,7 +31,7 @@ export const characterStats = {
     energy: 4,
     movement: 6,
     actions: 3,
-    defense: 10,
+    defense: 3,
     aim: 10,
   },
   eliteGuard: {
@@ -39,7 +39,7 @@ export const characterStats = {
     energy: 4,
     movement: 4,
     actions: 5,
-    defense: 20,
+    defense: 5,
     aim: 10,
   },
 }

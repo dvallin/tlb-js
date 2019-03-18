@@ -6,10 +6,12 @@ import { FeatureComponent } from '../components/feature'
 import { WorldMap, WorldMapResource } from '../resources/world-map'
 import { FovComponent } from '../components/fov'
 import { CharacterStatsComponent, createCharacterStatsComponent } from '../components/character-stats'
+import { ViewportResource } from '../resources/viewport'
+import { UIResource } from '../resources/ui'
 
 export class Running extends AbstractState {
   public constructor() {
-    super(['fov', 'light', 'player-control', 'player-interaction', 'npc', 'trigger', 'free-mode-control'])
+    super(['fov', 'light', 'player-control', 'player-interaction', 'npc', 'trigger', 'free-mode-control', 'damage'])
   }
 
   public start(world: TlbWorld): void {
@@ -28,6 +30,16 @@ export class Running extends AbstractState {
           .withComponent<FovComponent>('fov', { fov: [] })
           .withComponent<CharacterStatsComponent>('character-stats', createCharacterStatsComponent('player')).entity
         map.setCharacter(position, player)
+
+        const viewport = world.getResource<ViewportResource>('viewport')
+        viewport.addLayer({
+          getRenderable: (world, position) => {
+            const ui = world.getResource<UIResource>('ui')
+            const p = position.floor()
+            return { entity: undefined, opaque: !ui.hasElement(p), centered: true }
+          },
+          transformed: false,
+        })
       })
     } else {
       const position = new Vector(20, 20)

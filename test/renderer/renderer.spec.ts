@@ -2,7 +2,7 @@ import { RotRenderer } from '../../src/renderer/renderer'
 
 import { Display } from 'rot-js'
 import * as rot from 'rot-js'
-import { getInstances, mockComponent, mockImplementation, mockMap } from '../mocks'
+import { getInstances, mockComponent, mockImplementation, mockMap, mockUi } from '../mocks'
 import { Color } from '../../src/renderer/color'
 import { TlbWorld } from '../../src/tlb'
 import { World } from '../../src/ecs/world'
@@ -76,6 +76,8 @@ describe('RotRenderer', () => {
       mockComponent(world, 'lighting')
       mockComponent(world, 'overlay')
       map = mockMap(world)
+
+      mockUi(world)
 
       renderer.character = jest.fn()
       renderer.clear = jest.fn()

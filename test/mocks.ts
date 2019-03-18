@@ -9,6 +9,7 @@ import { Entity } from '../src/ecs/entity'
 import { SetSpace } from '../src/spatial/set-space'
 import { Rectangle } from '../src/geometry/rectangle'
 import { Input } from '../src/resources/input'
+import { UI } from '../src/resources/ui'
 
 export function mockComponent<T>(world: TlbWorld, component: ComponentName): Storage<T> {
   const storage = {
@@ -97,12 +98,24 @@ export function mockInput(world: TlbWorld): Input {
   return input
 }
 
+export function mockUi(world: TlbWorld): UI {
+  const ui = {
+    kind: 'ui' as ResourceName,
+    update: jest.fn(),
+    hasElement: jest.fn(),
+    render: jest.fn(),
+  }
+  world.registerResource(ui)
+  return ui
+}
+
 export function mockQueries(): Queries {
   return {
     fov: jest.fn(),
     lighting: jest.fn(),
     explore: jest.fn(),
     shortestPath: jest.fn(),
+    ray: jest.fn(),
   }
 }
 

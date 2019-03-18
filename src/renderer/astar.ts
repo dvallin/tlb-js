@@ -54,7 +54,7 @@ function calculateAstar(
         if (distance !== undefined) {
           const tentative = currentCost + distance
           const previousCost = costMap.get(key) || Number.MAX_VALUE
-          if (tentative < previousCost && tentative < maximumCost) {
+          if (tentative < previousCost && tentative <= maximumCost) {
             parent.set(key, position)
             costMap.set(key, tentative)
 

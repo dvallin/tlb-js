@@ -1,15 +1,27 @@
-import { WorldMap, WorldMapResource } from './world-map'
 import { Vector } from '../spatial'
 import { Position } from '../renderer/position'
 import { TlbWorld, ResourceName, TlbResource } from '../tlb'
 import { PositionComponent } from '../components/position'
 import { Input, InputResource } from './input'
 import { KEYS } from 'rot-js'
+import { Entity } from '../ecs/entity'
+
+export interface Renderable {
+  entity: Entity | undefined
+  opaque: boolean
+  centered: boolean
+}
 
 export interface Viewport {
   fromDisplay(p: Position): Vector
+  collectRenderables(world: TlbWorld): Renderable[]
   toDisplay(p: Vector, centered: boolean): Position
   focus(position: Vector): void
+}
+
+export interface Layer {
+  getRenderable: (world: TlbWorld, position: Vector) => Renderable
+  transformed: boolean
 }
 
 export class ViewportResource implements TlbResource, Viewport {
@@ -17,6 +29,8 @@ export class ViewportResource implements TlbResource, Viewport {
 
   public gridLocked: boolean = false
   public topLeft: Vector = new Vector(0, 0)
+
+  public readonly layers: Layer[] = []
 
   public constructor(public readonly boundaries: Vector = new Vector(60, 40)) {}
 
@@ -30,23 +44,35 @@ export class ViewportResource implements TlbResource, Viewport {
       const position = world.getComponent<PositionComponent>(focus, 'position')!
       this.focus(position.position)
     })
+  }
 
-    world.getStorage('in-viewport-character')!.clear()
-    world.getStorage('in-viewport-tile')!.clear()
-    const map: WorldMap = world.getResource<WorldMapResource>('map')
+  public collectRenderables(world: TlbWorld): Renderable[] {
+    const renderables: Renderable[] = []
     for (let y = 0; y < this.boundaries.y; y++) {
       for (let x = 0; x < this.boundaries.x; x++) {
-        const position = this.fromDisplay({ x, y })
-        const character = map.getCharacter(position.floor())
-        if (character !== undefined) {
-          world.editEntity(character).withComponent('in-viewport-character', {})
-        }
-        const tile = map.getTile(position.floor())
-        if (tile !== undefined) {
-          world.editEntity(tile).withComponent('in-viewport-tile', {})
+        const p = this.fromDisplay({ x, y })
+        for (let l = this.layers.length - 1; l >= 0; l--) {
+          const layer = this.layers[l]
+          let renderable
+          if (layer.transformed) {
+            renderable = layer.getRenderable(world, p)
+          } else {
+            renderable = layer.getRenderable(world, new Vector(x, y))
+          }
+          if (renderable.entity !== undefined) {
+            renderables.push(renderable)
+          }
+          if (!renderable.opaque) {
+            break
+          }
         }
       }
     }
+    return renderables.reverse()
+  }
+
+  public addLayer(layer: Layer) {
+    this.layers.push(layer)
   }
 
   public fromDisplay(p: Position): Vector {

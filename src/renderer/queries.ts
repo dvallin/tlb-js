@@ -6,6 +6,7 @@ import { Color } from './color'
 import { bfs } from './bfs'
 import { FunctionalShape } from '../geometry/functional-shape'
 import { astar, Path } from './astar'
+import { LineSegment } from '../geometry/line-segment'
 
 export interface QueryParameters {
   onlyDiscovered: boolean
@@ -75,6 +76,25 @@ export class Queries {
     )
     if (path !== undefined && path.path.length - 1 <= maximumCost) {
       return { path: path.path.slice(0, path.path.length - 1), cost: path.cost }
+    }
+    return undefined
+  }
+
+  public ray(world: TlbWorld, origin: Vector, target: Vector, params: Partial<QueryParameters>): Path | undefined {
+    const map: WorldMap = world.getResource<WorldMapResource>('map')
+    const originFloor = origin.floor()
+    const targetFloor = target.floor()
+    const maximumCost = params.maximumCost || Number.MAX_SAFE_INTEGER
+    const path: Vector[] = []
+    const success = new LineSegment(targetFloor, originFloor).all(p => {
+      path.push(p)
+      return !map.isLightBlocking(world, p, false)
+    })
+    if (success) {
+      let cost = path.length - 1
+      if (path.length - 1 <= maximumCost) {
+        return { path: path.slice(0, path.length - 1), cost: cost }
+      }
     }
     return undefined
   }

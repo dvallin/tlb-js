@@ -3,6 +3,10 @@ import { Rectangle } from './rectangle'
 import { Vector } from '../spatial/vector'
 
 export class Difference extends AbstractShape {
+  public static innerBorder(shape: Shape): Difference {
+    return new Difference(shape, shape.shrink())
+  }
+
   public constructor(public readonly baseShape: Shape, public readonly subtractionShape: Shape) {
     super()
   }

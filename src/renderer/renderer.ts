@@ -6,12 +6,13 @@ import { Color } from './color'
 
 import { Viewport, ViewportResource } from '../resources/viewport'
 import { TlbWorld } from '../tlb'
-import { getFeature } from '../components/feature'
+import { getFeature, Feature } from '../components/feature'
 import { PositionComponent } from '../components/position'
 import { Entity } from '../ecs/entity'
 import { WorldMap, WorldMapResource } from '../resources/world-map'
 import { LightingComponent } from '../components/light'
 import { OverlayComponent } from '../components/overlay'
+import { UI, UIResource } from '../resources/ui'
 
 export interface Renderer {
   render(world: TlbWorld): void
@@ -49,32 +50,48 @@ export class RotRenderer implements Renderer {
   public render(world: TlbWorld): void {
     this.clear()
     const viewport: Viewport = world.getResource<ViewportResource>('viewport')
-    world.getStorage('in-viewport-tile').foreach(entity => this.renderFeature(world, viewport, entity, false))
-    world.getStorage('in-viewport-character').foreach(entity => this.renderFeature(world, viewport, entity, true))
+    viewport.collectRenderables(world).forEach(({ entity, centered }) => {
+      if (entity !== undefined) {
+        this.renderEntity(world, viewport, entity, centered)
+      }
+    })
+    const ui: UI = world.getResource<UIResource>('ui')
+    ui.render(this)
     world.components.get('lighting')!.clear()
     world.components.get('overlay')!.clear()
   }
 
-  public renderFeature(world: TlbWorld, viewport: Viewport, entity: Entity, centered: boolean): void {
+  public renderEntity(world: TlbWorld, viewport: Viewport, entity: Entity, centered: boolean): void {
     const feature = getFeature(world, entity)
     const position = world.getComponent<PositionComponent>(entity, 'position')
     if (feature && position) {
-      const map: WorldMap = world.getResource<WorldMapResource>('map')
-      const p = position.position.floor()
-      if (map.isDiscovered(p)) {
-        let lighting = undefined
-        if (map.isVisible(p)) {
-          lighting = world.getComponent<LightingComponent>(entity, 'lighting')
-        }
-        const overlay = world.getComponent<OverlayComponent>(entity, 'overlay') || { background: undefined }
-        const displayPosition = viewport.toDisplay(position.position, centered)
-        this.character(
-          feature.character,
-          displayPosition,
-          this.computeColor(this.ambientColor, feature.diffuse, lighting),
-          overlay.background
-        )
+      this.renderFeature(world, viewport, entity, centered, feature, position)
+    }
+  }
+
+  public renderFeature(
+    world: TlbWorld,
+    viewport: Viewport,
+    entity: Entity,
+    centered: boolean,
+    feature: Feature,
+    position: PositionComponent
+  ): void {
+    const map: WorldMap = world.getResource<WorldMapResource>('map')
+    const p = position.position.floor()
+    if (map.isDiscovered(p)) {
+      let lighting = undefined
+      if (map.isVisible(p)) {
+        lighting = world.getComponent<LightingComponent>(entity, 'lighting')
       }
+      const overlay = world.getComponent<OverlayComponent>(entity, 'overlay') || { background: undefined }
+      const displayPosition = viewport.toDisplay(position.position, centered)
+      this.character(
+        feature.character,
+        displayPosition,
+        this.computeColor(this.ambientColor, feature.diffuse, lighting),
+        overlay.background
+      )
     }
   }
 

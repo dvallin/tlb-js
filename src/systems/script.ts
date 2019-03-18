@@ -5,6 +5,7 @@ import { Entity } from '../ecs/entity'
 import { Vector } from '../spatial'
 import { CharacterStatsComponent, speed } from '../components/character-stats'
 import { Line } from '../spatial/line'
+import { WorldMapResource } from '../resources/world-map'
 
 export class Script implements TlbSystem {
   public readonly components: ComponentName[] = ['script']
@@ -13,7 +14,6 @@ export class Script implements TlbSystem {
     const script = world.getComponent<ScriptComponent>(entity, 'script')!
     const currentAction = script.actions.pop()
     if (currentAction === undefined) {
-      console.log('deleted')
       world.editEntity(entity).removeComponent('script')
     } else {
       let done = true
@@ -41,14 +41,17 @@ export class Script implements TlbSystem {
     }
 
     const movement = delta.mult(speed(stats))
-    const newPosition = current.position.add(movement)
+    let newPosition = current.position.add(movement)
     const finishLine = new Line(target.center, delta.perpendicular())
+    let reached = false
     if (finishLine.side(current.position) !== finishLine.side(newPosition)) {
-      current.position = target.center
-      return true
-    } else {
-      current.position = newPosition
-      return false
+      newPosition = target.center
+      reached = true
     }
+    const map = world.getResource<WorldMapResource>('map')
+    map.removeCharacter(newPosition.floor())
+    map.setCharacter(current.position.floor(), entity)
+    current.position = newPosition
+    return reached
   }
 }

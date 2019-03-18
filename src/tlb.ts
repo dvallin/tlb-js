@@ -10,7 +10,6 @@ import { CharacterStatsComponent } from './components/character-stats'
 import { FeatureComponent } from './components/feature'
 import { FovComponent } from './components/fov'
 import { GroundComponent } from './components/ground'
-import { InfoPopupComponent } from './components/info-popup'
 import { LightingComponent, LightComponent } from './components/light'
 import { ParentComponent, ChildrenComponent } from './components/relation'
 import { PositionComponent } from './components/position'
@@ -26,6 +25,7 @@ import { PlayerInteraction } from './systems/player-interaction'
 import { RegionCreator } from './systems/region-creator'
 import { PlayerRoundControl } from './systems/player-round-control'
 import { Trigger } from './systems/trigger'
+import { Damage } from './systems/damage'
 import { Script } from './systems/script'
 
 import { WorldMapResource } from './resources/world-map'
@@ -40,17 +40,17 @@ import { Queries } from './renderer/queries'
 import { State } from './game-states/state'
 import { OverlayComponent } from './components/overlay'
 import { TakeTurnComponent } from './components/rounds'
-import { ScriptComponent } from './components/action'
+import { ScriptComponent, SelectedActionComponent, DamageComponent } from './components/action'
+import { UIResource } from './resources/ui'
 
 export type ComponentName =
-  | 'script'
-  | 'info-popup'
   | 'active'
   | 'age'
   | 'agent'
   | 'asset'
   | 'character-stats'
   | 'children'
+  | 'damage'
   | 'feature'
   | 'fov'
   | 'free-mode-anchor'
@@ -60,19 +60,22 @@ export type ComponentName =
   | 'light'
   | 'lighting'
   | 'npc'
+  | 'overlay'
   | 'parent'
   | 'player'
   | 'position'
   | 'region'
+  | 'script'
+  | 'selected-action'
   | 'spawn'
   | 'take-turn'
   | 'took-turn'
   | 'trigger'
-  | 'overlay'
   | 'viewport-focus'
   | 'wait-turn'
 export type SystemName =
   | 'agent'
+  | 'damage'
   | 'fov'
   | 'free-mode-control'
   | 'info-popup'
@@ -84,7 +87,7 @@ export type SystemName =
   | 'region-creator'
   | 'script'
   | 'trigger'
-export type ResourceName = 'input' | 'map' | 'viewport'
+export type ResourceName = 'input' | 'map' | 'viewport' | 'ui'
 
 export type TlbWorld = World<ComponentName, SystemName, ResourceName>
 export type TlbResource = Resource<ComponentName, SystemName, ResourceName>
@@ -92,12 +95,12 @@ export type TlbSystem = System<ComponentName, SystemName, ResourceName>
 
 export function registerComponents<S, R>(world: World<ComponentName, S, R>): void {
   world.registerComponentStorage('active', new SetStorage())
-  world.registerComponentStorage('info-popup', new SingletonStorage<InfoPopupComponent>())
   world.registerComponentStorage('age', new MapStorage<AgeComponent>())
   world.registerComponentStorage('agent', new MapStorage<AgentComponent>())
   world.registerComponentStorage('asset', new MapStorage<AssetComponent>())
   world.registerComponentStorage('character-stats', new MapStorage<CharacterStatsComponent>())
   world.registerComponentStorage('children', new MapStorage<ChildrenComponent>())
+  world.registerComponentStorage('damage', new MapStorage<DamageComponent>())
   world.registerComponentStorage('feature', new VectorStorage<FeatureComponent>())
   world.registerComponentStorage('fov', new MapStorage<FovComponent>())
   world.registerComponentStorage('free-mode-anchor', new SingletonStorage<{}>())
@@ -107,16 +110,17 @@ export function registerComponents<S, R>(world: World<ComponentName, S, R>): voi
   world.registerComponentStorage('light', new MapStorage<LightComponent>())
   world.registerComponentStorage('lighting', new VectorStorage<LightingComponent>())
   world.registerComponentStorage('npc', new SetStorage())
+  world.registerComponentStorage('overlay', new MapStorage<OverlayComponent>())
   world.registerComponentStorage('parent', new MapStorage<ParentComponent>())
   world.registerComponentStorage('player', new SingletonStorage<{}>())
   world.registerComponentStorage('position', new VectorStorage<PositionComponent>())
   world.registerComponentStorage('region', new MapStorage<RegionComponent>())
   world.registerComponentStorage('script', new MapStorage<ScriptComponent>())
+  world.registerComponentStorage('selected-action', new SingletonStorage<SelectedActionComponent>())
   world.registerComponentStorage('spawn', new SingletonStorage<{}>())
   world.registerComponentStorage('take-turn', new MapStorage<TakeTurnComponent>())
   world.registerComponentStorage('took-turn', new SetStorage())
   world.registerComponentStorage('trigger', new SetStorage())
-  world.registerComponentStorage('overlay', new MapStorage<OverlayComponent>())
   world.registerComponentStorage('viewport-focus', new SingletonStorage<{}>())
   world.registerComponentStorage('wait-turn', new SetStorage())
 }
@@ -125,6 +129,7 @@ export function registerResources(world: World<ComponentName, SystemName, Resour
   world.registerResource(new WorldMapResource())
   world.registerResource(new ViewportResource())
   world.registerResource(new InputResource(e => renderer.eventToPosition(e)))
+  world.registerResource(new UIResource())
 }
 
 export function registerSystems(
@@ -144,4 +149,5 @@ export function registerSystems(
   world.registerSystem('region-creator', new RegionCreator(new Random(uniform)))
   world.registerSystem('trigger', new Trigger())
   world.registerSystem('script', new Script())
+  world.registerSystem('damage', new Damage())
 }
