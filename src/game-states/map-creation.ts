@@ -48,6 +48,8 @@ export class MapCreation extends AbstractState {
       .withComponent('active', {}).entity
   }
 
+  public update({  }: TlbWorld): void {}
+
   public stop(world: TlbWorld): void {
     super.stop(world)
     if (this.startRegion !== undefined) {

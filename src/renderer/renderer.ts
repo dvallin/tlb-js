@@ -29,7 +29,7 @@ export class RotRenderer implements Renderer {
 
   public ambientColor: Color
 
-  public constructor() {
+  public constructor(public readonly root: HTMLElement) {
     const displayOptions = {
       width: 60,
       height: 40,
@@ -40,7 +40,7 @@ export class RotRenderer implements Renderer {
     }
     this.ambientColor = new Color([120, 120, 120])
     this.display = new Display(displayOptions)
-    document.body.appendChild(this.display.getContainer() as Node)
+    root.appendChild(this.display.getContainer() as Node)
   }
 
   public clear(): void {

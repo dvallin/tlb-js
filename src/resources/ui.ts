@@ -11,6 +11,10 @@ import { ViewportResource } from './viewport'
 export interface UI {
   hasElement(position: Vector): boolean
   render(renderer: Renderer): void
+
+  showSelectList(world: TlbWorld, entries: string[]): void
+  selectListSelection(): string | undefined
+  hideSelectList(world: TlbWorld): void
 }
 
 export interface SelectList {

@@ -10,6 +10,7 @@ import { SetSpace } from '../src/spatial/set-space'
 import { Rectangle } from '../src/geometry/rectangle'
 import { Input } from '../src/resources/input'
 import { UI } from '../src/resources/ui'
+import { Viewport } from '../src/resources/viewport'
 
 export function mockComponent<T>(world: TlbWorld, component: ComponentName): Storage<T> {
   const storage = {
@@ -107,6 +108,19 @@ export function mockUi(world: TlbWorld): UI {
   }
   world.registerResource(ui)
   return ui
+}
+
+export function mockViewport(world: TlbWorld): Viewport {
+  const viewport = {
+    kind: 'viewport' as ResourceName,
+    update: jest.fn(),
+    fromDisplay: jest.fn(),
+    collectRenderables: jest.fn(),
+    toDisplay: jest.fn(),
+    focus: jest.fn(),
+  }
+  world.registerResource(viewport)
+  return viewport
 }
 
 export function mockQueries(): Queries {

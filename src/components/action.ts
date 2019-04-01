@@ -12,7 +12,7 @@ export interface ScriptComponent {
 }
 
 export interface SelectedActionComponent {
-  type?: 'move' | 'use'
+  type?: 'move' | 'use' | 'end-turn'
   target?: Entity
   position?: Vector
   using?: Entity

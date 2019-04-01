@@ -45,7 +45,7 @@ describe('PlayerControl', () => {
     })
 
     it('adds delta times speed', () => {
-      expect(world.getComponent(0, 'position')).toEqual({ position: new Vector(1.87, 3) })
+      expect(world.getComponent(0, 'position')).toEqual({ position: new Vector(1.8571428571428572, 3) })
     })
 
     it('moves character', () => {

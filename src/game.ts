@@ -1,10 +1,9 @@
-import { World } from './ecs/world'
 import { TlbWorld, registerComponents, registerSystems, registerResources } from './tlb'
 import { State } from './game-states/state'
 import { Running } from './game-states/running'
 import { MapCreation } from './game-states/map-creation'
 
-import { RotRenderer, Renderer } from './renderer/renderer'
+import { Renderer } from './renderer/renderer'
 import { Queries } from './renderer/queries'
 
 export class Game {
@@ -14,10 +13,9 @@ export class Game {
   public started: number = 0
   public states: State[] = []
 
-  public renderer: Renderer = new RotRenderer()
   public rayCaster = new Queries()
 
-  public constructor(private readonly world: TlbWorld = new World(), private readonly targetFps: number = 60) {}
+  public constructor(private readonly world: TlbWorld, public readonly renderer: Renderer, private readonly targetFps: number) {}
 
   public init(): void {
     registerComponents(this.world)
@@ -46,7 +44,7 @@ export class Game {
     msLeft -= renderDelta
     this.renderTime += renderDelta
 
-    // execute the world
+    state.update(this.world)
     while (true) {
       const start = Date.now()
       this.world.updateSystems()

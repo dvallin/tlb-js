@@ -46,6 +46,14 @@ describe('RadixHeap', () => {
       expect(heap.buckets[3]).toHaveLength(1)
       expect(heap.buckets[4]).toHaveLength(2)
     })
+
+    it('inserts floating points', () => {
+      heap.insert('a', 3.4)
+      heap.insert('d', 1.8)
+      expect(heap.buckets[0]).toHaveLength(0)
+      expect(heap.buckets[1]).toHaveLength(1)
+      expect(heap.buckets[2]).toHaveLength(1)
+    })
   })
 
   describe('getKey', () => {
@@ -68,6 +76,13 @@ describe('RadixHeap', () => {
       expect(heap.getKey('e')).toEqual(256)
       expect(heap.getKey('f')).toEqual(2)
     })
+
+    it('gets keys of floating points', () => {
+      heap.insert('a', 3.4)
+      heap.insert('d', 1.8)
+      expect(heap.getKey('a')).toEqual(3.4)
+      expect(heap.getKey('d')).toEqual(1.8)
+    })
   })
 
   describe('decreaseKey', () => {
@@ -86,6 +101,12 @@ describe('RadixHeap', () => {
       heap.insert('a', 5)
       heap.decreaseKey('a', 4)
       expect(heap.buckets[3]).toHaveLength(1)
+    })
+
+    it('decreases floating points', () => {
+      heap.insert('a', 3.4)
+      heap.decreaseKey('a', 1.8)
+      expect(heap.getKey('a')).toEqual(1.8)
     })
   })
 
@@ -114,6 +135,25 @@ describe('RadixHeap', () => {
       heap.insert('b', 5)
       heap.insert('b', 6)
       heap.insert('c', 7)
+
+      expect(heap.buckets[0]).toHaveLength(0)
+      expect(heap.buckets[1]).toHaveLength(0)
+      expect(heap.buckets[2]).toHaveLength(0)
+      expect(heap.buckets[3]).toHaveLength(4)
+
+      heap.extractMin()
+
+      expect(heap.buckets[0]).toHaveLength(1)
+      expect(heap.buckets[1]).toHaveLength(2)
+      expect(heap.buckets[2]).toHaveLength(0)
+      expect(heap.buckets[3]).toHaveLength(0)
+    })
+
+    it('redistributes floating points', () => {
+      heap.insert('a', 5.1)
+      heap.insert('b', 5.1)
+      heap.insert('b', 6.1)
+      heap.insert('c', 7.1)
 
       expect(heap.buckets[0]).toHaveLength(0)
       expect(heap.buckets[1]).toHaveLength(0)

@@ -9,7 +9,7 @@ describe('registerComponents', () => {
 
     registerComponents(world)
 
-    expect(world.registerComponentStorage).toHaveBeenCalledTimes(29)
+    expect(world.registerComponentStorage).toHaveBeenCalledTimes(27)
   })
 })
 

@@ -7,6 +7,7 @@ export interface Storage<T> {
   has(entity: Entity): boolean
 
   foreach(f: (entity: Entity, value: T) => void): void
+  first(): Entity | undefined
   clear(): void
   size(): number
 }
@@ -41,10 +42,14 @@ export class SetStorage implements Storage<{}> {
   public foreach(f: (entity: Entity, value: {}) => void): void {
     this.data.forEach(v => f(v, {}))
   }
+
+  public first(): Entity | undefined {
+    return this.data.keys().next().value
+  }
 }
 
 export class SingletonStorage<T> implements Storage<T> {
-  private datum: number | undefined = undefined
+  private datum: Entity | undefined = undefined
   private value: T | undefined = undefined
 
   public size(): number {
@@ -81,6 +86,10 @@ export class SingletonStorage<T> implements Storage<T> {
       f(this.datum, this.value!)
     }
   }
+
+  public first(): Entity | undefined {
+    return this.datum
+  }
 }
 
 export class MapStorage<T> implements Storage<T> {
@@ -114,6 +123,10 @@ export class MapStorage<T> implements Storage<T> {
 
   public foreach(f: (entity: Entity, value: T) => void): void {
     this.data.forEach((value, entity) => f(entity, value))
+  }
+
+  public first(): Entity | undefined {
+    return this.data.keys().next().value
   }
 }
 
@@ -160,5 +173,15 @@ export class VectorStorage<T> implements Storage<T> {
         f(entity, value)
       }
     }
+  }
+
+  public first(): Entity | undefined {
+    for (let entity = 0; entity < this.data.length; entity++) {
+      const value = this.data[entity]
+      if (value !== undefined) {
+        return entity
+      }
+    }
+    return undefined
   }
 }

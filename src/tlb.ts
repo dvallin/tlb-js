@@ -42,11 +42,14 @@ import { OverlayComponent } from './components/overlay'
 import { TakeTurnComponent } from './components/rounds'
 import { ScriptComponent, SelectedActionComponent, DamageComponent } from './components/action'
 import { UIResource } from './resources/ui'
+import { AiComponent } from './components/ai'
+import { AiRoundControl } from './systems/ai-round-control'
 
 export type ComponentName =
   | 'active'
   | 'age'
   | 'agent'
+  | 'ai'
   | 'asset'
   | 'character-stats'
   | 'children'
@@ -55,8 +58,6 @@ export type ComponentName =
   | 'fov'
   | 'free-mode-anchor'
   | 'ground'
-  | 'in-viewport-character'
-  | 'in-viewport-tile'
   | 'light'
   | 'lighting'
   | 'npc'
@@ -75,6 +76,7 @@ export type ComponentName =
   | 'wait-turn'
 export type SystemName =
   | 'agent'
+  | 'ai-round-control'
   | 'damage'
   | 'fov'
   | 'free-mode-control'
@@ -96,6 +98,7 @@ export type TlbSystem = System<ComponentName, SystemName, ResourceName>
 export function registerComponents<S, R>(world: World<ComponentName, S, R>): void {
   world.registerComponentStorage('active', new SetStorage())
   world.registerComponentStorage('age', new MapStorage<AgeComponent>())
+  world.registerComponentStorage('ai', new MapStorage<AiComponent>())
   world.registerComponentStorage('agent', new MapStorage<AgentComponent>())
   world.registerComponentStorage('asset', new MapStorage<AssetComponent>())
   world.registerComponentStorage('character-stats', new MapStorage<CharacterStatsComponent>())
@@ -105,8 +108,6 @@ export function registerComponents<S, R>(world: World<ComponentName, S, R>): voi
   world.registerComponentStorage('fov', new MapStorage<FovComponent>())
   world.registerComponentStorage('free-mode-anchor', new SingletonStorage<{}>())
   world.registerComponentStorage('ground', new MapStorage<GroundComponent>())
-  world.registerComponentStorage('in-viewport-character', new SetStorage())
-  world.registerComponentStorage('in-viewport-tile', new SetStorage())
   world.registerComponentStorage('light', new MapStorage<LightComponent>())
   world.registerComponentStorage('lighting', new VectorStorage<LightingComponent>())
   world.registerComponentStorage('npc', new SetStorage())
@@ -139,6 +140,7 @@ export function registerSystems(
 ): void {
   const uniform = new Uniform('some seed')
   world.registerSystem('agent', new Agent(new Random(uniform)))
+  world.registerSystem('ai-round-control', new AiRoundControl(queries))
   world.registerSystem('free-mode-control', new FreeModeControl())
   world.registerSystem('light', new Light(queries))
   world.registerSystem('player-control', new PlayerControl())

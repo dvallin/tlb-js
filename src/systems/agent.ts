@@ -19,6 +19,7 @@ import { LightComponent } from '../components/light'
 import { Color } from '../renderer/color'
 import { FovComponent } from '../components/fov'
 import { createCharacterStatsComponent, CharacterStatsType, CharacterStatsComponent } from '../components/character-stats'
+import { AiComponent } from '../components/ai'
 
 export interface PositionedAgent {
   position: PositionComponent
@@ -334,6 +335,7 @@ export class Agent implements TlbSystem {
       .withComponent<FeatureComponent>('feature', { type })
       .withComponent<PositionComponent>('position', { position: centeredPosition })
       .withComponent<FovComponent>('fov', { fov: [] })
+      .withComponent<AiComponent>('ai', { type: 'rushing' })
       .withComponent<CharacterStatsComponent>('character-stats', createCharacterStatsComponent(type)).entity
     map.setCharacter(position, entity)
   }

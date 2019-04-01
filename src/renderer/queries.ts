@@ -40,7 +40,12 @@ export class Queries {
     })
   }
 
-  public explore(world: TlbWorld, origin: Vector, visit: (pos: Vector, distance: number) => void, params: Partial<QueryParameters>): void {
+  public explore(
+    world: TlbWorld,
+    origin: Vector,
+    visit: (pos: Vector, distance: number) => boolean,
+    params: Partial<QueryParameters>
+  ): void {
     const map: WorldMap = world.getResource<WorldMapResource>('map')
     const maximumDepth = params.maximumCost || Number.MAX_SAFE_INTEGER
     const onlyDiscovered = params.onlyDiscovered || false

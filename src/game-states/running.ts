@@ -51,6 +51,8 @@ export class Running extends AbstractState {
     }
   }
 
+  public update({  }: TlbWorld): void {}
+
   public isFrameLocked(): boolean {
     return true
   }

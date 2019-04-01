@@ -4,7 +4,7 @@ import { Shape } from '../geometry/shape'
 export function bfs(
   origin: Vector,
   neighbourhood: (target: Vector) => Shape,
-  visit: (target: Vector, depth: number) => void,
+  visit: (target: Vector, depth: number) => boolean,
   canVisit: (target: Vector, depth: number) => boolean
 ): void {
   const visited: Set<string> = new Set([origin.key])
@@ -13,10 +13,11 @@ export function bfs(
   let nextLayer: Vector[] = []
   putNeighboursIntoNextLayer(visited, neighbourhood(origin), currentLayer, n => canVisit(n, currentDepth))
 
-  while (true) {
+  let finished = false
+  while (!finished) {
     const current = currentLayer.pop()
     if (current !== undefined) {
-      visit(current, currentDepth)
+      finished = visit(current, currentDepth)
       putNeighboursIntoNextLayer(visited, neighbourhood(current), nextLayer, n => canVisit(n, currentDepth))
     } else {
       currentLayer = nextLayer

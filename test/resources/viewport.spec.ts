@@ -3,8 +3,8 @@ import { ViewportResource } from '../../src/resources/viewport'
 import { World } from '../../src/ecs/world'
 import { TlbWorld } from '../../src/tlb'
 
-import { mockComponent, mockMap, mockImplementation, mockInput } from '../mocks'
-import { Storage, MapStorage } from '../../src/ecs/storage'
+import { mockMap, mockImplementation, mockInput } from '../mocks'
+import { MapStorage } from '../../src/ecs/storage'
 import { WorldMapResource } from '../../src/resources/world-map'
 import { Vector } from '../../src/spatial/vector'
 import { PositionComponent } from '../../src/components/position'
@@ -12,16 +12,12 @@ import { PositionComponent } from '../../src/components/position'
 describe('Viewport', () => {
   let viewport: ViewportResource
 
-  let inViewportCharacter: Storage<{}>
-  let inViewportTile: Storage<{}>
   let map: WorldMapResource
   let world: TlbWorld
   beforeEach(() => {
     world = new World()
     map = mockMap(world)
     mockImplementation(map.tiles.get, (vector: Vector) => (vector.key === '1,1' ? 42 : undefined))
-    inViewportCharacter = mockComponent(world, 'in-viewport-character')
-    inViewportTile = mockComponent(world, 'in-viewport-tile')
     mockInput(world)
 
     world.registerComponentStorage('viewport-focus', new MapStorage<{}>())
@@ -44,35 +40,6 @@ describe('Viewport', () => {
 
       // then
       expect(viewport.focus).toHaveBeenCalledWith(new Vector(1, 2))
-    })
-
-    it('adds entities into the viewport', () => {
-      viewport.update(world)
-
-      expect(map.getTile).toHaveBeenCalledTimes(60 * 40)
-    })
-
-    it('clears in viewport components', () => {
-      viewport.update(world)
-
-      expect(inViewportTile.clear).toHaveBeenCalledTimes(1)
-      expect(inViewportCharacter.clear).toHaveBeenCalledTimes(1)
-    })
-
-    it('adds tiles into the viewport', () => {
-      mockImplementation(map.getTile, (vector: Vector) => (vector.key === '1,1' ? 42 : undefined))
-
-      viewport.update(world)
-
-      expect(inViewportTile.insert).toHaveBeenCalledWith(42, {})
-    })
-
-    it('adds characters into the viewport', () => {
-      mockImplementation(map.getCharacter, (vector: Vector) => (vector.key === '1,1' ? 42 : undefined))
-
-      viewport.update(world)
-
-      expect(inViewportCharacter.insert).toHaveBeenCalledWith(42, {})
     })
   })
 

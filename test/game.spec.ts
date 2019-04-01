@@ -11,7 +11,7 @@ describe('Game', () => {
   beforeEach(() => {
     jest.useFakeTimers()
     world = new World()
-    game = new Game(world)
+    game = new Game(world, mockRenderer(), 60)
     mockState = {
       start: jest.fn(),
       stop: jest.fn(),
@@ -19,7 +19,6 @@ describe('Game', () => {
       isFrameLocked: jest.fn(),
     }
     game.states.push(mockState)
-    game.renderer = mockRenderer()
   })
 
   it('counts frames and sets timing values', () => {
