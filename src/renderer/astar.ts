@@ -13,10 +13,12 @@ export function astar(
   cost: (v: Vector, w: Vector) => number | undefined,
   neighbourhood: (target: Vector) => Shape,
   heuristic: (v: Vector) => number,
-  maximumCost: number
+  maximumCost: number,
+  bestEffort: boolean = false
 ): Path | undefined {
-  const calculation = calculateAstar(from, to, cost, neighbourhood, heuristic, maximumCost)
-  return extractPath(to, calculation.parent, calculation.costMap)
+  const actualMaximumCost = bestEffort ? Number.MAX_VALUE : maximumCost
+  const calculation = calculateAstar(from, to, cost, neighbourhood, heuristic, actualMaximumCost)
+  return extractPath(to, calculation.parent, calculation.costMap, maximumCost)
 }
 
 function calculateAstar(
@@ -53,7 +55,7 @@ function calculateAstar(
         const distance = cost(position, neighbor)
         if (distance !== undefined) {
           const tentative = currentCost + distance
-          const previousCost = costMap.get(key) || Number.MAX_VALUE
+          const previousCost = costMap.get(key) || Number.MAX_SAFE_INTEGER
           if (tentative < previousCost && tentative <= maximumCost) {
             parent.set(key, position)
             costMap.set(key, tentative)
@@ -72,12 +74,20 @@ function calculateAstar(
   return { parent, costMap }
 }
 
-function extractPath(to: Vector, parent: Map<string, Vector>, costMap: Map<string, number>): Path | undefined {
+function extractPath(to: Vector, parent: Map<string, Vector>, costMap: Map<string, number>, maximumCost: number): Path | undefined {
   let path: Vector[] = []
   let current = to
+  let cost = costMap.get(to.key)!
   while (true) {
     const key = current.key
-    path.push(current)
+    const tentativeCost = costMap.get(current.key)!
+    if (cost > maximumCost) {
+      cost = tentativeCost
+    }
+    if (cost <= maximumCost) {
+      path.push(current)
+    }
+
     const parentValue = parent.get(key)
     if (parentValue === undefined) {
       return undefined
@@ -87,5 +97,5 @@ function extractPath(to: Vector, parent: Map<string, Vector>, costMap: Map<strin
     }
     current = parentValue
   }
-  return { path, cost: costMap.get(to.key)! }
+  return { path, cost }
 }

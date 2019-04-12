@@ -6,7 +6,7 @@ import { Rectangle } from '../geometry/rectangle'
 import { Renderer } from '../renderer/renderer'
 import { primary, gray } from '../renderer/palettes'
 import { InputResource, Input } from './input'
-import { ViewportResource } from './viewport'
+import { ViewportResource, Viewport } from './viewport'
 
 export interface UI {
   hasElement(position: Vector): boolean
@@ -73,7 +73,7 @@ export class UIResource implements TlbResource, UI {
   }
 
   public showSelectList(world: TlbWorld, entries: string[]) {
-    const viewport = world.getResource<ViewportResource>('viewport')
+    const viewport: Viewport = world.getResource<ViewportResource>('viewport')
     const height = entries.length + 2
     let element
     if (this.selectList !== undefined) {

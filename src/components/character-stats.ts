@@ -21,7 +21,7 @@ export const characterStats = {
   player: {
     health: 10,
     energy: 4,
-    movement: 6,
+    movement: 8,
     actions: 5,
     defense: 4,
     aim: 10,

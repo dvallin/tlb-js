@@ -48,7 +48,7 @@ export class RadixHeap<T> {
       if (bucket > this.bucketCount) {
         return undefined
       }
-      let smallestK = Number.MAX_VALUE
+      let smallestK = Number.MAX_SAFE_INTEGER
       const currentBucket = this.buckets[bucket]
       this.buckets[bucket] = []
       for (let i = 0; i < currentBucket.length; i++) {

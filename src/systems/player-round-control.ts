@@ -45,7 +45,6 @@ export class PlayerRoundControl implements TlbSystem {
     } else if (selectedAction.type === undefined) {
       this.selectAction(world, ui, selectedAction)
     } else {
-      console.log(selectedAction.type)
       switch (selectedAction.type) {
         case 'move':
           this.move(world, input, viewport, map, entity, takeTurn)
@@ -103,7 +102,7 @@ export class PlayerRoundControl implements TlbSystem {
           selectedAction.using = 0
           break
         }
-        case 'nail gun': {
+        case 'nail-gun': {
           selectedAction.type = 'use'
           selectedAction.using = 1
           break

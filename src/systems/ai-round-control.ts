@@ -2,7 +2,6 @@ import { ComponentName, TlbSystem, TlbWorld } from '../tlb'
 import { TakeTurnComponent } from '../components/rounds'
 import { Queries } from '../renderer/queries'
 import { PositionComponent } from '../components/position'
-import { WorldMapResource, WorldMap } from '../resources/world-map'
 import { Entity } from '../ecs/entity'
 import { ScriptComponent, Action } from '../components/action'
 import { Vector } from '../spatial'
@@ -18,7 +17,6 @@ export class AiRoundControl implements TlbSystem {
 
     const isInAnimation = script !== undefined
     const turnIsOver = takeTurn.actions === 0 && takeTurn.movements === 0
-    console.log(takeTurn)
     if (!isInAnimation) {
       if (!turnIsOver) {
         this.doTurn(world, entity, takeTurn)
@@ -29,10 +27,8 @@ export class AiRoundControl implements TlbSystem {
   }
 
   public doTurn(world: TlbWorld, entity: Entity, takeTurn: TakeTurnComponent) {
-    const map: WorldMap = world.getResource<WorldMapResource>('map')
-
     const position = world.getComponent<PositionComponent>(entity, 'position')!
-    let player = this.findTarget(world, map, takeTurn, position.position)
+    let player = this.findTarget(world, position.position)
 
     if (player !== undefined) {
       const playerPosition = world.getComponent<PositionComponent>(player, 'position')!
@@ -40,40 +36,37 @@ export class AiRoundControl implements TlbSystem {
       if (dist.lN() > 1) {
         const path = this.queries.shortestPath(world, position.position, playerPosition.position, {
           maximumCost: takeTurn.movements,
+          bestEffort: true,
         })
         if (path !== undefined) {
-          console.log('ai move', path)
+          console.log('found path', path)
           takeTurn.movements -= path.cost
           world.editEntity(entity).withComponent<ScriptComponent>('script', {
             actions: path.path.map(p => ({ type: 'move', position: p } as Action)),
           })
         } else {
-          console.log('ai move could not reach')
+          console.log('did not find a path')
           this.endTurn(world, entity)
         }
       }
     } else {
-      console.log('ai could not find')
+      console.log('did not find player')
       this.endTurn(world, entity)
     }
   }
 
-  public findTarget(world: TlbWorld, map: WorldMap, takTurn: TakeTurnComponent, position: Vector): Entity | undefined {
-    let player: Entity | undefined
-    this.queries.explore(
-      world,
-      position,
-      p => {
-        const character = map.getCharacter(p)
-        const isPlayer = character !== undefined && world.hasComponent(character, 'player')
-        if (isPlayer) {
-          player = character
-        }
-        return isPlayer
-      },
-      { maximumCost: takTurn.movements * 10 }
-    )
-    return player
+  public findTarget(world: TlbWorld, position: Vector): Entity | undefined {
+    let nearestPlayer: Entity | undefined
+    let bestDist = Number.MAX_SAFE_INTEGER
+    world.getStorage('player').foreach(player => {
+      const playerPosition = world.getComponent<PositionComponent>(player, 'position')!
+      const dist = position.minus(playerPosition.position).squaredLength()
+      if (nearestPlayer === undefined && dist < bestDist) {
+        nearestPlayer = player
+        bestDist = dist
+      }
+    })
+    return nearestPlayer
   }
 
   public endTurn(world: TlbWorld, entity: Entity): void {

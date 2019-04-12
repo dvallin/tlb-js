@@ -2,7 +2,7 @@ import { RotRenderer } from '../../src/renderer/renderer'
 
 import { Display } from 'rot-js'
 import * as rot from 'rot-js'
-import { getInstances, mockComponent, mockImplementation, mockMap, mockUi, mockViewport, mockReturnValue } from '../mocks'
+import { mockComponent, mockImplementation, mockMap, mockUi, mockViewport, mockReturnValue } from '../mocks'
 import { Color } from '../../src/renderer/color'
 import { TlbWorld } from '../../src/tlb'
 import { World } from '../../src/ecs/world'
@@ -27,19 +27,22 @@ jest.mock('rot-js')
 document.body.appendChild = jest.fn()
 rot.Color.toRGB = jest.fn(c => c.join())
 
+describe('RotRenderer create and mound', () => {
+  it('creates a display and attaches it to the dom', () => {
+    RotRenderer.createAndMount(document.body)
+    expect(Display).toHaveBeenCalledTimes(1)
+    expect(document.body.appendChild).toHaveBeenCalledTimes(1)
+  })
+})
+
 describe('RotRenderer', () => {
   let renderer: RotRenderer
   let display: Display
   beforeEach(() => {
     jest.resetAllMocks()
-    const element = document.body
-    renderer = new RotRenderer(element)
-    display = getInstances<Display>(Display)[0]
-  })
-
-  it('creates a display and attaches it to the dom', () => {
-    expect(Display).toHaveBeenCalledTimes(1)
-    expect(document.body.appendChild).toHaveBeenCalledTimes(1)
+    display = new Display()
+    display.clear = jest.fn()
+    renderer = new RotRenderer(display, new Color([120, 120, 120]))
   })
 
   it('clears the display', () => {
@@ -66,6 +69,8 @@ describe('RotRenderer', () => {
 
       world = new World()
       mockUi(world)
+      mockComponent(world, 'lighting')
+      mockComponent(world, 'overlay')
     })
 
     describe('viewport rendering', () => {

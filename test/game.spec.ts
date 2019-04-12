@@ -15,6 +15,7 @@ describe('Game', () => {
     mockState = {
       start: jest.fn(),
       stop: jest.fn(),
+      update: jest.fn(),
       isDone: jest.fn(),
       isFrameLocked: jest.fn(),
     }

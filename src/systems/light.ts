@@ -16,7 +16,7 @@ export class Light implements TlbSystem {
     const light = world.getComponent<LightComponent>(entity, 'light')!
     const position = world.getComponent<PositionComponent>(entity, 'position')!
     const map: WorldMap = world.getResource<WorldMapResource>('map')
-    this.queries.lighting(world, position.position.floor(), light.color, (pos: Vector, color: Color) => {
+    this.queries.lighting(world, position.position, light.color, (pos: Vector, color: Color) => {
       const tile = map.getTile(pos)
       if (tile !== undefined) {
         this.addLight(world, tile, entity, color)

@@ -3,7 +3,7 @@ import { AbstractState } from './state'
 import { Entity } from '../ecs/entity'
 import { TakeTurnComponent } from '../components/rounds'
 import { CharacterStatsComponent } from '../components/character-stats'
-import { ViewportResource } from '../resources/viewport'
+import { ViewportResource, Viewport } from '../resources/viewport'
 
 export class Fighting extends AbstractState {
   public constructor() {
@@ -19,34 +19,38 @@ export class Fighting extends AbstractState {
     let next: Entity = world.getStorage('player').first()!
     this.setNextEntity(world, next)
 
-    const viewport = world.getResource<ViewportResource>('viewport')
+    const viewport: Viewport = world.getResource<ViewportResource>('viewport')
     this.wasGridLocked = viewport.gridLocked
     viewport.gridLocked = true
   }
 
   public stop(world: TlbWorld): void {
-    const viewport = world.getResource<ViewportResource>('viewport')
+    const viewport: Viewport = world.getResource<ViewportResource>('viewport')
     viewport.gridLocked = this.wasGridLocked
   }
 
   public addCharactersToRound(world: TlbWorld): void {
-    world.components.get('character-stats')!.foreach(entity => {
-      world.editEntity(entity).withComponent('wait-turn', {})
-    })
+    world.components.get('character-stats')!.foreach(entity => this.addToTurn(world, entity))
   }
 
   public update(world: TlbWorld): void {
     if (world.getStorage('take-turn').size() === 0) {
       let next = world.getStorage('wait-turn').first()
-      if (next !== undefined) {
-        world.getStorage('took-turn').foreach(entity => {
-          world.editEntity(entity).withComponent('wait-turn', {})
-        })
-        world.getStorage('took-turn').clear()
+      if (next === undefined) {
+        this.newRound(world)
         next = world.getStorage('wait-turn').first()!
-        this.setNextEntity(world, next)
       }
+      this.setNextEntity(world, next)
     }
+  }
+
+  public newRound(world: TlbWorld) {
+    world.getStorage('took-turn').foreach(entity => this.addToTurn(world, entity))
+    world.getStorage('took-turn').clear()
+  }
+
+  public addToTurn(world: TlbWorld, entity: Entity) {
+    world.editEntity(entity).withComponent('wait-turn', {})
   }
 
   public setNextEntity(world: TlbWorld, next: Entity): void {
@@ -58,8 +62,6 @@ export class Fighting extends AbstractState {
         actions: stats.current.actions,
       })
       .removeComponent('wait-turn')
-
-    console.log(next, 'is now in turn')
   }
 
   public isFrameLocked(): boolean {

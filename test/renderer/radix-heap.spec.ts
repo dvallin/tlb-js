@@ -133,37 +133,38 @@ describe('RadixHeap', () => {
     it('redistributes from bucket', () => {
       heap.insert('a', 5)
       heap.insert('b', 5)
-      heap.insert('b', 6)
       heap.insert('c', 7)
 
       expect(heap.buckets[0]).toHaveLength(0)
       expect(heap.buckets[1]).toHaveLength(0)
       expect(heap.buckets[2]).toHaveLength(0)
-      expect(heap.buckets[3]).toHaveLength(4)
+      expect(heap.buckets[3]).toHaveLength(3)
 
       heap.extractMin()
 
       expect(heap.buckets[0]).toHaveLength(1)
-      expect(heap.buckets[1]).toHaveLength(2)
+      expect(heap.buckets[1]).toHaveLength(1)
       expect(heap.buckets[2]).toHaveLength(0)
       expect(heap.buckets[3]).toHaveLength(0)
+
+      expect(heap.getKey('a')).toEqual(5)
+      expect(heap.getKey('c')).toEqual(7)
     })
 
     it('redistributes floating points', () => {
       heap.insert('a', 5.1)
       heap.insert('b', 5.1)
-      heap.insert('b', 6.1)
       heap.insert('c', 7.1)
 
       expect(heap.buckets[0]).toHaveLength(0)
       expect(heap.buckets[1]).toHaveLength(0)
       expect(heap.buckets[2]).toHaveLength(0)
-      expect(heap.buckets[3]).toHaveLength(4)
+      expect(heap.buckets[3]).toHaveLength(3)
 
       heap.extractMin()
 
       expect(heap.buckets[0]).toHaveLength(1)
-      expect(heap.buckets[1]).toHaveLength(2)
+      expect(heap.buckets[1]).toHaveLength(1)
       expect(heap.buckets[2]).toHaveLength(0)
       expect(heap.buckets[3]).toHaveLength(0)
     })

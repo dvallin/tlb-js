@@ -11,14 +11,16 @@ import { LineSegment } from '../geometry/line-segment'
 export interface QueryParameters {
   onlyDiscovered: boolean
   maximumCost: number
+  bestEffort: boolean
 }
 
 export class Queries {
   public fov(world: TlbWorld, origin: Vector, callback: (pos: Vector, distance: number) => void) {
+    const originFloor = origin.floor()
     const map: WorldMap = world.getResource<WorldMapResource>('map')
     const fov = new FOV.RecursiveShadowcasting((x, y) => !map.isLightBlocking(world, new Vector(x, y)), { topology: 8 })
     const seenAlready = new Set<string>()
-    fov.compute(origin.x, origin.y, 20, (x, y, distance) => {
+    fov.compute(originFloor.x, originFloor.y, 20, (x, y, distance) => {
       const position = new Vector(x, y)
       const key = position.key
       if (!seenAlready.has(key)) {
@@ -29,10 +31,11 @@ export class Queries {
   }
 
   public lighting(world: TlbWorld, origin: Vector, color: Color, callback: (pos: Vector, color: Color) => void) {
+    const originFloor = origin.floor()
     const map: WorldMap = world.getResource<WorldMapResource>('map')
     const fov = new FOV.RecursiveShadowcasting((x, y) => !map.isLightBlocking(world, new Vector(x, y)), { topology: 8 })
     const lighting = new Lighting((x, y) => (map.isLightBlocking(world, new Vector(x, y)) ? 0.0 : 1.0), { passes: 1 })
-    lighting.setLight(origin.x, origin.y, color.color)
+    lighting.setLight(originFloor.x, originFloor.y, color.color)
     lighting.setFOV(fov)
     lighting.setOptions({ range: 6 })
     lighting.compute((x: number, y: number, c: [number, number, number]) => {
@@ -46,10 +49,11 @@ export class Queries {
     visit: (pos: Vector, distance: number) => boolean,
     params: Partial<QueryParameters>
   ): void {
+    const originFloor = origin.floor()
     const map: WorldMap = world.getResource<WorldMapResource>('map')
     const maximumDepth = params.maximumCost || Number.MAX_SAFE_INTEGER
     const onlyDiscovered = params.onlyDiscovered || false
-    bfs(origin.floor(), target => FunctionalShape.lN(target, 1, false), visit, (target, depth) => {
+    bfs(originFloor, target => FunctionalShape.lN(target, 1, false), visit, (target, depth) => {
       if (depth >= maximumDepth || map.isBlocking(world, target)) {
         return false
       }
@@ -63,6 +67,7 @@ export class Queries {
     const originFloor = origin.floor()
     const targetFloor = target.floor()
     const maximumCost = params.maximumCost || Number.MAX_SAFE_INTEGER
+    const bestEffort = params.bestEffort || false
     const path = astar(
       originFloor,
       targetFloor,
@@ -77,7 +82,8 @@ export class Queries {
       },
       v => FunctionalShape.lN(v, 1, false),
       v => targetFloor.minus(v).lN(),
-      maximumCost
+      maximumCost,
+      bestEffort
     )
     if (path !== undefined && path.path.length - 1 <= maximumCost) {
       return { path: path.path.slice(0, path.path.length - 1), cost: path.cost }

@@ -318,6 +318,7 @@ describe('Agent', () => {
       mockComponent(world, 'feature')
       mockComponent(world, 'npc')
       mockComponent(world, 'fov')
+      mockComponent(world, 'ai')
       mockComponent(world, 'character-stats')
     })
 

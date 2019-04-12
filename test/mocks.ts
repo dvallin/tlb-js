@@ -4,7 +4,7 @@ import { Renderer } from '../src/renderer/renderer'
 import { ComponentName, TlbWorld, ResourceName } from '../src/tlb'
 import { Random } from '../src/random'
 import { Queries } from '../src/renderer/queries'
-import { Space, StackedSpace } from '../src/spatial'
+import { Space, StackedSpace, Vector } from '../src/spatial'
 import { Entity } from '../src/ecs/entity'
 import { SetSpace } from '../src/spatial/set-space'
 import { Rectangle } from '../src/geometry/rectangle'
@@ -19,6 +19,7 @@ export function mockComponent<T>(world: TlbWorld, component: ComponentName): Sto
     remove: jest.fn(),
     has: jest.fn(),
     foreach: jest.fn(),
+    first: jest.fn(),
     clear: jest.fn(),
     size: jest.fn(),
   }
@@ -105,6 +106,9 @@ export function mockUi(world: TlbWorld): UI {
     update: jest.fn(),
     hasElement: jest.fn(),
     render: jest.fn(),
+    showSelectList: jest.fn(),
+    selectListSelection: jest.fn(),
+    hideSelectList: jest.fn(),
   }
   world.registerResource(ui)
   return ui
@@ -118,6 +122,9 @@ export function mockViewport(world: TlbWorld): Viewport {
     collectRenderables: jest.fn(),
     toDisplay: jest.fn(),
     focus: jest.fn(),
+    addLayer: jest.fn(),
+    gridLocked: false,
+    boundaries: new Vector(0, 1, 2),
   }
   world.registerResource(viewport)
   return viewport
@@ -193,11 +200,6 @@ export function mockImplementation5<T, T2, T3, T4, T5, O>(
 ): void {
   const mock = o as jest.Mock
   mock.mockImplementation(f)
-}
-
-export function getInstances<T>(o: object): T[] {
-  const mock = o as jest.Mock<T>
-  return mock.mock.instances
 }
 
 export function callArgument<T>(o: object, call: number, argument: number): T {

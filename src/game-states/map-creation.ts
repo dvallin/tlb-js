@@ -9,7 +9,7 @@ import { PositionComponent } from '../components/position'
 import { WorldMap, WorldMapResource } from '../resources/world-map'
 import { FunctionalShape } from '../geometry/functional-shape'
 import { createFeature } from '../components/feature'
-import { ViewportResource } from '../resources/viewport'
+import { ViewportResource, Viewport } from '../resources/viewport'
 
 export class MapCreation extends AbstractState {
   private startRegion: Entity | undefined
@@ -21,7 +21,7 @@ export class MapCreation extends AbstractState {
   public start(world: TlbWorld): void {
     super.start(world)
 
-    const viewport = world.getResource<ViewportResource>('viewport')
+    const viewport: Viewport = world.getResource<ViewportResource>('viewport')
     viewport.addLayer({
       getRenderable: (world, position) => {
         const map = world.getResource<WorldMapResource>('map')

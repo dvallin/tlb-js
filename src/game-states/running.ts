@@ -6,7 +6,7 @@ import { FeatureComponent } from '../components/feature'
 import { WorldMap, WorldMapResource } from '../resources/world-map'
 import { FovComponent } from '../components/fov'
 import { CharacterStatsComponent, createCharacterStatsComponent } from '../components/character-stats'
-import { ViewportResource } from '../resources/viewport'
+import { ViewportResource, Viewport } from '../resources/viewport'
 import { UIResource } from '../resources/ui'
 
 export class Running extends AbstractState {
@@ -31,7 +31,7 @@ export class Running extends AbstractState {
           .withComponent<CharacterStatsComponent>('character-stats', createCharacterStatsComponent('player')).entity
         map.setCharacter(position, player)
 
-        const viewport = world.getResource<ViewportResource>('viewport')
+        const viewport: Viewport = world.getResource<ViewportResource>('viewport')
         viewport.addLayer({
           getRenderable: (world, position) => {
             const ui = world.getResource<UIResource>('ui')

@@ -1,7 +1,7 @@
 import { Fov } from '../../src/systems/fov'
 import { TlbWorld } from '../../src/tlb'
 import { World } from '../../src/ecs/world'
-import { mockComponent, mockReturnValue, mockImplementation3, callArgument, mockQueries } from '../mocks'
+import { mockComponent, mockReturnValue, mockImplementation3, mockQueries } from '../mocks'
 import { FovComponent } from '../../src/components/fov'
 import { Storage } from '../../src/ecs/storage'
 import { PositionComponent } from '../../src/components/position'
@@ -37,9 +37,5 @@ describe('Fov', () => {
 
   it('pushes all fov cells', () => {
     expect(fov.fov).toEqual([{ position: new Vector(1, 1), distance: 2 }, { position: new Vector(0, 0), distance: 1 }])
-  })
-
-  it('floors position', () => {
-    expect(callArgument(queries.fov, 0, 1)).toEqual(new Vector(1, 1))
   })
 })

@@ -25,12 +25,11 @@ export interface Renderer {
 }
 
 export class RotRenderer implements Renderer {
-  public readonly display: Display
+  public constructor(public readonly display: Display, public ambientColor: Color) {}
 
-  public ambientColor: Color
-
-  public constructor(public readonly root: HTMLElement) {
-    const displayOptions = {
+  public static createAndMount(
+    root: HTMLElement,
+    displayOptions = {
       width: 60,
       height: 40,
       forceSquareRatio: true,
@@ -38,9 +37,11 @@ export class RotRenderer implements Renderer {
       fontFamily: 'Lucida Console, Monaco, monospace',
       bg: gray[4].rgb,
     }
-    this.ambientColor = new Color([120, 120, 120])
-    this.display = new Display(displayOptions)
-    root.appendChild(this.display.getContainer() as Node)
+  ): RotRenderer {
+    const ambientColor = new Color([120, 120, 120])
+    const display = new Display(displayOptions)
+    root.appendChild(display.getContainer() as Node)
+    return new RotRenderer(display, ambientColor)
   }
 
   public clear(): void {
