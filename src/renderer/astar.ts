@@ -16,9 +16,12 @@ export function astar(
   maximumCost: number,
   bestEffort: boolean = false
 ): Path | undefined {
-  const actualMaximumCost = bestEffort ? Number.MAX_VALUE : maximumCost
-  const calculation = calculateAstar(from, to, cost, neighbourhood, heuristic, actualMaximumCost)
-  return extractPath(to, calculation.parent, calculation.costMap, maximumCost)
+  const actualMaximumCost = bestEffort ? Number.MAX_SAFE_INTEGER : maximumCost
+  const { parent, costMap, closest } = calculateAstar(from, to, cost, neighbourhood, heuristic, actualMaximumCost)
+  if (bestEffort === false && closest.key !== to.key) {
+    return undefined
+  }
+  return extractPath(closest, parent, costMap, maximumCost)
 }
 
 function calculateAstar(
@@ -28,27 +31,36 @@ function calculateAstar(
   neighbourhood: (target: Vector) => Shape,
   heuristic: (v: Vector) => number,
   maximumCost: number
-): { parent: Map<string, Vector>; costMap: Map<string, number> } {
+): { parent: Map<string, Vector>; costMap: Map<string, number>; closest: Vector } {
   const targetKey = to.key
   const parent: Map<string, Vector> = new Map()
   const closed: Set<string> = new Set()
   const open: RadixHeap<Vector> = new RadixHeap(256)
   const costMap: Map<string, number> = new Map()
-  open.insert(from, heuristic(from))
+  let closest = from
+  let minHeuristic = heuristic(from)
+  open.insert(from.key, from, minHeuristic)
   costMap.set(from.key, 0)
   parent.set(from.key, from)
+
   while (true) {
     const position = open.extractMin()
     if (position === undefined) {
       break
     }
+    const currentHeuristic = heuristic(position)
+    if (currentHeuristic <= minHeuristic) {
+      closest = position
+      minHeuristic = currentHeuristic
+    }
     const currentKey = position.key
-    const currentCost = costMap.get(currentKey)!
-    if (targetKey === currentKey) {
+    if (targetKey === currentKey || currentHeuristic > 5 * minHeuristic) {
       break
     }
 
-    closed.add(position.key)
+    closed.add(currentKey)
+    const currentCost = costMap.get(currentKey)!
+
     neighbourhood(position).foreach(neighbor => {
       const key = neighbor.key
       if (!closed.has(key)) {
@@ -60,18 +72,18 @@ function calculateAstar(
             parent.set(key, position)
             costMap.set(key, tentative)
 
-            const heuristicScore = tentative + heuristic(position)
-            if (open.getKey(neighbor) === undefined) {
-              open.insert(neighbor, heuristicScore)
+            const heuristicScore = tentative + heuristic(neighbor)
+            if (open.getPriority(key) === undefined) {
+              open.insert(key, neighbor, heuristicScore)
             } else {
-              open.decreaseKey(neighbor, heuristicScore)
+              open.decreasePriority(key, heuristicScore)
             }
           }
         }
       }
     })
   }
-  return { parent, costMap }
+  return { parent, costMap, closest }
 }
 
 function extractPath(to: Vector, parent: Map<string, Vector>, costMap: Map<string, number>, maximumCost: number): Path | undefined {

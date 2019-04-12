@@ -34,12 +34,12 @@ describe('RadixHeap', () => {
     })
 
     it('inserts values', () => {
-      heap.insert('a', 4)
-      heap.insert('b', 8)
-      heap.insert('b', 256)
-      heap.insert('c', 2)
-      heap.insert('c', 2)
-      heap.insert('d', 1)
+      heap.insert('a', 'a', 4)
+      heap.insert('b', 'b', 8)
+      heap.insert('c', 'b', 256)
+      heap.insert('d', 'c', 2)
+      heap.insert('e', 'c', 2)
+      heap.insert('f', 'd', 1)
       expect(heap.buckets[0]).toHaveLength(0)
       expect(heap.buckets[1]).toHaveLength(1)
       expect(heap.buckets[2]).toHaveLength(2)
@@ -48,65 +48,65 @@ describe('RadixHeap', () => {
     })
 
     it('inserts floating points', () => {
-      heap.insert('a', 3.4)
-      heap.insert('d', 1.8)
+      heap.insert('a', 'a', 3.4)
+      heap.insert('b', 'd', 1.8)
       expect(heap.buckets[0]).toHaveLength(0)
       expect(heap.buckets[1]).toHaveLength(1)
       expect(heap.buckets[2]).toHaveLength(1)
     })
   })
 
-  describe('getKey', () => {
+  describe('getPriority', () => {
     let heap: RadixHeap<string>
     beforeEach(() => {
       heap = new RadixHeap<string>(8)
     })
 
-    it('gets keys of values', () => {
-      heap.insert('a', 4)
-      heap.insert('b', 8)
-      heap.insert('e', 256)
-      heap.insert('c', 2)
-      heap.insert('f', 2)
-      heap.insert('d', 1)
-      expect(heap.getKey('a')).toEqual(4)
-      expect(heap.getKey('b')).toEqual(8)
-      expect(heap.getKey('c')).toEqual(2)
-      expect(heap.getKey('d')).toEqual(1)
-      expect(heap.getKey('e')).toEqual(256)
-      expect(heap.getKey('f')).toEqual(2)
+    it('gets priorities of values', () => {
+      heap.insert('a', 'a', 4)
+      heap.insert('b', 'b', 8)
+      heap.insert('d', 'c', 2)
+      heap.insert('c', 'b', 256)
+      heap.insert('e', 'c', 2)
+      heap.insert('f', 'd', 1)
+      expect(heap.getPriority('a')).toEqual(4)
+      expect(heap.getPriority('b')).toEqual(8)
+      expect(heap.getPriority('c')).toEqual(256)
+      expect(heap.getPriority('d')).toEqual(2)
+      expect(heap.getPriority('e')).toEqual(2)
+      expect(heap.getPriority('f')).toEqual(1)
     })
 
-    it('gets keys of floating points', () => {
-      heap.insert('a', 3.4)
-      heap.insert('d', 1.8)
-      expect(heap.getKey('a')).toEqual(3.4)
-      expect(heap.getKey('d')).toEqual(1.8)
+    it('gets priorities of floating points', () => {
+      heap.insert('a', 'a', 3.4)
+      heap.insert('b', 'd', 1.8)
+      expect(heap.getPriority('a')).toEqual(3.4)
+      expect(heap.getPriority('b')).toEqual(1.8)
     })
   })
 
-  describe('decreaseKey', () => {
+  describe('decreasePriority', () => {
     let heap: RadixHeap<string>
     beforeEach(() => {
       heap = new RadixHeap<string>(8)
     })
 
     it('puts values into previous buckets', () => {
-      heap.insert('a', 4)
-      heap.decreaseKey('a', 2)
+      heap.insert('a', 'a', 4)
+      heap.decreasePriority('a', 2)
       expect(heap.buckets[2]).toHaveLength(1)
     })
 
     it('puts values into same bucket', () => {
-      heap.insert('a', 5)
-      heap.decreaseKey('a', 4)
+      heap.insert('a', 'a', 5)
+      heap.decreasePriority('a', 4)
       expect(heap.buckets[3]).toHaveLength(1)
     })
 
     it('decreases floating points', () => {
-      heap.insert('a', 3.4)
-      heap.decreaseKey('a', 1.8)
-      expect(heap.getKey('a')).toEqual(1.8)
+      heap.insert('a', 'a', 3.4)
+      heap.decreasePriority('a', 1.8)
+      expect(heap.getPriority('a')).toEqual(1.8)
     })
   })
 
@@ -117,23 +117,23 @@ describe('RadixHeap', () => {
     })
 
     it('extracts from first bucket', () => {
-      heap.insert('a', 0)
+      heap.insert('a', 'a', 0)
       const value = heap.extractMin()
       expect(value).toEqual('a')
-      expect(heap.getKey('a')).toBeUndefined()
+      expect(heap.getPriority('a')).toBeUndefined()
     })
 
     it('extracts from bucket', () => {
-      heap.insert('a', 5)
+      heap.insert('a', 'a', 5)
       const value = heap.extractMin()
       expect(value).toEqual('a')
-      expect(heap.getKey('a')).toBeUndefined()
+      expect(heap.getPriority('a')).toBeUndefined()
     })
 
     it('redistributes from bucket', () => {
-      heap.insert('a', 5)
-      heap.insert('b', 5)
-      heap.insert('c', 7)
+      heap.insert('a', 'a', 5)
+      heap.insert('b', 'b', 5)
+      heap.insert('c', 'c', 7)
 
       expect(heap.buckets[0]).toHaveLength(0)
       expect(heap.buckets[1]).toHaveLength(0)
@@ -147,14 +147,14 @@ describe('RadixHeap', () => {
       expect(heap.buckets[2]).toHaveLength(0)
       expect(heap.buckets[3]).toHaveLength(0)
 
-      expect(heap.getKey('a')).toEqual(5)
-      expect(heap.getKey('c')).toEqual(7)
+      expect(heap.getPriority('a')).toEqual(5)
+      expect(heap.getPriority('c')).toEqual(7)
     })
 
     it('redistributes floating points', () => {
-      heap.insert('a', 5.1)
-      heap.insert('b', 5.1)
-      heap.insert('c', 7.1)
+      heap.insert('a', 'a', 5.1)
+      heap.insert('b', 'b', 5.1)
+      heap.insert('c', 'c', 7.1)
 
       expect(heap.buckets[0]).toHaveLength(0)
       expect(heap.buckets[1]).toHaveLength(0)

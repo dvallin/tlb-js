@@ -7,11 +7,13 @@ import { bfs } from './bfs'
 import { FunctionalShape } from '../geometry/functional-shape'
 import { astar, Path } from './astar'
 import { LineSegment } from '../geometry/line-segment'
+import { Entity } from '../ecs/entity'
 
 export interface QueryParameters {
   onlyDiscovered: boolean
   maximumCost: number
   bestEffort: boolean
+  self: Entity
 }
 
 export class Queries {
@@ -81,7 +83,7 @@ export class Queries {
         return current.minus(neighbour).l1()
       },
       v => FunctionalShape.lN(v, 1, false),
-      v => targetFloor.minus(v).lN(),
+      v => targetFloor.minus(v).l1(),
       maximumCost,
       bestEffort
     )

@@ -28,13 +28,13 @@ export class AiRoundControl implements TlbSystem {
 
   public doTurn(world: TlbWorld, entity: Entity, takeTurn: TakeTurnComponent) {
     const position = world.getComponent<PositionComponent>(entity, 'position')!
-    let player = this.findTarget(world, position.position)
+    let target = this.findTarget(world, position.position)
 
-    if (player !== undefined) {
-      const playerPosition = world.getComponent<PositionComponent>(player, 'position')!
-      const dist = playerPosition.position.minus(position.position)
+    if (target !== undefined) {
+      const targetPosition = world.getComponent<PositionComponent>(target, 'position')!
+      const dist = targetPosition.position.minus(position.position)
       if (dist.lN() > 1) {
-        const path = this.queries.shortestPath(world, position.position, playerPosition.position, {
+        const path = this.queries.shortestPath(world, position.position, targetPosition.position, {
           maximumCost: takeTurn.movements,
           bestEffort: true,
         })

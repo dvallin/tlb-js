@@ -1,7 +1,13 @@
+interface Entry<T> {
+  priority: number
+  key: string
+  value: T
+}
+
 export class RadixHeap<T> {
   public readonly bucketCount: number
-  public readonly bucketOfValue: Map<T, number> = new Map()
-  public readonly buckets: { key: number; value: T }[][] = []
+  public readonly bucketOfValue: Map<string, number> = new Map()
+  public readonly buckets: Entry<T>[][] = []
   public readonly boundaries: number[] = []
 
   constructor(public readonly maximumKeySpan: number) {
@@ -17,25 +23,25 @@ export class RadixHeap<T> {
     }
   }
 
-  insert(value: T, key: number): void {
-    this.insertIntoLargestPossibleBucket(key, value, this.bucketCount)
+  insert(key: string, value: T, priority: number): void {
+    this.insertIntoLargestPossibleBucket(key, value, priority, this.bucketCount)
   }
 
-  getKey(value: T, equals: (a: T, b: T) => boolean = (a, b) => a === b): number | undefined {
-    let bucket = this.bucketOfValue.get(value)
+  getPriority(key: string): number | undefined {
+    let bucket = this.bucketOfValue.get(key)
     if (bucket === undefined) {
       return undefined
     }
-    return this.findInBucket(bucket, value, equals)
+    return this.findInBucket(bucket, key)
   }
 
-  decreaseKey(value: T, key: number, equals: (a: T, b: T) => boolean = (a, b) => a === b): void {
-    let bucket = this.bucketOfValue.get(value)
+  decreasePriority(key: string, priority: number): void {
+    let bucket = this.bucketOfValue.get(key)
     if (bucket === undefined) {
-      throw Error(`unknown bucket for value ${value}`)
+      throw Error(`unknown bucket for key ${key}`)
     }
-    this.removeFromBucket(value, bucket, equals)
-    this.insertIntoLargestPossibleBucket(key, value, bucket)
+    const entry = this.removeFromBucket(key, bucket)
+    this.insertIntoLargestPossibleBucket(key, entry.value, priority, bucket)
   }
 
   extractMin(): T | undefined {
@@ -53,10 +59,10 @@ export class RadixHeap<T> {
       this.buckets[bucket] = []
       for (let i = 0; i < currentBucket.length; i++) {
         const entry = currentBucket[i]
-        if (smallestK > entry.key) {
-          smallestK = entry.key
+        if (smallestK > entry.priority) {
+          smallestK = entry.priority
         }
-        this.bucketOfValue.delete(entry.value)
+        this.bucketOfValue.delete(entry.key)
       }
 
       this.boundaries[0] = smallestK
@@ -66,36 +72,38 @@ export class RadixHeap<T> {
       }
       for (let i = 0; i < currentBucket.length; i++) {
         const entry = currentBucket[i]
-        this.insertIntoLargestPossibleBucket(entry.key, entry.value, bucket)
+        this.insertIntoLargestPossibleBucket(entry.key, entry.value, entry.priority, bucket)
       }
       result = this.buckets[0].pop()
     }
-    this.bucketOfValue.delete(result!.value)
+    this.bucketOfValue.delete(result!.key)
     return result!.value
   }
 
-  private removeFromBucket(value: T, bucket: number, equals: (a: T, b: T) => boolean): void {
-    this.bucketOfValue.delete(value)
+  private removeFromBucket(key: string, bucket: number): Entry<T> {
+    this.bucketOfValue.delete(key)
     const currentBucket = this.buckets[bucket]
-    const index = currentBucket.findIndex(v => equals(v.value, value))!
+    const index = currentBucket.findIndex(v => v.key === key)!
+    const entry = currentBucket[index]
     currentBucket[index] = currentBucket[currentBucket.length - 1]
     currentBucket.pop()!
+    return entry
   }
 
-  private insertIntoLargestPossibleBucket(key: number, value: T, bucket: number): void {
-    while (this.boundaries[bucket] > key) {
+  private insertIntoLargestPossibleBucket(key: string, value: T, priority: number, bucket: number): void {
+    while (this.boundaries[bucket] > priority) {
       --bucket
     }
-    this.buckets[bucket].push({ key, value })
-    this.bucketOfValue.set(value, bucket)
+    this.buckets[bucket].push({ key, value, priority })
+    this.bucketOfValue.set(key, bucket)
   }
 
-  private findInBucket(bucket: number, value: T, equals: (a: T, b: T) => boolean): number | undefined {
+  private findInBucket(bucket: number, key: string): number | undefined {
     const currentBucket = this.buckets[bucket]
-    const index = currentBucket.findIndex(v => equals(v.value, value))!
+    const index = currentBucket.findIndex(v => v.key === key)!
     const entry = currentBucket[index]
     if (entry !== undefined) {
-      return entry.key
+      return entry.priority
     }
     return undefined
   }
