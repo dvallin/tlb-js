@@ -49,8 +49,8 @@ export class Script implements TlbSystem {
       reached = true
     }
     const map = world.getResource<WorldMapResource>('map')
-    map.removeCharacter(newPosition.floor())
-    map.setCharacter(current.position.floor(), entity)
+    map.removeCharacter(current.position.floor())
+    map.setCharacter(newPosition.floor(), entity)
     current.position = newPosition
     return reached
   }

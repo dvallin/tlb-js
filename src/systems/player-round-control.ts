@@ -11,6 +11,7 @@ import { Entity } from '../ecs/entity'
 import { ScriptComponent, Action, SelectedActionComponent, DamageComponent } from '../components/action'
 import { UIResource, UI } from '../resources/ui'
 import { Path } from '../renderer/astar'
+import { KEYS } from 'rot-js'
 
 export class PlayerRoundControl implements TlbSystem {
   public readonly components: ComponentName[] = ['take-turn', 'player', 'position']
@@ -45,18 +46,22 @@ export class PlayerRoundControl implements TlbSystem {
     } else if (selectedAction.type === undefined) {
       this.selectAction(world, ui, selectedAction)
     } else {
-      switch (selectedAction.type) {
-        case 'move':
-          this.move(world, input, viewport, map, entity, takeTurn)
-          break
-        case 'use':
-          this.use(world, input, viewport, map, entity, takeTurn, selectedAction)
-          break
-        case 'end-turn':
-          takeTurn.actions = 0
-          takeTurn.movements = 0
-          this.clearAction(world, entity)
-          break
+      if (input.keyPressed.has(KEYS.VK_ESCAPE)) {
+        world.editEntity(entity).removeComponent('selected-action')
+      } else {
+        switch (selectedAction.type) {
+          case 'move':
+            this.move(world, input, viewport, map, entity, takeTurn)
+            break
+          case 'use':
+            this.use(world, input, viewport, map, entity, takeTurn, selectedAction)
+            break
+          case 'end-turn':
+            takeTurn.actions = 0
+            takeTurn.movements = 0
+            this.clearAction(world, entity)
+            break
+        }
       }
     }
   }
@@ -126,6 +131,8 @@ export class PlayerRoundControl implements TlbSystem {
         actions: path.path.map(p => ({ type: 'move', position: p } as Action)),
       })
       this.clearAction(world, entity)
+    } else if (input.mousePressed) {
+      world.editEntity(entity).removeComponent('selected-action')
     }
   }
 
@@ -142,7 +149,7 @@ export class PlayerRoundControl implements TlbSystem {
     const path = this.selectAttackPath(world, input, viewport, map, entity, range)
     if (path !== undefined) {
       takeTurn.actions -= 1
-      path.path.some(p => {
+      const hitEnemy = path.path.some(p => {
         const target = map.getCharacter(p)
         const hasEnemy = target !== undefined && target !== entity
         if (hasEnemy) {
@@ -155,6 +162,11 @@ export class PlayerRoundControl implements TlbSystem {
         }
         return hasEnemy
       })
+      if (!hitEnemy) {
+        world.editEntity(entity).removeComponent('selected-action')
+      }
+    } else if (input.mousePressed) {
+      world.editEntity(entity).removeComponent('selected-action')
     }
   }
 

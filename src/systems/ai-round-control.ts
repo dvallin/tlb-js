@@ -3,7 +3,7 @@ import { TakeTurnComponent } from '../components/rounds'
 import { Queries } from '../renderer/queries'
 import { PositionComponent } from '../components/position'
 import { Entity } from '../ecs/entity'
-import { ScriptComponent, Action } from '../components/action'
+import { ScriptComponent, Action, DamageComponent } from '../components/action'
 import { Vector } from '../spatial'
 
 export class AiRoundControl implements TlbSystem {
@@ -33,13 +33,14 @@ export class AiRoundControl implements TlbSystem {
     if (target !== undefined) {
       const targetPosition = world.getComponent<PositionComponent>(target, 'position')!
       const dist = targetPosition.position.minus(position.position)
-      if (dist.lN() > 1) {
+      const canGetCloaser = dist.lN() > 1 && takeTurn.movements > 0
+      if (canGetCloaser) {
         const path = this.queries.shortestPath(world, position.position, targetPosition.position, {
           maximumCost: takeTurn.movements,
           bestEffort: true,
         })
-        if (path !== undefined) {
-          console.log('found path', path)
+        if (path !== undefined && path.path.length > 0) {
+          console.log(entity, 'found path', path.path.map(p => p.key), targetPosition.position.key)
           takeTurn.movements -= path.cost
           world.editEntity(entity).withComponent<ScriptComponent>('script', {
             actions: path.path.map(p => ({ type: 'move', position: p } as Action)),
@@ -48,6 +49,14 @@ export class AiRoundControl implements TlbSystem {
           console.log('did not find a path')
           this.endTurn(world, entity)
         }
+      } else if (takeTurn.actions > 0) {
+        world.createEntity().withComponent<DamageComponent>('damage', {
+          source: entity,
+          target: target,
+          damage: 3,
+        })
+        takeTurn.actions -= 1
+        this.endTurn(world, entity)
       }
     } else {
       console.log('did not find player')
