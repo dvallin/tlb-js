@@ -16,6 +16,12 @@ export class Running extends AbstractState {
 
   public start(world: TlbWorld): void {
     super.start(world)
+    if (world.components.get('viewport-focus')!.size() === 0) {
+      this.createViewportFocus(world)
+    }
+  }
+
+  public createViewportFocus(world: TlbWorld): void {
     const spawns = world.components.get('spawn')!
     if (spawns.size() === 1) {
       const map: WorldMap = world.getResource<WorldMapResource>('map')

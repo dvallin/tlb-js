@@ -89,8 +89,8 @@ export class ViewportResource implements TlbResource, Viewport {
       position.y = Math.floor(position.y)
     }
     if (!this.gridLocked && centered) {
-      position.x -= 0.5
-      position.y -= 0.25
+      position.x += 0.5
+      position.y += 0.25
     }
     return position
   }

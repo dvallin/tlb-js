@@ -335,7 +335,7 @@ export class Agent implements TlbSystem {
       .withComponent<FeatureComponent>('feature', { type })
       .withComponent<PositionComponent>('position', { position: centeredPosition })
       .withComponent<FovComponent>('fov', { fov: [] })
-      .withComponent<AiComponent>('ai', { type: 'rushing' })
+      .withComponent<AiComponent>('ai', { type: 'rushing', state: 'idle' })
       .withComponent<CharacterStatsComponent>('character-stats', createCharacterStatsComponent(type)).entity
     map.setCharacter(position, entity)
   }

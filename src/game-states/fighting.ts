@@ -7,14 +7,13 @@ import { ViewportResource, Viewport } from '../resources/viewport'
 
 export class Fighting extends AbstractState {
   public constructor() {
-    super(['fov', 'light', 'player-round-control', 'ai-round-control', 'script', 'damage'])
+    super(['fov', 'light', 'player-round-control', 'npc', 'ai-round-control', 'script', 'damage'])
   }
 
   private wasGridLocked: boolean = true
 
   public start(world: TlbWorld): void {
     super.start(world)
-    this.addCharactersToRound(world)
 
     let next: Entity = world.getStorage('player').first()!
     this.setNextEntity(world, next)
@@ -29,10 +28,6 @@ export class Fighting extends AbstractState {
     viewport.gridLocked = this.wasGridLocked
   }
 
-  public addCharactersToRound(world: TlbWorld): void {
-    world.components.get('character-stats')!.foreach(entity => this.addToTurn(world, entity))
-  }
-
   public update(world: TlbWorld): void {
     if (world.getStorage('take-turn').size() === 0) {
       let next = world.getStorage('wait-turn').first()
@@ -42,6 +37,12 @@ export class Fighting extends AbstractState {
       }
       this.setNextEntity(world, next)
     }
+  }
+
+  public isDone(world: TlbWorld) {
+    const turnBasedEntities =
+      world.components.get('wait-turn')!.size() + world.components.get('take-turn')!.size() + world.components.get('took-turn')!.size()
+    return turnBasedEntities <= world.components.get('player')!.size()
   }
 
   public newRound(world: TlbWorld) {
