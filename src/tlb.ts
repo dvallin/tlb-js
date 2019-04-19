@@ -11,7 +11,6 @@ import { FeatureComponent } from './components/feature'
 import { FovComponent } from './components/fov'
 import { GroundComponent } from './components/ground'
 import { LightingComponent, LightComponent } from './components/light'
-import { ParentComponent, ChildrenComponent } from './components/relation'
 import { PositionComponent } from './components/position'
 import { RegionComponent } from './components/region'
 
@@ -25,7 +24,7 @@ import { PlayerInteraction } from './systems/player-interaction'
 import { RegionCreator } from './systems/region-creator'
 import { PlayerRoundControl } from './systems/player-round-control'
 import { Trigger } from './systems/trigger'
-import { Damage } from './systems/damage'
+import { Effect } from './systems/effect'
 import { Script } from './systems/script'
 
 import { WorldMapResource } from './resources/world-map'
@@ -40,10 +39,13 @@ import { Queries } from './renderer/queries'
 import { State } from './game-states/state'
 import { OverlayComponent } from './components/overlay'
 import { TakeTurnComponent } from './components/rounds'
-import { ScriptComponent, SelectedActionComponent, DamageComponent } from './components/action'
+import { SelectedActionComponent, HasActionComponent } from './components/action'
+import { ScriptComponent } from './components/script'
 import { UIResource } from './resources/ui'
 import { AiComponent } from './components/ai'
 import { AiRoundControl } from './systems/ai-round-control'
+import { TriggersComponent, TriggeredByComponent } from './components/trigger'
+import { EffectComponent } from './components/effects'
 
 export type ComponentName =
   | 'active'
@@ -52,17 +54,16 @@ export type ComponentName =
   | 'ai'
   | 'asset'
   | 'character-stats'
-  | 'children'
-  | 'damage'
+  | 'effect'
   | 'feature'
   | 'fov'
   | 'free-mode-anchor'
   | 'ground'
+  | 'has-action'
   | 'light'
   | 'lighting'
   | 'npc'
   | 'overlay'
-  | 'parent'
   | 'player'
   | 'position'
   | 'region'
@@ -72,20 +73,22 @@ export type ComponentName =
   | 'take-turn'
   | 'took-turn'
   | 'trigger'
+  | 'triggered-by'
+  | 'triggers'
   | 'viewport-focus'
   | 'wait-turn'
 export type SystemName =
   | 'agent'
   | 'ai-round-control'
-  | 'damage'
+  | 'effect'
   | 'fov'
   | 'free-mode-control'
   | 'info-popup'
   | 'light'
   | 'npc'
   | 'player-control'
-  | 'player-round-control'
   | 'player-interaction'
+  | 'player-round-control'
   | 'region-creator'
   | 'script'
   | 'trigger'
@@ -98,21 +101,20 @@ export type TlbSystem = System<ComponentName, SystemName, ResourceName>
 export function registerComponents<S, R>(world: World<ComponentName, S, R>): void {
   world.registerComponentStorage('active', new SetStorage())
   world.registerComponentStorage('age', new MapStorage<AgeComponent>())
-  world.registerComponentStorage('ai', new MapStorage<AiComponent>())
   world.registerComponentStorage('agent', new MapStorage<AgentComponent>())
+  world.registerComponentStorage('ai', new MapStorage<AiComponent>())
   world.registerComponentStorage('asset', new MapStorage<AssetComponent>())
   world.registerComponentStorage('character-stats', new MapStorage<CharacterStatsComponent>())
-  world.registerComponentStorage('children', new MapStorage<ChildrenComponent>())
-  world.registerComponentStorage('damage', new MapStorage<DamageComponent>())
+  world.registerComponentStorage('effect', new MapStorage<EffectComponent>())
   world.registerComponentStorage('feature', new VectorStorage<FeatureComponent>())
   world.registerComponentStorage('fov', new MapStorage<FovComponent>())
   world.registerComponentStorage('free-mode-anchor', new SingletonStorage<{}>())
   world.registerComponentStorage('ground', new MapStorage<GroundComponent>())
+  world.registerComponentStorage('has-action', new MapStorage<HasActionComponent>())
   world.registerComponentStorage('light', new MapStorage<LightComponent>())
   world.registerComponentStorage('lighting', new VectorStorage<LightingComponent>())
   world.registerComponentStorage('npc', new SetStorage())
   world.registerComponentStorage('overlay', new MapStorage<OverlayComponent>())
-  world.registerComponentStorage('parent', new MapStorage<ParentComponent>())
   world.registerComponentStorage('player', new SingletonStorage<{}>())
   world.registerComponentStorage('position', new VectorStorage<PositionComponent>())
   world.registerComponentStorage('region', new MapStorage<RegionComponent>())
@@ -122,6 +124,8 @@ export function registerComponents<S, R>(world: World<ComponentName, S, R>): voi
   world.registerComponentStorage('take-turn', new MapStorage<TakeTurnComponent>())
   world.registerComponentStorage('took-turn', new SetStorage())
   world.registerComponentStorage('trigger', new SetStorage())
+  world.registerComponentStorage('triggered-by', new MapStorage<TriggeredByComponent>())
+  world.registerComponentStorage('triggers', new MapStorage<TriggersComponent>())
   world.registerComponentStorage('viewport-focus', new SingletonStorage<{}>())
   world.registerComponentStorage('wait-turn', new SetStorage())
 }
@@ -141,15 +145,15 @@ export function registerSystems(
   const uniform = new Uniform('some seed')
   world.registerSystem('agent', new Agent(new Random(uniform)))
   world.registerSystem('ai-round-control', new AiRoundControl(queries))
+  world.registerSystem('effect', new Effect())
+  world.registerSystem('fov', new Fov(queries))
   world.registerSystem('free-mode-control', new FreeModeControl())
   world.registerSystem('light', new Light(queries))
-  world.registerSystem('player-control', new PlayerControl())
-  world.registerSystem('player-round-control', new PlayerRoundControl(queries))
-  world.registerSystem('player-interaction', new PlayerInteraction())
-  world.registerSystem('fov', new Fov(queries))
   world.registerSystem('npc', new Npc(pushState))
+  world.registerSystem('player-control', new PlayerControl())
+  world.registerSystem('player-interaction', new PlayerInteraction())
+  world.registerSystem('player-round-control', new PlayerRoundControl(queries))
   world.registerSystem('region-creator', new RegionCreator(new Random(uniform)))
-  world.registerSystem('trigger', new Trigger())
   world.registerSystem('script', new Script())
-  world.registerSystem('damage', new Damage())
+  world.registerSystem('trigger', new Trigger())
 }

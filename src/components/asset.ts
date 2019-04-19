@@ -5,10 +5,10 @@ import { WorldMap } from '../resources/world-map'
 import { Shape } from '../geometry/shape'
 
 import { FeatureType, FeatureComponent, features } from './feature'
-import { ParentComponent, ChildrenComponent } from './relation'
 import { GroundComponent } from './ground'
 import { PositionComponent } from './position'
 import { Rectangle } from '../geometry/rectangle'
+import { TriggeredByComponent, TriggersComponent } from './trigger'
 
 export type AssetType = 'door' | 'locker' | 'trash'
 export interface AssetComponent {
@@ -61,19 +61,19 @@ function createAsset(world: TlbWorld, type: AssetType): Entity {
     .createEntity()
     .withComponent<AssetComponent>('asset', { type })
     .withComponent('trigger', {})
-    .withComponent('children', { children: [] }).entity
+    .withComponent<TriggersComponent>('triggers', { entities: [] }).entity
 }
 
 function putTile(world: TlbWorld, map: WorldMap, position: Vector, entity: Entity, type: FeatureType): void {
   const feature = removeGround(world, map, position)
   const tile = world
     .createEntity()
-    .withComponent<ParentComponent>('parent', { entity })
+    .withComponent<TriggeredByComponent>('triggered-by', { entity })
     .withComponent<PositionComponent>('position', { position })
     .withComponent<FeatureComponent>('feature', { type })
     .withComponent<GroundComponent>('ground', { feature }).entity
   map.setTile(position, tile)
-  world.getComponent<ChildrenComponent>(entity, 'children')!.children.push(tile)
+  world.getComponent<TriggersComponent>(entity, 'triggers')!.entities.push(tile)
 }
 
 function removeGround(world: TlbWorld, map: WorldMap, position: Vector): FeatureType {

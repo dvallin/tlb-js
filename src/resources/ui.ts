@@ -8,17 +8,21 @@ import { primary, gray } from '../renderer/palettes'
 import { InputResource, Input } from './input'
 import { ViewportResource, Viewport } from './viewport'
 
+export interface ListElement {
+  description: string
+}
+
 export interface UI {
   hasElement(position: Vector): boolean
   render(renderer: Renderer): void
 
-  showSelectList(world: TlbWorld, entries: string[]): void
-  selectListSelection(): string | undefined
+  showSelectList(world: TlbWorld, entries: ListElement[]): void
+  selectListSelection(): ListElement | undefined
   hideSelectList(world: TlbWorld): void
 }
 
 export interface SelectList {
-  entries: string[]
+  entries: ListElement[]
   shape: Rectangle
   element: Entity
   hovered: number | undefined
@@ -66,13 +70,18 @@ export class UIResource implements TlbResource, UI {
       Difference.innerBorder(list.shape).foreach(p => {
         renderer.character('+', p, primary[0])
       })
-      list.entries.forEach((action, index) => {
-        renderer.text(action, list.shape.topLeft.add(new Vector(1, index + 1)), primary[0], list.hovered === index ? gray[1] : undefined)
+      list.entries.forEach((entry, index) => {
+        renderer.text(
+          entry.description,
+          list.shape.topLeft.add(new Vector(1, index + 1)),
+          primary[0],
+          list.hovered === index ? gray[1] : undefined
+        )
       })
     }
   }
 
-  public showSelectList(world: TlbWorld, entries: string[]) {
+  public showSelectList(world: TlbWorld, entries: ListElement[]) {
     const viewport: Viewport = world.getResource<ViewportResource>('viewport')
     const height = entries.length + 2
     let element
@@ -92,7 +101,7 @@ export class UIResource implements TlbResource, UI {
     }
   }
 
-  public selectListSelection(): string | undefined {
+  public selectListSelection(): ListElement | undefined {
     if (this.selectList !== undefined && this.selectList.selected !== undefined) {
       return this.selectList.entries[this.selectList.selected]
     }

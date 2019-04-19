@@ -7,7 +7,7 @@ import { WorldMap, WorldMapResource } from '../resources/world-map'
 import { FunctionalShape } from '../geometry/functional-shape'
 import { Shape } from '../geometry/shape'
 import { Entity } from '../ecs/entity'
-import { ParentComponent } from '../components/relation'
+import { TriggeredByComponent } from '../components/trigger'
 
 export class PlayerInteraction implements TlbSystem {
   public readonly components: ComponentName[] = ['player', 'position']
@@ -35,10 +35,10 @@ export class PlayerInteraction implements TlbSystem {
           trigger = entity
           return true
         }
-        const parent = world.getComponent<ParentComponent>(entity, 'parent')
-        if (parent !== undefined) {
-          if (world.getComponent(parent.entity, 'trigger') !== undefined) {
-            trigger = parent.entity
+        const triggeredBy = world.getComponent<TriggeredByComponent>(entity, 'triggered-by')
+        if (triggeredBy !== undefined) {
+          if (world.getComponent(triggeredBy.entity, 'trigger') !== undefined) {
+            trigger = triggeredBy.entity
             return true
           }
         }

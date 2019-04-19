@@ -3,8 +3,9 @@ import { TakeTurnComponent } from '../components/rounds'
 import { Queries } from '../renderer/queries'
 import { PositionComponent } from '../components/position'
 import { Entity } from '../ecs/entity'
-import { ScriptComponent, Action, DamageComponent } from '../components/action'
+import { ScriptComponent } from '../components/script'
 import { Vector } from '../spatial'
+import { EffectComponent } from '../components/effects'
 
 export class AiRoundControl implements TlbSystem {
   public readonly components: ComponentName[] = ['take-turn', 'ai', 'position']
@@ -43,14 +44,14 @@ export class AiRoundControl implements TlbSystem {
           console.log(entity, 'found path', path.path.map(p => p.key), targetPosition.position.key)
           takeTurn.movements -= path.cost
           world.editEntity(entity).withComponent<ScriptComponent>('script', {
-            actions: path.path.map(p => ({ type: 'move', position: p } as Action)),
+            path: path.path,
           })
         } else {
           console.log('did not find a path')
           this.endTurn(world, entity)
         }
       } else if (takeTurn.actions > 0) {
-        world.createEntity().withComponent<DamageComponent>('damage', {
+        world.createEntity().withComponent<EffectComponent>('effect', {
           source: entity,
           target: target,
           damage: 3,

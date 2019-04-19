@@ -8,10 +8,11 @@ import { FovComponent } from '../components/fov'
 import { CharacterStatsComponent, createCharacterStatsComponent } from '../components/character-stats'
 import { ViewportResource, Viewport } from '../resources/viewport'
 import { UIResource } from '../resources/ui'
+import { HasActionComponent } from '../components/action'
 
 export class Running extends AbstractState {
   public constructor() {
-    super(['fov', 'light', 'player-control', 'player-interaction', 'npc', 'trigger', 'free-mode-control', 'damage'])
+    super(['fov', 'light', 'player-control', 'player-interaction', 'npc', 'trigger', 'free-mode-control', 'effect'])
   }
 
   public start(world: TlbWorld): void {
@@ -34,6 +35,7 @@ export class Running extends AbstractState {
           .withComponent<PositionComponent>('position', { position })
           .withComponent<FeatureComponent>('feature', { type: 'player' })
           .withComponent<FovComponent>('fov', { fov: [] })
+          .withComponent<HasActionComponent>('has-action', { actions: ['move', 'hit', 'rush', 'shoot', 'endTurn'] })
           .withComponent<CharacterStatsComponent>('character-stats', createCharacterStatsComponent('player')).entity
         map.setCharacter(position, player)
 

@@ -23,7 +23,7 @@ export interface Feature {
   description: string
 }
 
-export const features = {
+export const features: { [key: string]: Feature } = {
   wall: {
     character: '#',
     diffuse: gray[3],

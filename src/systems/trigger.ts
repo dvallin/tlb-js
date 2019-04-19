@@ -1,9 +1,9 @@
 import { ComponentName, TlbSystem, TlbWorld } from '../tlb'
 import { AssetComponent } from '../components/asset'
-import { ChildrenComponent } from '../components/relation'
 import { FeatureComponent } from '../components/feature'
 import { GroundComponent } from '../components/ground'
 import { Entity } from '../ecs/entity'
+import { TriggersComponent } from '../components/trigger'
 
 export class Trigger implements TlbSystem {
   public readonly components: ComponentName[] = ['active', 'trigger']
@@ -21,8 +21,8 @@ export class Trigger implements TlbSystem {
   }
 
   public door(world: TlbWorld, entity: Entity): void {
-    const children = world.getComponent<ChildrenComponent>(entity, 'children')!
-    children.children.forEach(doorPart => this.swapGroundAndFeature(world, doorPart))
+    const triggers = world.getComponent<TriggersComponent>(entity, 'triggers')!
+    triggers.entities.forEach(doorPart => this.swapGroundAndFeature(world, doorPart))
   }
 
   public swapGroundAndFeature(world: TlbWorld, entity: Entity): void {

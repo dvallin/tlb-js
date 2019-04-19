@@ -21,15 +21,15 @@ export const characterStats = {
   player: {
     health: 10,
     energy: 4,
-    movement: 8,
-    actions: 5,
+    movement: 3,
+    actions: 3,
     defense: 4,
     aim: 10,
   },
   guard: {
     health: 7,
     energy: 4,
-    movement: 6,
+    movement: 3,
     actions: 3,
     defense: 3,
     aim: 10,
@@ -37,7 +37,7 @@ export const characterStats = {
   eliteGuard: {
     health: 10,
     energy: 4,
-    movement: 4,
+    movement: 2,
     actions: 5,
     defense: 5,
     aim: 10,
@@ -45,5 +45,5 @@ export const characterStats = {
 }
 
 export function speed(stats: CharacterStatsComponent): number {
-  return stats.current.movement / 42
+  return stats.current.movement / 20
 }

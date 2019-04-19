@@ -1,6 +1,6 @@
 import { ComponentName, TlbSystem, TlbWorld } from '../tlb'
 import { PositionComponent } from '../components/position'
-import { ScriptComponent } from '../components/action'
+import { ScriptComponent } from '../components/script'
 import { Entity } from '../ecs/entity'
 import { Vector } from '../spatial'
 import { CharacterStatsComponent, speed } from '../components/character-stats'
@@ -12,21 +12,13 @@ export class Script implements TlbSystem {
 
   public update(world: TlbWorld, entity: Entity): void {
     const script = world.getComponent<ScriptComponent>(entity, 'script')!
-    const currentAction = script.actions.pop()
-    if (currentAction === undefined) {
+    const nextLocation = script.path.pop()
+    if (nextLocation === undefined) {
       world.editEntity(entity).removeComponent('script')
     } else {
-      let done = true
-      switch (currentAction.type) {
-        case 'move':
-          done = this.move(world, entity, currentAction.position!)
-          break
-        default:
-          console.error(`${currentAction.type} is not a known action type`)
-          break
-      }
+      const done = this.move(world, entity, nextLocation)
       if (!done) {
-        script.actions.push(currentAction)
+        script.path.push(nextLocation)
       }
     }
   }
