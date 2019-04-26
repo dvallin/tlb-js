@@ -10,40 +10,33 @@ export function createCharacterStatsComponent(type: CharacterStatsType): Charact
 
 export interface CharacterStats {
   health: number
-  energy: number
   movement: number
   actions: number
   defense: number
-  aim: number
 }
 
 export const characterStats = {
   player: {
     health: 10,
-    energy: 4,
     movement: 3,
     actions: 3,
     defense: 4,
-    aim: 10,
   },
   guard: {
     health: 7,
-    energy: 4,
     movement: 3,
     actions: 3,
     defense: 3,
-    aim: 10,
   },
   eliteGuard: {
     health: 10,
-    energy: 4,
     movement: 2,
     actions: 5,
     defense: 5,
-    aim: 10,
   },
 }
+export const characterStatsTypeguard: { [key: string]: CharacterStats } = characterStats
 
 export function speed(stats: CharacterStatsComponent): number {
-  return stats.current.movement / 20
+  return stats.current.movement / 13
 }

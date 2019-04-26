@@ -1,5 +1,5 @@
 import { Entity } from '../ecs/entity'
-import { Vector } from '../spatial'
+import { effect } from './effects'
 
 export interface Cost {
   actions: number
@@ -8,10 +8,13 @@ export interface Cost {
 }
 
 export interface Movement {
+  kind: 'movement'
   range: number
 }
 
 export interface Attack {
+  kind: 'attack'
+  effects: effect[]
   damage: number
   range: number
 }
@@ -23,11 +26,8 @@ export interface HasActionComponent {
 export interface SelectedActionComponent {
   action?: Action
   target?: Entity
-  position?: Vector
-  handledMovement: boolean
-  handledAttack: boolean
-  skippedMovement: boolean
-  skippedAttack: boolean
+  skippedActions: number
+  currentSubAction: number
 }
 
 export type ActionType = keyof typeof actions
@@ -38,11 +38,18 @@ export interface FeatureComponent {
 export interface Action {
   cost: Cost
   description: string
-  movement?: Movement
-  attack?: Attack
+  subActions: (Movement | Attack)[]
 }
 
-export const actions: { [key: string]: Action } = {
+function movement(range: number): Movement {
+  return { kind: 'movement', range }
+}
+
+function attack(range: number, damage: number, effects: effect[] = ['damage']): Attack {
+  return { kind: 'attack', damage, range, effects }
+}
+
+export const actions = {
   endTurn: {
     description: 'end turn',
     cost: {
@@ -50,6 +57,7 @@ export const actions: { [key: string]: Action } = {
       movement: 0,
       costsAll: true,
     },
+    subActions: [],
   },
   move: {
     description: 'move',
@@ -57,9 +65,7 @@ export const actions: { [key: string]: Action } = {
       actions: 0,
       movement: 2,
     },
-    movement: {
-      range: 8,
-    },
+    subActions: [movement(5)],
   },
   hit: {
     description: 'hit',
@@ -67,10 +73,7 @@ export const actions: { [key: string]: Action } = {
       actions: 2,
       movement: 0,
     },
-    attack: {
-      damage: 6,
-      range: 1,
-    },
+    subActions: [attack(1, 4)],
   },
   rush: {
     description: 'rush',
@@ -79,9 +82,7 @@ export const actions: { [key: string]: Action } = {
       movement: 3,
       costsAll: true,
     },
-    movement: {
-      range: 12,
-    },
+    subActions: [movement(8)],
   },
   shoot: {
     description: 'shoot',
@@ -89,9 +90,32 @@ export const actions: { [key: string]: Action } = {
       actions: 3,
       movement: 0,
     },
-    attack: {
-      damage: 4,
-      range: 5,
+    subActions: [attack(5, 4)],
+  },
+  overcharge: {
+    description: 'overcharge',
+    cost: {
+      actions: 3,
+      movement: 0,
     },
+    attack: {},
+    subActions: [attack(3, 5)],
+  },
+  execute: {
+    description: 'execute',
+    cost: {
+      actions: 3,
+      movement: 0,
+    },
+    subActions: [attack(1, 13, ['damage', 'confuse'])],
+  },
+  hitAndRun: {
+    description: 'hit and run',
+    cost: {
+      actions: 3,
+      movement: 3,
+    },
+    subActions: [attack(1, 7, ['damage']), movement(5)],
   },
 }
+export const actionsTypeguard: { [key: string]: Action } = actions

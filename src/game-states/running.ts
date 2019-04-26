@@ -9,6 +9,7 @@ import { CharacterStatsComponent, createCharacterStatsComponent } from '../compo
 import { ViewportResource, Viewport } from '../resources/viewport'
 import { UIResource } from '../resources/ui'
 import { HasActionComponent } from '../components/action'
+import { InventoryComponent, ItemComponent, EquipmentComponent } from '../components/items'
 
 export class Running extends AbstractState {
   public constructor() {
@@ -28,6 +29,8 @@ export class Running extends AbstractState {
       const map: WorldMap = world.getResource<WorldMapResource>('map')
       spawns.foreach(spawn => {
         const position = world.getComponent<PositionComponent>(spawn, 'position')!.position
+        const nailgun = world.createEntity().withComponent<ItemComponent>('item', { type: 'nailGun' }).entity
+        const rifle = world.createEntity().withComponent<ItemComponent>('item', { type: 'rifle' }).entity
         const player = world
           .createEntity()
           .withComponent<{}>('player', {})
@@ -36,7 +39,9 @@ export class Running extends AbstractState {
           .withComponent<FeatureComponent>('feature', { type: 'player' })
           .withComponent<FovComponent>('fov', { fov: [] })
           .withComponent<HasActionComponent>('has-action', { actions: ['move', 'hit', 'rush', 'shoot', 'endTurn'] })
-          .withComponent<CharacterStatsComponent>('character-stats', createCharacterStatsComponent('player')).entity
+          .withComponent<CharacterStatsComponent>('character-stats', createCharacterStatsComponent('player'))
+          .withComponent<InventoryComponent>('inventory', { content: [nailgun, rifle] })
+          .withComponent<EquipmentComponent>('equipment', { equiped: [nailgun, rifle] }).entity
         map.setCharacter(position, player)
 
         const viewport: Viewport = world.getResource<ViewportResource>('viewport')

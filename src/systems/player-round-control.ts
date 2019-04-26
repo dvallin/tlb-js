@@ -8,12 +8,13 @@ import { primary } from '../renderer/palettes'
 import { InputResource, Input } from '../resources/input'
 import { Viewport, ViewportResource } from '../resources/viewport'
 import { Entity } from '../ecs/entity'
-import { SelectedActionComponent, HasActionComponent, Action, Movement, Attack, actions } from '../components/action'
+import { SelectedActionComponent, Action, Movement, Attack } from '../components/action'
 import { UIResource, UI } from '../resources/ui'
 import { Path } from '../renderer/astar'
 import { KEYS } from 'rot-js'
 import { EffectComponent } from '../components/effects'
 import { ScriptComponent } from '../components/script'
+import { calculateAvailableActions } from '../component-reducers/available-actions'
 
 export class PlayerRoundControl implements TlbSystem {
   public readonly components: ComponentName[] = ['take-turn', 'player', 'position']
@@ -28,7 +29,7 @@ export class PlayerRoundControl implements TlbSystem {
     if (!isInAnimation) {
       const turnIsOver = takeTurn.actions + takeTurn.movements === 0
       if (!turnIsOver) {
-        const availableActions = this.calculateAvailableActions(world, entity, takeTurn)
+        const availableActions = calculateAvailableActions(world, entity, takeTurn)
         this.doTurn(world, entity, takeTurn, availableActions)
       } else {
         this.endTurn(world, entity)
@@ -38,8 +39,6 @@ export class PlayerRoundControl implements TlbSystem {
 
   public doTurn(world: TlbWorld, entity: Entity, takeTurn: TakeTurnComponent, availableActions: Action[]) {
     const ui = world.getResource<UIResource>('ui')
-    const map: WorldMap = world.getResource<WorldMapResource>('map')
-    const viewport: Viewport = world.getResource<ViewportResource>('viewport')
     const input: Input = world.getResource<InputResource>('input')
 
     const selectedAction = world.getComponent<SelectedActionComponent>(entity, 'selected-action')
@@ -49,41 +48,44 @@ export class PlayerRoundControl implements TlbSystem {
       this.selectAction(world, ui, selectedAction)
     } else {
       const skip = input.keyPressed.has(KEYS.VK_ESCAPE)
-      if (!selectedAction.handledMovement && !selectedAction.skippedMovement) {
+      const subActionCount = selectedAction.action.subActions.length
+      const allDone = selectedAction.currentSubAction >= subActionCount
+      if (!allDone) {
         if (skip) {
-          selectedAction.skippedMovement = true
+          selectedAction.currentSubAction += 1
+          selectedAction.skippedActions += 1
         } else {
-          if (selectedAction.action.movement !== undefined) {
-            selectedAction.handledMovement = this.move(world, input, viewport, map, entity, selectedAction.action.movement)
-          } else {
-            selectedAction.handledMovement = true
+          const currentSubAction = selectedAction.action.subActions[selectedAction.currentSubAction]
+          const done = this.handleSubAction(world, entity, currentSubAction)
+          if (done) {
+            selectedAction.currentSubAction += 1
           }
         }
-      }
-      if (!selectedAction.handledAttack && !selectedAction.skippedAttack) {
-        if (skip) {
-          selectedAction.skippedAttack = true
-        } else {
-          if (selectedAction.action.attack !== undefined) {
-            selectedAction.handledAttack = this.attack(world, input, viewport, map, entity, selectedAction.action.attack)
+      } else {
+        const noActionsOrAtLeastOneActionTaken = subActionCount == 0 || subActionCount - selectedAction.skippedActions > 0
+        if (noActionsOrAtLeastOneActionTaken) {
+          if (selectedAction.action.cost.costsAll) {
+            takeTurn.movements = 0
+            takeTurn.actions = 0
           } else {
-            selectedAction.handledAttack = true
+            takeTurn.movements -= selectedAction.action.cost.movement
+            takeTurn.actions -= selectedAction.action.cost.actions
           }
         }
+        this.clearAction(world, entity)
       }
+    }
+  }
 
-      if (selectedAction.skippedMovement && selectedAction.skippedAttack) {
-        this.clearAction(world, entity)
-      } else if (selectedAction.handledMovement && selectedAction.handledAttack) {
-        if (selectedAction.action.cost.costsAll) {
-          takeTurn.movements = 0
-          takeTurn.actions = 0
-        } else {
-          takeTurn.movements -= selectedAction.action.cost.movement
-          takeTurn.actions -= selectedAction.action.cost.actions
-        }
-        this.clearAction(world, entity)
-      }
+  public handleSubAction(world: TlbWorld, entity: Entity, subAction: Movement | Attack): boolean {
+    const viewport: Viewport = world.getResource<ViewportResource>('viewport')
+    const input: Input = world.getResource<InputResource>('input')
+    const map: WorldMap = world.getResource<WorldMapResource>('map')
+    switch (subAction.kind) {
+      case 'attack':
+        return this.attack(world, input, viewport, map, entity, subAction)
+      case 'movement':
+        return this.move(world, input, viewport, map, entity, subAction)
     }
   }
 
@@ -97,20 +99,13 @@ export class PlayerRoundControl implements TlbSystem {
   public showActionDialog(world: TlbWorld, ui: UI, entity: Entity, availableActions: Action[]) {
     ui.showSelectList(world, availableActions)
     world.editEntity(entity).withComponent<SelectedActionComponent>('selected-action', {
-      handledAttack: false,
-      handledMovement: false,
-      skippedAttack: false,
-      skippedMovement: false,
+      currentSubAction: 0,
+      skippedActions: 0,
     })
   }
 
   public clearAction(world: TlbWorld, entity: Entity): void {
     world.editEntity(entity).removeComponent('selected-action')
-  }
-
-  public calculateAvailableActions(world: TlbWorld, entity: Entity, takeTurn: TakeTurnComponent): Action[] {
-    const hasActions = world.getComponent<HasActionComponent>(entity, 'has-action')!
-    return hasActions.actions.map(a => actions[a]).filter(a => a.cost.actions <= takeTurn.actions && a.cost.movement <= takeTurn.movements)
   }
 
   public selectAction(world: TlbWorld, ui: UI, selectedAction: SelectedActionComponent) {
@@ -140,11 +135,14 @@ export class PlayerRoundControl implements TlbSystem {
         const target = map.getCharacter(p)
         const hasEnemy = target !== undefined && target !== entity
         if (hasEnemy) {
-          world.createEntity().withComponent<EffectComponent>('effect', {
-            source: entity,
-            target: target!,
-            damage: attack.damage,
-          })
+          attack.effects.forEach(effect =>
+            world.createEntity().withComponent<EffectComponent>('effect', {
+              source: entity,
+              target: target!,
+              value: attack.damage,
+              effect,
+            })
+          )
         }
         return hasEnemy
       })

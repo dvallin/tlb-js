@@ -23,7 +23,7 @@ export interface Feature {
   description: string
 }
 
-export const features: { [key: string]: Feature } = {
+export const features = {
   wall: {
     character: '#',
     diffuse: gray[3],
@@ -83,6 +83,7 @@ export const features: { [key: string]: Feature } = {
   guard: enemy('g', 'a guard'),
   eliteGuard: eliteEnemy('g', 'a very strong guard'),
 }
+export const featureTypeguard: { [key: string]: Feature } = features
 
 function enemy(character: string, description: string): Feature {
   return {
