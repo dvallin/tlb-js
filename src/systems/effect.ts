@@ -28,25 +28,40 @@ export class Effect implements TlbSystem {
   }
 
   public applyDamage(world: TlbWorld, effect: EffectComponent) {
-    const stats = world.getComponent<CharacterStatsComponent>(effect.target, 'character-stats')!
-    console.log(`${effect.source} hits ${effect.target} with ${effect.value} damage`)
-    const effectiveDamage = Math.max(0, effect.value! - stats.current.defense)
-    stats.current.health -= effectiveDamage
-    console.log(`${effect.target} suffers ${effectiveDamage} damage, his health is down to ${stats.current.health}`)
-    if (stats.current.health <= 0) {
-      this.kill(world, effect.target)
+    const stats = world.getComponent<CharacterStatsComponent>(effect.target, 'character-stats')
+
+    if (stats !== undefined) {
+      console.log(`${effect.source} hits ${effect.target}'s ${effect.bodyPart} with ${effect.value} damage`)
+
+      const bodyPart = stats.current.bodyParts[effect.bodyPart!]
+      bodyPart.health -= effect.value!
+
+      if (bodyPart.health <= 0) {
+        const isLethal = bodyPart.kind === 'torso' || bodyPart.kind === 'head'
+        if (isLethal) {
+          console.log(`${effect.target} died`)
+          this.kill(world, effect.target)
+        }
+      }
     }
   }
 
   public applyHeal(world: TlbWorld, effect: EffectComponent) {
-    const stats = world.getComponent<CharacterStatsComponent>(effect.target, 'character-stats')!
-    stats.current.health = Math.max(stats.current.health + effect.value!, characterStats[stats.type].health)
-    console.log(`${effect.target} heals ${effect.value} hp, his health is up to ${stats.current.health}`)
+    const stats = world.getComponent<CharacterStatsComponent>(effect.target, 'character-stats')
+
+    if (stats !== undefined) {
+      const bodyPart = stats.current.bodyParts[effect.bodyPart!]
+      bodyPart.health = Math.max(bodyPart.health + effect.value!, characterStats[stats.type].bodyParts[effect.bodyPart!].health)
+
+      console.log(`${effect.target} heals ${effect.value}'s ${effect.bodyPart} to ${bodyPart.health}`)
+    }
   }
 
   public applyStatusEffect(world: TlbWorld, effect: EffectComponent, status: status) {
-    const statusEffects = world.getComponent<StatusEffectComponent>(effect.target, 'status-effect')!
-    statusEffects.activeEffects.push({ status, duration: effect.duration || 1 })
+    const statusEffects = world.getComponent<StatusEffectComponent>(effect.target, 'status-effect')
+    if (statusEffects !== undefined) {
+      statusEffects.activeEffects.push({ status, duration: effect.duration || 1 })
+    }
   }
 
   public kill(world: TlbWorld, entity: Entity) {

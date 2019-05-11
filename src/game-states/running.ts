@@ -38,7 +38,7 @@ export class Running extends AbstractState {
           .withComponent<PositionComponent>('position', { position })
           .withComponent<FeatureComponent>('feature', { type: 'player' })
           .withComponent<FovComponent>('fov', { fov: [] })
-          .withComponent<HasActionComponent>('has-action', { actions: ['move', 'hit', 'rush', 'shoot', 'endTurn'] })
+          .withComponent<HasActionComponent>('has-action', { actions: ['move', 'hit', 'rush', 'endTurn'] })
           .withComponent<CharacterStatsComponent>('character-stats', createCharacterStatsComponent('player'))
           .withComponent<InventoryComponent>('inventory', { content: [nailgun, rifle] })
           .withComponent<EquipmentComponent>('equipment', { equiped: [nailgun, rifle] }).entity

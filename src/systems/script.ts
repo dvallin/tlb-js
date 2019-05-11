@@ -34,13 +34,13 @@ export class Script implements TlbSystem {
 
     const movement = delta.mult(speed(stats))
     let newPosition = current.position.add(movement)
+    const map = world.getResource<WorldMapResource>('map')
     const finishLine = new Line(target.center, delta.perpendicular())
     let reached = false
     if (finishLine.side(current.position) !== finishLine.side(newPosition)) {
       newPosition = target.center
       reached = true
     }
-    const map = world.getResource<WorldMapResource>('map')
     map.removeCharacter(current.position.floor())
     map.setCharacter(newPosition.floor(), entity)
     current.position = newPosition

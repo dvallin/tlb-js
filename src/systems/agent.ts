@@ -18,8 +18,10 @@ import { Shape } from '../geometry/shape'
 import { LightComponent } from '../components/light'
 import { Color } from '../renderer/color'
 import { FovComponent } from '../components/fov'
-import { createCharacterStatsComponent, CharacterStatsType, CharacterStatsComponent } from '../components/character-stats'
+import { createCharacterStatsComponent, CharacterStatsComponent } from '../components/character-stats'
 import { AiComponent } from '../components/ai'
+import { ItemComponent, InventoryComponent, EquipmentComponent } from '../components/items'
+import { HasActionComponent } from '../components/action'
 
 export interface PositionedAgent {
   position: PositionComponent
@@ -327,16 +329,25 @@ export class Agent implements TlbSystem {
   }
 
   public spawnEnemy(world: TlbWorld, map: WorldMap, position: Vector): void {
-    const type = this.random.pick<CharacterStatsType>(['guard', 'eliteGuard'])
+    const elite = this.random.decision(0.2)
+
+    const characterType = elite ? 'eliteGuard' : 'guard'
+    const weaponType = elite ? 'nailGun' : 'rifle'
+
+    const weapon = world.createEntity().withComponent<ItemComponent>('item', { type: weaponType }).entity
+
     const centeredPosition = new Vector(position.x, position.y).center
     const entity = world
       .createEntity()
       .withComponent('npc', {})
-      .withComponent<FeatureComponent>('feature', { type })
+      .withComponent<FeatureComponent>('feature', { type: characterType })
       .withComponent<PositionComponent>('position', { position: centeredPosition })
       .withComponent<FovComponent>('fov', { fov: [] })
       .withComponent<AiComponent>('ai', { type: 'rushing', state: 'idle' })
-      .withComponent<CharacterStatsComponent>('character-stats', createCharacterStatsComponent(type)).entity
+      .withComponent<HasActionComponent>('has-action', { actions: ['move', 'hit', 'rush', 'endTurn'] })
+      .withComponent<CharacterStatsComponent>('character-stats', createCharacterStatsComponent(characterType))
+      .withComponent<InventoryComponent>('inventory', { content: [weapon] })
+      .withComponent<EquipmentComponent>('equipment', { equiped: [weapon] }).entity
     map.setCharacter(position, entity)
   }
 

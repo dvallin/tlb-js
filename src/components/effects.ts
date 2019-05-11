@@ -16,6 +16,7 @@ export interface EffectComponent {
   effect: effect
   value?: number
   duration?: number
+  bodyPart?: string
   source: Entity
   target: Entity
 }

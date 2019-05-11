@@ -9,6 +9,7 @@ import { EffectComponent } from '../components/effects'
 import { calculateAvailableActions } from '../component-reducers/available-actions'
 import { Action, SelectedActionComponent, Movement, Attack } from '../components/action'
 import { Random } from '../random'
+import { CharacterStatsComponent } from '../components/character-stats'
 
 export class AiRoundControl implements TlbSystem {
   public readonly components: ComponentName[] = ['take-turn', 'ai', 'position']
@@ -75,14 +76,17 @@ export class AiRoundControl implements TlbSystem {
       world.editEntity(entity).removeComponent('selected-action')
     } else {
       const currentAction = selectedAction.action!.subActions[selectedAction.currentSubAction]
+      console.log(selectedAction.action!.description)
       switch (currentAction.kind) {
         case 'movement':
           this.move(world, entity, selectedAction.target!, currentAction)
           break
         case 'attack':
-          this.attack(world, entity, selectedAction.target!, currentAction)
+          const bodyPart = this.chooseBodyPart(world, selectedAction.target!)
+          this.attack(world, entity, selectedAction.target!, bodyPart!, currentAction)
           break
       }
+      selectedAction.currentSubAction++
     }
   }
 
@@ -100,13 +104,14 @@ export class AiRoundControl implements TlbSystem {
     }
   }
 
-  public attack(world: TlbWorld, entity: Entity, target: Entity, attack: Attack) {
+  public attack(world: TlbWorld, entity: Entity, target: Entity, bodyPart: string, attack: Attack) {
     attack.effects.forEach(effect =>
       world.createEntity().withComponent<EffectComponent>('effect', {
         source: entity,
         target: target!,
         value: attack.damage,
         effect,
+        bodyPart,
       })
     )
   }
@@ -123,6 +128,16 @@ export class AiRoundControl implements TlbSystem {
       }
     })
     return nearestPlayer
+  }
+
+  public chooseBodyPart(world: TlbWorld, target: Entity): string {
+    const stats = world.getComponent<CharacterStatsComponent>(target, 'character-stats')!
+
+    const aliveBodyParts = Object.keys(stats.current.bodyParts).filter(key => {
+      const bodyPart = stats.current.bodyParts[key]
+      return bodyPart.health > 0
+    })
+    return this.random.pick(aliveBodyParts)
   }
 
   public endTurn(world: TlbWorld, entity: Entity): void {

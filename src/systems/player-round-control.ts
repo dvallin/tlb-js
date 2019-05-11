@@ -141,6 +141,7 @@ export class PlayerRoundControl implements TlbSystem {
               target: target!,
               value: attack.damage,
               effect,
+              bodyPart: 'head',
             })
           )
         }

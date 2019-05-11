@@ -73,7 +73,7 @@ export const actions = {
       actions: 2,
       movement: 0,
     },
-    subActions: [attack(1, 4)],
+    subActions: [attack(1, 1)],
   },
   rush: {
     description: 'rush',
@@ -90,7 +90,7 @@ export const actions = {
       actions: 3,
       movement: 0,
     },
-    subActions: [attack(5, 4)],
+    subActions: [attack(5, 2)],
   },
   overcharge: {
     description: 'overcharge',
@@ -99,7 +99,7 @@ export const actions = {
       movement: 0,
     },
     attack: {},
-    subActions: [attack(3, 5)],
+    subActions: [attack(3, 3)],
   },
   execute: {
     description: 'execute',
@@ -107,7 +107,7 @@ export const actions = {
       actions: 3,
       movement: 0,
     },
-    subActions: [attack(1, 13, ['damage', 'confuse'])],
+    subActions: [attack(1, 5, ['damage', 'confuse'])],
   },
   hitAndRun: {
     description: 'hit and run',
@@ -115,7 +115,7 @@ export const actions = {
       actions: 3,
       movement: 3,
     },
-    subActions: [attack(1, 7, ['damage']), movement(5)],
+    subActions: [attack(1, 2, ['damage']), movement(5)],
   },
 }
 export const actionsTypeguard: { [key: string]: Action } = actions

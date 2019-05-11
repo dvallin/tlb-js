@@ -82,7 +82,7 @@ export class Queries {
         }
         return current.minus(neighbour).l1()
       },
-      v => FunctionalShape.lN(v, 1, false),
+      v => FunctionalShape.l1(v, 1, false),
       v => targetFloor.minus(v).l1(),
       maximumCost,
       bestEffort
