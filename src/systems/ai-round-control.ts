@@ -7,9 +7,10 @@ import { ScriptComponent } from '../components/script'
 import { Vector } from '../spatial'
 import { EffectComponent } from '../components/effects'
 import { calculateAvailableActions } from '../component-reducers/available-actions'
-import { Action, SelectedActionComponent, Movement, Attack } from '../components/action'
+import { SelectedActionComponent, Movement, Attack, SelectedAction } from '../components/action'
 import { Random } from '../random'
 import { CharacterStatsComponent } from '../components/character-stats'
+import { ActionGroup } from '../ui/action-selector'
 
 export class AiRoundControl implements TlbSystem {
   public readonly components: ComponentName[] = ['take-turn', 'ai', 'position']
@@ -37,26 +38,46 @@ export class AiRoundControl implements TlbSystem {
     }
   }
 
-  public selectAction(world: TlbWorld, entity: Entity, availableActions: Action[]) {
+  public selectAction(world: TlbWorld, entity: Entity, actionGroups: ActionGroup[]) {
     const position = world.getComponent<PositionComponent>(entity, 'position')!
     let target = this.findTarget(world, position.position)
-    const movementActions = availableActions.filter(a => a.subActions.find(s => s.kind === 'movement'))
-    const fightActions = availableActions.filter(a => a.subActions.find(s => s.kind === 'attack'))
+    const movementActions: SelectedAction[] = []
+    const fightActions: SelectedAction[] = []
+    const allActions: SelectedAction[] = []
+    for (const group of actionGroups) {
+      group.actions
+        .filter(action => action.available)
+        .map(availableAction => {
+          const selectedAction = { entity: group.entity, action: availableAction.action }
+          const hasMovement = availableAction.action.subActions.find(s => s.kind === 'movement') !== undefined
+          if (hasMovement) {
+            movementActions.push(selectedAction)
+          }
+          const hasAttack = availableAction.action.subActions.find(s => s.kind === 'attack') !== undefined
+          if (hasAttack) {
+            fightActions.push(selectedAction)
+          }
+          allActions.push(selectedAction)
+        })
+    }
     if (target !== undefined) {
       const targetPosition = world.getComponent<PositionComponent>(target, 'position')!
       const dist = targetPosition.position.minus(position.position)
-      let action
+      let selection: SelectedAction
       const canGetCloser = dist.lN() > 1 && movementActions.length > 0
       if (canGetCloser) {
-        action = this.random.pick(movementActions)
+        selection = this.random.pick(movementActions)
       } else if (fightActions.length > 0) {
-        action = this.random.pick(fightActions)
+        selection = this.random.pick(fightActions)
       } else {
-        action = this.random.pick(availableActions)
+        selection = this.random.pick(allActions)
       }
-      world
-        .editEntity(entity)
-        .withComponent<SelectedActionComponent>('selected-action', { skippedActions: 0, target, currentSubAction: 0, action })
+      world.editEntity(entity).withComponent<SelectedActionComponent>('selected-action', {
+        skippedActions: 0,
+        target,
+        currentSubAction: 0,
+        selection,
+      })
     } else {
       console.log('did not find player')
       this.endTurn(world, entity)
@@ -64,19 +85,20 @@ export class AiRoundControl implements TlbSystem {
   }
 
   public takeAction(world: TlbWorld, entity: Entity, takeTurn: TakeTurnComponent, selectedAction: SelectedActionComponent) {
-    const subActions = selectedAction.action!.subActions.length
+    const action = selectedAction.selection!.action
+    const subActions = action.subActions.length
     if (selectedAction.currentSubAction >= subActions) {
-      if (selectedAction.action!.cost.costsAll) {
+      if (action.cost.costsAll) {
         takeTurn.movements = 0
         takeTurn.actions = 0
       } else {
-        takeTurn.movements -= selectedAction.action!.cost.movement
-        takeTurn.actions -= selectedAction.action!.cost.actions
+        takeTurn.movements -= action.cost.movement
+        takeTurn.actions -= action.cost.actions
       }
       world.editEntity(entity).removeComponent('selected-action')
     } else {
-      const currentAction = selectedAction.action!.subActions[selectedAction.currentSubAction]
-      console.log(selectedAction.action!.description)
+      const currentAction = action.subActions[selectedAction.currentSubAction]
+      console.log(action.name)
       switch (currentAction.kind) {
         case 'movement':
           this.move(world, entity, selectedAction.target!, currentAction)

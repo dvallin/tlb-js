@@ -1,32 +1,20 @@
 import { ResourceName, TlbResource, TlbWorld } from '../tlb'
 import { Vector } from '../spatial'
-import { Entity } from '../ecs/entity'
-import { Difference } from '../geometry/difference'
 import { Rectangle } from '../geometry/rectangle'
 import { Renderer } from '../renderer/renderer'
-import { primary, gray } from '../renderer/palettes'
 import { InputResource, Input } from './input'
 import { ViewportResource, Viewport } from './viewport'
-
-export interface ListElement {
-  description: string
-}
+import { KEYS } from 'rot-js'
+import { SelectedAction } from '../components/action'
+import { ActionSelector, ActionGroup } from '../ui/action-selector'
 
 export interface UI {
   hasElement(position: Vector): boolean
   render(renderer: Renderer): void
 
-  showSelectList(world: TlbWorld, entries: ListElement[]): void
-  selectListSelection(): ListElement | undefined
-  hideSelectList(world: TlbWorld): void
-}
-
-export interface SelectList {
-  entries: ListElement[]
-  shape: Rectangle
-  element: Entity
-  hovered: number | undefined
-  selected: number | undefined
+  showActionSelector(world: TlbWorld, title: string, groups: ActionGroup[]): void
+  selectedAction(): SelectedAction | undefined
+  hideActionSelector(world: TlbWorld): void
 }
 
 export class UIResource implements TlbResource, UI {
@@ -34,7 +22,7 @@ export class UIResource implements TlbResource, UI {
 
   public visibleElements: Rectangle[] = []
 
-  private selectList: SelectList | undefined = undefined
+  private actionSelector: ActionSelector | undefined = undefined
 
   public update(world: TlbWorld): void {
     const input: Input = world.getResource<InputResource>('input')
@@ -42,73 +30,67 @@ export class UIResource implements TlbResource, UI {
     if (input.position) {
       position = new Vector(input.position.x, input.position.y)
     }
-    this.updateSelectList(position, input.mousePressed)
+    const pressed = input.mousePressed || input.keyPressed.has(KEYS.VK_RETURN)
+    const up = input.keyPressed.has(KEYS.VK_K)
+    const down = input.keyPressed.has(KEYS.VK_J)
+    this.updateActionSelector(position, pressed, up, down)
   }
 
-  public updateSelectList(position: Vector | undefined, pressed: boolean) {
-    if (this.selectList !== undefined) {
-      this.selectList.hovered = undefined
-      this.selectList.selected = undefined
-      const content = this.selectList.shape.shrink()
-      if (position && content.containsVector(position)) {
-        const delta = position.minus(content.topLeft)
-        this.selectList.hovered = delta.y
-        if (pressed) {
-          this.selectList.selected = delta.y
-        }
-      }
+  public updateActionSelector(position: Vector | undefined, pressed: boolean, up: boolean, down: boolean) {
+    if (this.actionSelector !== undefined) {
+      this.actionSelector.update(position, pressed, up, down)
     }
   }
 
   public render(renderer: Renderer): void {
-    this.renderInfoPopup(renderer)
-  }
-
-  public renderInfoPopup(renderer: Renderer) {
-    if (this.selectList !== undefined) {
-      const list = this.selectList
-      Difference.innerBorder(list.shape).foreach(p => {
-        renderer.character('+', p, primary[0])
-      })
-      list.entries.forEach((entry, index) => {
-        renderer.text(
-          entry.description,
-          list.shape.topLeft.add(new Vector(1, index + 1)),
-          primary[0],
-          list.hovered === index ? gray[1] : undefined
-        )
-      })
+    if (this.actionSelector !== undefined) {
+      this.actionSelector.render(renderer)
     }
   }
 
-  public showSelectList(world: TlbWorld, entries: ListElement[]) {
+  public showActionSelector(world: TlbWorld, title: string, groups: ActionGroup[]) {
     const viewport: Viewport = world.getResource<ViewportResource>('viewport')
-    const height = entries.length + 2
+
     let element
-    if (this.selectList !== undefined) {
-      element = this.selectList.element
+    if (this.actionSelector !== undefined) {
+      element = this.actionSelector.element
     } else {
       element = world.createEntity().entity
     }
-    const shape = new Rectangle(30, viewport.boundaries.y - height, 20, height)
-    this.selectList = { entries, shape, element, hovered: undefined, selected: undefined }
+
+    const rows = groups.map(g => g.actions.length + 1).reduce((a, b) => a + b)
+    const height = rows + 2
+
+    const actionsWindow = new Rectangle(5, viewport.boundaries.y - height, 20, height)
+    const descriptionWindow = new Rectangle(actionsWindow.right, viewport.boundaries.y - height, 32, height)
+
+    this.actionSelector = new ActionSelector({
+      groups,
+      rows,
+      actionsWindow,
+      descriptionWindow,
+      title,
+      element,
+      hovered: 0,
+      selected: undefined,
+    })
   }
 
-  public hideSelectList(world: TlbWorld) {
-    if (this.selectList !== undefined) {
-      world.deleteEntity(this.selectList.element)
-      this.selectList = undefined
+  public hideActionSelector(world: TlbWorld) {
+    if (this.actionSelector !== undefined) {
+      world.deleteEntity(this.actionSelector.element)
+      this.actionSelector = undefined
     }
   }
 
-  public selectListSelection(): ListElement | undefined {
-    if (this.selectList !== undefined && this.selectList.selected !== undefined) {
-      return this.selectList.entries[this.selectList.selected]
+  public selectedAction(): SelectedAction | undefined {
+    if (this.actionSelector !== undefined) {
+      return this.actionSelector.selectedAction
     }
     return undefined
   }
 
   public hasElement(position: Vector): boolean {
-    return this.selectList !== undefined && this.selectList.shape!.containsVector(position)
+    return this.actionSelector !== undefined && this.actionSelector.hasElement(position)
   }
 }

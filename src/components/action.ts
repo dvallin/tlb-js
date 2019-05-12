@@ -19,12 +19,17 @@ export interface Attack {
   range: number
 }
 
+export interface SelectedAction {
+  entity: number
+  action: Action
+}
+
 export interface HasActionComponent {
   actions: ActionType[]
 }
 
 export interface SelectedActionComponent {
-  action?: Action
+  selection?: SelectedAction
   target?: Entity
   skippedActions: number
   currentSubAction: number
@@ -37,7 +42,7 @@ export interface FeatureComponent {
 
 export interface Action {
   cost: Cost
-  description: string
+  name: string
   subActions: (Movement | Attack)[]
 }
 
@@ -51,7 +56,7 @@ function attack(range: number, damage: number, effects: effect[] = ['damage']): 
 
 export const actions = {
   endTurn: {
-    description: 'end turn',
+    name: 'end turn',
     cost: {
       actions: 0,
       movement: 0,
@@ -60,7 +65,7 @@ export const actions = {
     subActions: [],
   },
   move: {
-    description: 'move',
+    name: 'move',
     cost: {
       actions: 0,
       movement: 2,
@@ -68,7 +73,7 @@ export const actions = {
     subActions: [movement(5)],
   },
   hit: {
-    description: 'hit',
+    name: 'hit',
     cost: {
       actions: 2,
       movement: 0,
@@ -76,7 +81,7 @@ export const actions = {
     subActions: [attack(1, 1)],
   },
   rush: {
-    description: 'rush',
+    name: 'rush',
     cost: {
       actions: 2,
       movement: 3,
@@ -85,7 +90,7 @@ export const actions = {
     subActions: [movement(8)],
   },
   shoot: {
-    description: 'shoot',
+    name: 'shoot',
     cost: {
       actions: 3,
       movement: 0,
@@ -93,7 +98,7 @@ export const actions = {
     subActions: [attack(5, 2)],
   },
   overcharge: {
-    description: 'overcharge',
+    name: 'overcharge',
     cost: {
       actions: 3,
       movement: 0,
@@ -102,7 +107,7 @@ export const actions = {
     subActions: [attack(3, 3)],
   },
   execute: {
-    description: 'execute',
+    name: 'execute',
     cost: {
       actions: 3,
       movement: 0,
@@ -110,7 +115,7 @@ export const actions = {
     subActions: [attack(1, 5, ['damage', 'confuse'])],
   },
   hitAndRun: {
-    description: 'hit and run',
+    name: 'hit and run',
     cost: {
       actions: 3,
       movement: 3,

@@ -8,13 +8,14 @@ import { primary } from '../renderer/palettes'
 import { InputResource, Input } from '../resources/input'
 import { Viewport, ViewportResource } from '../resources/viewport'
 import { Entity } from '../ecs/entity'
-import { SelectedActionComponent, Action, Movement, Attack } from '../components/action'
+import { SelectedActionComponent, Movement, Attack } from '../components/action'
 import { UIResource, UI } from '../resources/ui'
 import { Path } from '../renderer/astar'
 import { KEYS } from 'rot-js'
 import { EffectComponent } from '../components/effects'
 import { ScriptComponent } from '../components/script'
 import { calculateAvailableActions } from '../component-reducers/available-actions'
+import { ActionGroup } from '../ui/action-selector'
 
 export class PlayerRoundControl implements TlbSystem {
   public readonly components: ComponentName[] = ['take-turn', 'player', 'position']
@@ -37,39 +38,41 @@ export class PlayerRoundControl implements TlbSystem {
     }
   }
 
-  public doTurn(world: TlbWorld, entity: Entity, takeTurn: TakeTurnComponent, availableActions: Action[]) {
+  public doTurn(world: TlbWorld, entity: Entity, takeTurn: TakeTurnComponent, availableActions: ActionGroup[]) {
     const ui = world.getResource<UIResource>('ui')
     const input: Input = world.getResource<InputResource>('input')
 
     const selectedAction = world.getComponent<SelectedActionComponent>(entity, 'selected-action')
     if (selectedAction === undefined) {
       this.showActionDialog(world, ui, entity, availableActions)
-    } else if (selectedAction.action === undefined) {
+    } else if (selectedAction.selection === undefined) {
       this.selectAction(world, ui, selectedAction)
     } else {
       const skip = input.keyPressed.has(KEYS.VK_ESCAPE)
-      const subActionCount = selectedAction.action.subActions.length
+      const action = selectedAction.selection!.action
+      const subActionCount = action.subActions.length
       const allDone = selectedAction.currentSubAction >= subActionCount
       if (!allDone) {
         if (skip) {
           selectedAction.currentSubAction += 1
           selectedAction.skippedActions += 1
         } else {
-          const currentSubAction = selectedAction.action.subActions[selectedAction.currentSubAction]
+          const currentSubAction = action.subActions[selectedAction.currentSubAction]
           const done = this.handleSubAction(world, entity, currentSubAction)
           if (done) {
             selectedAction.currentSubAction += 1
           }
         }
       } else {
+        const action = selectedAction.selection!.action
         const noActionsOrAtLeastOneActionTaken = subActionCount == 0 || subActionCount - selectedAction.skippedActions > 0
         if (noActionsOrAtLeastOneActionTaken) {
-          if (selectedAction.action.cost.costsAll) {
+          if (action.cost.costsAll) {
             takeTurn.movements = 0
             takeTurn.actions = 0
           } else {
-            takeTurn.movements -= selectedAction.action.cost.movement
-            takeTurn.actions -= selectedAction.action.cost.actions
+            takeTurn.movements -= action.cost.movement
+            takeTurn.actions -= action.cost.actions
           }
         }
         this.clearAction(world, entity)
@@ -96,8 +99,8 @@ export class PlayerRoundControl implements TlbSystem {
       .withComponent('took-turn', {})
   }
 
-  public showActionDialog(world: TlbWorld, ui: UI, entity: Entity, availableActions: Action[]) {
-    ui.showSelectList(world, availableActions)
+  public showActionDialog(world: TlbWorld, ui: UI, entity: Entity, availableActions: ActionGroup[]) {
+    ui.showActionSelector(world, 'actions', availableActions)
     world.editEntity(entity).withComponent<SelectedActionComponent>('selected-action', {
       currentSubAction: 0,
       skippedActions: 0,
@@ -109,10 +112,10 @@ export class PlayerRoundControl implements TlbSystem {
   }
 
   public selectAction(world: TlbWorld, ui: UI, selectedAction: SelectedActionComponent) {
-    const selection = ui.selectListSelection()
+    const selection = ui.selectedAction()
     if (selection !== undefined) {
-      selectedAction.action = selection as Action
-      ui.hideSelectList(world)
+      selectedAction.selection = selection
+      ui.hideActionSelector(world)
     }
   }
 
