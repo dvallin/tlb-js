@@ -34,10 +34,10 @@ export class Effect implements TlbSystem {
       console.log(`${effect.source} hits ${effect.target}'s ${effect.bodyPart} with ${effect.value} damage`)
 
       const bodyPart = stats.current.bodyParts[effect.bodyPart!]
-      bodyPart.health -= effect.value!
+      bodyPart.health = Math.max(0, bodyPart.health - effect.value!)
 
-      if (bodyPart.health <= 0) {
-        const isLethal = bodyPart.kind === 'torso' || bodyPart.kind === 'head'
+      if (bodyPart.health === 0) {
+        const isLethal = bodyPart.type === 'torso' || bodyPart.type === 'head'
         if (isLethal) {
           console.log(`${effect.target} died`)
           this.kill(world, effect.target)

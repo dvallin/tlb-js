@@ -80,8 +80,8 @@ export const features = {
     lightBlocking: true,
     description: 'you',
   },
-  guard: enemy('g', 'a guard'),
-  eliteGuard: eliteEnemy('g', 'a very strong guard'),
+  guard: enemy('g', 'guard'),
+  eliteGuard: eliteEnemy('g', 'elite guard'),
 }
 export const featureTypeguard: { [key: string]: Feature } = features
 

@@ -2,11 +2,12 @@ import { ResourceName, TlbResource, TlbWorld } from '../tlb'
 import { Vector } from '../spatial'
 import { Rectangle } from '../geometry/rectangle'
 import { Renderer } from '../renderer/renderer'
-import { InputResource, Input } from './input'
 import { ViewportResource, Viewport } from './viewport'
-import { KEYS } from 'rot-js'
 import { SelectedAction } from '../components/action'
 import { ActionSelector, ActionGroup } from '../ui/action-selector'
+import { Overview } from '../ui/overview'
+import { Entity } from '../ecs/entity'
+import { WindowDecoration } from '../ui/window-decoration'
 
 export interface UI {
   hasElement(position: Vector): boolean
@@ -23,22 +24,14 @@ export class UIResource implements TlbResource, UI {
   public visibleElements: Rectangle[] = []
 
   private actionSelector: ActionSelector | undefined = undefined
+  private overview: Overview | undefined = undefined
 
   public update(world: TlbWorld): void {
-    const input: Input = world.getResource<InputResource>('input')
-    let position
-    if (input.position) {
-      position = new Vector(input.position.x, input.position.y)
-    }
-    const pressed = input.mousePressed || input.keyPressed.has(KEYS.VK_RETURN)
-    const up = input.keyPressed.has(KEYS.VK_K)
-    const down = input.keyPressed.has(KEYS.VK_J)
-    this.updateActionSelector(position, pressed, up, down)
-  }
-
-  public updateActionSelector(position: Vector | undefined, pressed: boolean, up: boolean, down: boolean) {
     if (this.actionSelector !== undefined) {
-      this.actionSelector.update(position, pressed, up, down)
+      this.actionSelector.update(world)
+    }
+    if (this.overview !== undefined) {
+      this.overview.update(world)
     }
   }
 
@@ -46,6 +39,22 @@ export class UIResource implements TlbResource, UI {
     if (this.actionSelector !== undefined) {
       this.actionSelector.render(renderer)
     }
+    if (this.overview !== undefined) {
+      this.overview.render(renderer)
+    }
+  }
+
+  public setOverview(world: TlbWorld, entity: Entity) {
+    const viewport: Viewport = world.getResource<ViewportResource>('viewport')
+
+    let element
+    if (this.overview !== undefined) {
+      element = this.overview.element
+    } else {
+      element = world.createEntity().entity
+    }
+
+    this.overview = new Overview(entity, element, new Vector(viewport.boundaries.x - 20, 0), 20)
   }
 
   public showActionSelector(world: TlbWorld, title: string, groups: ActionGroup[]) {
@@ -61,8 +70,12 @@ export class UIResource implements TlbResource, UI {
     const rows = groups.map(g => g.actions.length + 1).reduce((a, b) => a + b)
     const height = rows + 2
 
-    const actionsWindow = new Rectangle(5, viewport.boundaries.y - height, 20, height)
-    const descriptionWindow = new Rectangle(actionsWindow.right, viewport.boundaries.y - height, 32, height)
+    const actionsWindow = new WindowDecoration(new Rectangle(5, viewport.boundaries.y - height, 20, height), 'actions')
+
+    const descriptionWindow = new WindowDecoration(
+      new Rectangle(actionsWindow.right, viewport.boundaries.y - height, 32, height),
+      'description'
+    )
 
     this.actionSelector = new ActionSelector({
       groups,
@@ -91,6 +104,9 @@ export class UIResource implements TlbResource, UI {
   }
 
   public hasElement(position: Vector): boolean {
-    return this.actionSelector !== undefined && this.actionSelector.hasElement(position)
+    return (
+      (this.actionSelector !== undefined && this.actionSelector.contains(position)) ||
+      (this.overview !== undefined && this.overview.contains(position))
+    )
   }
 }

@@ -17,6 +17,7 @@ export interface Attack {
   effects: effect[]
   damage: number
   range: number
+  accuracy: number
 }
 
 export interface SelectedAction {
@@ -50,8 +51,8 @@ function movement(range: number): Movement {
   return { kind: 'movement', range }
 }
 
-function attack(range: number, damage: number, effects: effect[] = ['damage']): Attack {
-  return { kind: 'attack', damage, range, effects }
+function attack(range: number, damage: number, accuracy: number, effects: effect[] = ['damage']): Attack {
+  return { kind: 'attack', damage, range, accuracy, effects }
 }
 
 export const actions = {
@@ -78,7 +79,7 @@ export const actions = {
       actions: 2,
       movement: 0,
     },
-    subActions: [attack(1, 1)],
+    subActions: [attack(1, 1, 10)],
   },
   rush: {
     name: 'rush',
@@ -95,7 +96,7 @@ export const actions = {
       actions: 3,
       movement: 0,
     },
-    subActions: [attack(5, 2)],
+    subActions: [attack(5, 2, 5)],
   },
   overcharge: {
     name: 'overcharge',
@@ -104,7 +105,7 @@ export const actions = {
       movement: 0,
     },
     attack: {},
-    subActions: [attack(3, 3)],
+    subActions: [attack(3, 3, 3)],
   },
   execute: {
     name: 'execute',
@@ -112,7 +113,7 @@ export const actions = {
       actions: 3,
       movement: 0,
     },
-    subActions: [attack(1, 5, ['damage', 'confuse'])],
+    subActions: [attack(1, 5, 10, ['damage', 'confuse'])],
   },
   hitAndRun: {
     name: 'hit and run',
@@ -120,7 +121,7 @@ export const actions = {
       actions: 3,
       movement: 3,
     },
-    subActions: [attack(1, 2, ['damage']), movement(5)],
+    subActions: [attack(1, 2, 3, ['damage']), movement(5)],
   },
 }
 export const actionsTypeguard: { [key: string]: Action } = actions

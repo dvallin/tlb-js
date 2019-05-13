@@ -5,5 +5,6 @@ export interface LightComponent {
   color: Color
 }
 export interface LightingComponent {
+  incomingLightInFrame: Map<Entity, Color>
   incomingLight: Map<Entity, Color>
 }

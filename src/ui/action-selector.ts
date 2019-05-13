@@ -1,10 +1,15 @@
 import { Action, SelectedAction } from '../components/action'
-import { Rectangle } from '../geometry/rectangle'
 import { Entity } from '../ecs/entity'
 import { Vector } from '../spatial'
 import { Renderer } from '../renderer/renderer'
-import { Difference } from '../geometry/difference'
 import { primary, gray } from '../renderer/palettes'
+
+import { UIElement } from './ui-element'
+import { TlbWorld } from '../tlb'
+import { Input, InputResource } from '../resources/input'
+import { KEYS } from 'rot-js'
+
+import { WindowDecoration } from './window-decoration'
 
 export interface SelectableAction {
   action: Action
@@ -20,8 +25,8 @@ export interface ActionGroup {
 
 export interface State {
   title: string
-  actionsWindow: Rectangle
-  descriptionWindow: Rectangle
+  actionsWindow: WindowDecoration
+  descriptionWindow: WindowDecoration
   element: Entity
   rows: number
 
@@ -31,7 +36,7 @@ export interface State {
   hovered: number
 }
 
-export class ActionSelector {
+export class ActionSelector implements UIElement {
   public constructor(private readonly state: State) {}
 
   public render(renderer: Renderer) {
@@ -44,9 +49,18 @@ export class ActionSelector {
     return this.state.element
   }
 
-  public update(position: Vector | undefined, pressed: boolean, up: boolean, down: boolean) {
+  public update(world: TlbWorld) {
+    const input: Input = world.getResource<InputResource>('input')
+    let position
+    if (input.position) {
+      position = new Vector(input.position.x, input.position.y)
+    }
+    const pressed = input.mousePressed || input.keyPressed.has(KEYS.VK_RETURN)
+    const up = input.keyPressed.has(KEYS.VK_K)
+    const down = input.keyPressed.has(KEYS.VK_J)
+
     this.state.selected = undefined
-    const content = this.state.actionsWindow.shrink()
+    const content = this.state.actionsWindow.content
     if (position && content.containsVector(position)) {
       const delta = position.minus(content.topLeft)
       this.state.hovered = delta.y
@@ -73,55 +87,52 @@ export class ActionSelector {
     return undefined
   }
 
-  private renderActions(renderer: Renderer, window: Rectangle, groups: ActionGroup[], hovered: number) {
-    this.renderWindowBorder(renderer, window, 'actions')
+  private renderActions(renderer: Renderer, window: WindowDecoration, groups: ActionGroup[], hovered: number) {
+    window.render(renderer)
 
     let index = 0
     groups.forEach(group => {
-      renderer.text(`- ${group.name}`, window.topLeft.add(new Vector(1, index + 1)), primary[0], hovered === index ? gray[1] : undefined)
+      const hasActions = group.actions.find(a => a.available)
+      renderer.text(
+        `- ${group.name}`,
+        window.topLeft.add(new Vector(1, index + 1)),
+        hasActions ? primary[1] : gray[3],
+        hovered === index ? gray[1] : undefined
+      )
       index++
       group.actions.forEach(action => {
         renderer.text(
           ` | ${action.action.name}`,
           window.topLeft.add(new Vector(1, index + 1)),
-          primary[0],
-          hovered === index ? gray[1] : undefined
+          action.available ? primary[1] : gray[3],
+          hovered === index && action.available ? gray[1] : undefined
         )
         index++
       })
     })
   }
 
-  private renderDescription(renderer: Renderer, window: Rectangle, groups: ActionGroup[], hovered: number) {
-    this.renderWindowBorder(renderer, window, 'description')
+  private renderDescription(renderer: Renderer, window: WindowDecoration, groups: ActionGroup[], hovered: number) {
+    window.render(renderer)
+
     const action = this.actionAtLine(groups, hovered)
     if (action !== undefined) {
-      renderer.text(action.action.name, window.topLeft.add(new Vector(1, 1)), primary[0])
+      renderer.text(action.action.name, window.topLeft.add(new Vector(1, 1)), primary[1])
       const cost = action.action.cost
       if (cost.costsAll) {
-        renderer.text('costs all AP and MP', window.topLeft.add(new Vector(1, 2)), primary[0])
+        renderer.text('costs all AP and MP', window.topLeft.add(new Vector(1, 2)), primary[1])
       } else {
-        renderer.text(`cost: ${cost.actions}AP ${cost.movement}MP`, window.topLeft.add(new Vector(1, 2)), primary[0])
+        renderer.text(`cost: ${cost.actions}AP ${cost.movement}MP`, window.topLeft.add(new Vector(1, 2)), primary[1])
       }
     } else {
       const group = this.groupAtLine(groups, hovered)
       if (group !== undefined) {
-        renderer.text(group.name, window.topLeft.add(new Vector(1, 1)), primary[0])
-        renderer.flowText(group.description, window.topLeft.add(new Vector(1, 2)), window.width - 2, primary[0])
+        renderer.text(group.name, window.topLeft.add(new Vector(1, 1)), primary[1])
+        renderer.flowText(group.description, window.topLeft.add(new Vector(1, 2)), window.width - 2, primary[1])
+      } else {
+        renderer.text('choose an action to perform', window.topLeft.add(new Vector(1, 1)), primary[1])
       }
     }
-  }
-
-  private renderWindowBorder(renderer: Renderer, window: Rectangle, title: string) {
-    Difference.innerBorder(window).foreach(p => {
-      if (p.y === window.top || p.y === window.bottom) {
-        renderer.character('-', p, primary[0])
-      } else {
-        renderer.character('|', p, primary[0])
-      }
-    })
-    const titleText = `/${title}/`
-    renderer.text(titleText, { x: window.right - titleText.length, y: window.top }, primary[0])
   }
 
   private groupAtLine(groups: ActionGroup[], line: number): ActionGroup | undefined {
@@ -142,16 +153,19 @@ export class ActionSelector {
       } else if (line >= group.actions.length) {
         line -= group.actions.length
       } else {
-        return {
-          entity: group.entity,
-          action: group.actions[line].action,
+        const action = group.actions[line]
+        if (action.available) {
+          return {
+            entity: group.entity,
+            action: action.action,
+          }
         }
       }
     }
     return undefined
   }
 
-  public hasElement(position: Vector): boolean {
-    return this.state.actionsWindow!.containsVector(position) || this.state.descriptionWindow!.containsVector(position)
+  public contains(position: Vector): boolean {
+    return this.state.actionsWindow.containsVector(position) || this.state.descriptionWindow.containsVector(position)
   }
 }

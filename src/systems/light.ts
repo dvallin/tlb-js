@@ -29,8 +29,11 @@ export class Light implements TlbSystem {
   }
 
   public addLight(world: TlbWorld, entity: Entity, light: Entity, color: Color) {
-    const lighting = world.getComponent<LightingComponent>(entity, 'lighting') || { incomingLight: new Map() }
-    lighting.incomingLight.set(light, color)
+    const lighting = world.getComponent<LightingComponent>(entity, 'lighting') || {
+      incomingLight: new Map(),
+      incomingLightInFrame: new Map(),
+    }
+    lighting.incomingLightInFrame.set(light, color)
     world.editEntity(entity).withComponent('lighting', lighting)
   }
 }

@@ -12,15 +12,16 @@ import { SelectedActionComponent, Movement, Attack } from '../components/action'
 import { UIResource, UI } from '../resources/ui'
 import { Path } from '../renderer/astar'
 import { KEYS } from 'rot-js'
-import { EffectComponent } from '../components/effects'
 import { ScriptComponent } from '../components/script'
 import { calculateAvailableActions } from '../component-reducers/available-actions'
 import { ActionGroup } from '../ui/action-selector'
+import { Random } from '../random'
+import { attackTarget } from '../component-reducers/attack-target'
 
 export class PlayerRoundControl implements TlbSystem {
   public readonly components: ComponentName[] = ['take-turn', 'player', 'position']
 
-  public constructor(public readonly queries: Queries) {}
+  public constructor(public readonly queries: Queries, public readonly random: Random) {}
 
   public update(world: TlbWorld, entity: Entity): void {
     const script = world.getComponent<ScriptComponent>(entity, 'script')
@@ -75,6 +76,7 @@ export class PlayerRoundControl implements TlbSystem {
             takeTurn.actions -= action.cost.actions
           }
         }
+        console.log('payed ', JSON.stringify(takeTurn), noActionsOrAtLeastOneActionTaken)
         this.clearAction(world, entity)
       }
     }
@@ -138,15 +140,7 @@ export class PlayerRoundControl implements TlbSystem {
         const target = map.getCharacter(p)
         const hasEnemy = target !== undefined && target !== entity
         if (hasEnemy) {
-          attack.effects.forEach(effect =>
-            world.createEntity().withComponent<EffectComponent>('effect', {
-              source: entity,
-              target: target!,
-              value: attack.damage,
-              effect,
-              bodyPart: 'head',
-            })
-          )
+          attackTarget(world, this.random, entity, target!, 'head', attack)
         }
         return hasEnemy
       })

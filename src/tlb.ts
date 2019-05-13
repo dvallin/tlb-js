@@ -141,7 +141,7 @@ export function registerComponents<S, R>(world: World<ComponentName, S, R>): voi
 
 export function registerResources(world: World<ComponentName, SystemName, ResourceName>, renderer: Renderer): void {
   world.registerResource(new WorldMapResource())
-  world.registerResource(new ViewportResource())
+  world.registerResource(new ViewportResource(renderer.boundary))
   world.registerResource(new InputResource(e => renderer.eventToPosition(e)))
   world.registerResource(new UIResource())
 }
@@ -161,7 +161,7 @@ export function registerSystems(
   world.registerSystem('npc', new Npc(pushState))
   world.registerSystem('player-control', new PlayerControl())
   world.registerSystem('player-interaction', new PlayerInteraction())
-  world.registerSystem('player-round-control', new PlayerRoundControl(queries))
+  world.registerSystem('player-round-control', new PlayerRoundControl(queries, new Random(uniform)))
   world.registerSystem('region-creator', new RegionCreator(new Random(uniform)))
   world.registerSystem('script', new Script())
   world.registerSystem('trigger', new Trigger())

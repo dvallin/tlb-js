@@ -5,12 +5,12 @@ import { PositionComponent } from '../components/position'
 import { Entity } from '../ecs/entity'
 import { ScriptComponent } from '../components/script'
 import { Vector } from '../spatial'
-import { EffectComponent } from '../components/effects'
 import { calculateAvailableActions } from '../component-reducers/available-actions'
-import { SelectedActionComponent, Movement, Attack, SelectedAction } from '../components/action'
+import { SelectedActionComponent, Movement, SelectedAction } from '../components/action'
 import { Random } from '../random'
 import { CharacterStatsComponent } from '../components/character-stats'
 import { ActionGroup } from '../ui/action-selector'
+import { attackTarget } from '../component-reducers/attack-target'
 
 export class AiRoundControl implements TlbSystem {
   public readonly components: ComponentName[] = ['take-turn', 'ai', 'position']
@@ -98,14 +98,13 @@ export class AiRoundControl implements TlbSystem {
       world.editEntity(entity).removeComponent('selected-action')
     } else {
       const currentAction = action.subActions[selectedAction.currentSubAction]
-      console.log(action.name)
       switch (currentAction.kind) {
         case 'movement':
           this.move(world, entity, selectedAction.target!, currentAction)
           break
         case 'attack':
           const bodyPart = this.chooseBodyPart(world, selectedAction.target!)
-          this.attack(world, entity, selectedAction.target!, bodyPart!, currentAction)
+          attackTarget(world, this.random, entity, selectedAction.target!, bodyPart!, currentAction)
           break
       }
       selectedAction.currentSubAction++
@@ -124,18 +123,6 @@ export class AiRoundControl implements TlbSystem {
         path: path.path,
       })
     }
-  }
-
-  public attack(world: TlbWorld, entity: Entity, target: Entity, bodyPart: string, attack: Attack) {
-    attack.effects.forEach(effect =>
-      world.createEntity().withComponent<EffectComponent>('effect', {
-        source: entity,
-        target: target!,
-        value: attack.damage,
-        effect,
-        bodyPart,
-      })
-    )
   }
 
   public findTarget(world: TlbWorld, position: Vector): Entity | undefined {

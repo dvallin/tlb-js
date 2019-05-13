@@ -5,11 +5,13 @@ export interface CharacterStatsComponent {
 }
 
 export function createCharacterStatsComponent(type: CharacterStatsType): CharacterStatsComponent {
-  return { type, current: { ...characterStats[type] } }
+  return { type, current: JSON.parse(JSON.stringify(characterStats[type])) }
 }
 
+export type bodyPartType = 'head' | 'arm' | 'torso' | 'leg'
+
 export interface BodyPart {
-  kind: 'head' | 'arm' | 'torso' | 'leg'
+  type: bodyPartType
   health: number
 }
 
@@ -17,16 +19,17 @@ export interface CharacterStats {
   bodyParts: { [key: string]: BodyPart }
   movement: number
   actions: number
+  aim: number
 }
 
 function humanoidBodyParts(health: number): { [key: string]: BodyPart } {
   return {
-    head: { kind: 'head', health },
-    leftArm: { kind: 'arm', health },
-    rightArm: { kind: 'arm', health },
-    torso: { kind: 'torso', health },
-    leftLeg: { kind: 'leg', health },
-    rightLeg: { kind: 'leg', health },
+    head: { type: 'head', health },
+    leftArm: { type: 'arm', health },
+    rightArm: { type: 'arm', health },
+    torso: { type: 'torso', health },
+    leftLeg: { type: 'leg', health },
+    rightLeg: { type: 'leg', health },
   }
 }
 
@@ -35,16 +38,19 @@ export const characterStats = {
     bodyParts: humanoidBodyParts(4),
     movement: 3,
     actions: 3,
+    aim: 7,
   },
   guard: {
     bodyParts: humanoidBodyParts(4),
     movement: 3,
     actions: 3,
+    aim: 3,
   },
   eliteGuard: {
     bodyParts: humanoidBodyParts(5),
     movement: 2,
     actions: 5,
+    aim: 6,
   },
 }
 export const characterStatsTypeguard: { [key: string]: CharacterStats } = characterStats

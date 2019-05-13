@@ -42,17 +42,9 @@ export class Running extends AbstractState {
           .withComponent<CharacterStatsComponent>('character-stats', createCharacterStatsComponent('player'))
           .withComponent<InventoryComponent>('inventory', { content: [nailgun, rifle] })
           .withComponent<EquipmentComponent>('equipment', { equiped: [nailgun, rifle] }).entity
+        const ui = world.getResource<UIResource>('ui')
+        ui.setOverview(world, player)
         map.setCharacter(position, player)
-
-        const viewport: Viewport = world.getResource<ViewportResource>('viewport')
-        viewport.addLayer({
-          getRenderable: (world, position) => {
-            const ui = world.getResource<UIResource>('ui')
-            const p = position.floor()
-            return { entity: undefined, opaque: !ui.hasElement(p), centered: true }
-          },
-          transformed: false,
-        })
       })
     } else {
       const position = new Vector(20, 20)
@@ -62,6 +54,19 @@ export class Running extends AbstractState {
         .withComponent<{}>('viewport-focus', {})
         .withComponent<PositionComponent>('position', { position })
     }
+    this.createUILayer(world)
+  }
+
+  private createUILayer(world: TlbWorld) {
+    const viewport: Viewport = world.getResource<ViewportResource>('viewport')
+    viewport.addLayer({
+      getRenderable: (world, position) => {
+        const ui = world.getResource<UIResource>('ui')
+        const p = position.floor()
+        return { entity: undefined, opaque: !ui.hasElement(p), centered: true }
+      },
+      transformed: false,
+    })
   }
 
   public update({  }: TlbWorld): void {}

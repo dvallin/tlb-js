@@ -13,9 +13,12 @@ import { WorldMap, WorldMapResource } from '../resources/world-map'
 import { LightingComponent } from '../components/light'
 import { OverlayComponent } from '../components/overlay'
 import { UI, UIResource } from '../resources/ui'
+import { Vector } from '../spatial'
 
 export interface Renderer {
   render(world: TlbWorld): void
+
+  boundary: Vector
 
   clear(): void
   eventToPosition(e: UIEvent): Position | undefined
@@ -28,14 +31,18 @@ export interface Renderer {
 export class RotRenderer implements Renderer {
   public constructor(public readonly display: Display, public ambientColor: Color) {}
 
+  public get boundary(): Vector {
+    return new Vector(this.display.getOptions().width, this.display.getOptions().height)
+  }
+
   public static createAndMount(
     root: HTMLElement,
     displayOptions = {
-      width: 60,
-      height: 40,
+      width: 80,
+      height: 50,
       forceSquareRatio: true,
-      fontSize: 17,
-      fontFamily: 'Lucida Console, Monaco, monospace',
+      fontSize: 16,
+      fontFamily: 'Monaco, monospace',
       bg: gray[4].rgb,
     }
   ): RotRenderer {
@@ -59,7 +66,10 @@ export class RotRenderer implements Renderer {
     })
     const ui: UI = world.getResource<UIResource>('ui')
     ui.render(this)
-    world.components.get('lighting')!.clear()
+    world.getStorage<LightingComponent>('lighting')!.foreach(({}, lighting) => {
+      lighting.incomingLight = lighting.incomingLightInFrame
+      lighting.incomingLightInFrame = new Map()
+    })
     world.components.get('overlay')!.clear()
   }
 

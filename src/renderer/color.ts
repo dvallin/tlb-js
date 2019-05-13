@@ -11,6 +11,10 @@ export class Color {
     this.rgb = rot.Color.toRGB(color)
   }
 
+  public brightness(): number {
+    return (this.color[0] + this.color[1] + this.color[2]) / 3
+  }
+
   public add(other: Color): Color {
     return new Color(rot.Color.add(this.color, other.color))
   }

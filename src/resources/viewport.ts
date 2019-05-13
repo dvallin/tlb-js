@@ -35,7 +35,7 @@ export class ViewportResource implements TlbResource, Viewport {
 
   public readonly layers: Layer[] = []
 
-  public constructor(public readonly boundaries: Vector = new Vector(60, 40)) {}
+  public constructor(public readonly boundaries: Vector) {}
 
   public update(world: TlbWorld): void {
     const input: Input = world.getResource<InputResource>('input')
@@ -96,8 +96,8 @@ export class ViewportResource implements TlbResource, Viewport {
   }
 
   public focus(position: Vector): void {
-    const x = position.x - Math.floor(this.boundaries.x / 2)
-    const y = position.y - Math.floor(this.boundaries.y / 2)
+    const x = position.x - Math.floor(this.boundaries.x / 2) + 5
+    const y = position.y - Math.floor(this.boundaries.y / 2) + 5
     if (this.gridLocked) {
       this.topLeft = new Vector(Math.floor(x), Math.floor(y))
     } else {
