@@ -27,7 +27,6 @@ export interface State {
   title: string
   actionsWindow: WindowDecoration
   descriptionWindow: WindowDecoration
-  element: Entity
   rows: number
 
   groups: ActionGroup[]
@@ -37,16 +36,12 @@ export interface State {
 }
 
 export class ActionSelector implements UIElement {
-  public constructor(private readonly state: State) {}
+  public constructor(public readonly entity: Entity, private readonly state: State) {}
 
   public render(renderer: Renderer) {
     const { actionsWindow, descriptionWindow, groups, hovered } = this.state
     this.renderActions(renderer, actionsWindow, groups, hovered)
     this.renderDescription(renderer, descriptionWindow, groups, hovered)
-  }
-
-  public get element(): Entity {
-    return this.state.element
   }
 
   public update(world: TlbWorld) {
@@ -55,7 +50,6 @@ export class ActionSelector implements UIElement {
     if (input.position) {
       position = new Vector(input.position.x, input.position.y)
     }
-    const pressed = input.mousePressed || input.keyPressed.has(KEYS.VK_RETURN)
     const up = input.keyPressed.has(KEYS.VK_K)
     const down = input.keyPressed.has(KEYS.VK_J)
 
@@ -64,6 +58,9 @@ export class ActionSelector implements UIElement {
     if (position && content.containsVector(position)) {
       const delta = position.minus(content.topLeft)
       this.state.hovered = delta.y
+      if (input.mousePressed) {
+        this.state.selected = delta.y
+      }
     }
     if (up) {
       this.state.hovered--
@@ -74,7 +71,7 @@ export class ActionSelector implements UIElement {
     this.state.hovered += this.state.rows
     this.state.hovered %= this.state.rows
 
-    if (pressed) {
+    if (input.keyPressed.has(KEYS.VK_RETURN)) {
       this.state.selected = this.state.hovered
     }
   }

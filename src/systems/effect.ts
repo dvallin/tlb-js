@@ -4,6 +4,7 @@ import { Entity } from '../ecs/entity'
 import { CharacterStatsComponent, characterStats } from '../components/character-stats'
 import { WorldMap, WorldMapResource } from '../resources/world-map'
 import { PositionComponent } from '../components/position'
+import { LogResource, Log } from '../resources/log'
 
 export class Effect implements TlbSystem {
   public readonly components: ComponentName[] = ['effect']
@@ -31,7 +32,8 @@ export class Effect implements TlbSystem {
     const stats = world.getComponent<CharacterStatsComponent>(effect.target, 'character-stats')
 
     if (stats !== undefined) {
-      console.log(`${effect.source} hits ${effect.target}'s ${effect.bodyPart} with ${effect.value} damage`)
+      const log: Log = world.getResource<LogResource>('log')
+      log.effectApplied(world, effect)
 
       const bodyPart = stats.current.bodyParts[effect.bodyPart!]
       bodyPart.health = Math.max(0, bodyPart.health - effect.value!)
@@ -39,7 +41,7 @@ export class Effect implements TlbSystem {
       if (bodyPart.health === 0) {
         const isLethal = bodyPart.type === 'torso' || bodyPart.type === 'head'
         if (isLethal) {
-          console.log(`${effect.target} died`)
+          log.died(world, effect.target)
           this.kill(world, effect.target)
         }
       }
@@ -53,7 +55,8 @@ export class Effect implements TlbSystem {
       const bodyPart = stats.current.bodyParts[effect.bodyPart!]
       bodyPart.health = Math.max(bodyPart.health + effect.value!, characterStats[stats.type].bodyParts[effect.bodyPart!].health)
 
-      console.log(`${effect.target} heals ${effect.value}'s ${effect.bodyPart} to ${bodyPart.health}`)
+      const log: Log = world.getResource<LogResource>('log')
+      log.effectApplied(world, effect)
     }
   }
 

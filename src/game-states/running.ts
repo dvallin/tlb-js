@@ -44,6 +44,7 @@ export class Running extends AbstractState {
           .withComponent<EquipmentComponent>('equipment', { equiped: [nailgun, rifle] }).entity
         const ui = world.getResource<UIResource>('ui')
         ui.setOverview(world, player)
+        ui.setLog(world)
         map.setCharacter(position, player)
       })
     } else {

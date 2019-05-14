@@ -29,11 +29,13 @@ import { Script } from './systems/script'
 
 import { WorldMapResource } from './resources/world-map'
 import { ViewportResource } from './resources/viewport'
+import { InputResource } from './resources/input'
+import { UIResource } from './resources/ui'
+import { LogResource } from './resources/log'
 
 import { Random } from './random'
 import { Uniform } from './random/distributions'
 
-import { InputResource } from './resources/input'
 import { Renderer } from './renderer/renderer'
 import { Queries } from './renderer/queries'
 import { State } from './game-states/state'
@@ -41,7 +43,6 @@ import { OverlayComponent } from './components/overlay'
 import { TakeTurnComponent } from './components/rounds'
 import { SelectedActionComponent, HasActionComponent } from './components/action'
 import { ScriptComponent } from './components/script'
-import { UIResource } from './resources/ui'
 import { AiComponent } from './components/ai'
 import { AiRoundControl } from './systems/ai-round-control'
 import { TriggersComponent, TriggeredByComponent } from './components/trigger'
@@ -97,7 +98,7 @@ export type SystemName =
   | 'region-creator'
   | 'script'
   | 'trigger'
-export type ResourceName = 'input' | 'map' | 'viewport' | 'ui'
+export type ResourceName = 'input' | 'map' | 'viewport' | 'ui' | 'log'
 
 export type TlbWorld = World<ComponentName, SystemName, ResourceName>
 export type TlbResource = Resource<ComponentName, SystemName, ResourceName>
@@ -144,6 +145,7 @@ export function registerResources(world: World<ComponentName, SystemName, Resour
   world.registerResource(new ViewportResource(renderer.boundary))
   world.registerResource(new InputResource(e => renderer.eventToPosition(e)))
   world.registerResource(new UIResource())
+  world.registerResource(new LogResource())
 }
 
 export function registerSystems(

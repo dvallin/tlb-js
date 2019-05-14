@@ -7,6 +7,7 @@ import { LightingComponent } from '../components/light'
 import { EffectComponent } from '../components/effects'
 import { Random } from '../random'
 import { calculateBrightness } from './brigthness'
+import { Log, LogResource } from '../resources/log'
 
 export function attackTarget(world: TlbWorld, random: Random, entity: Entity, target: Entity, bodyPart: string, attack: Attack): void {
   const stats = world.getComponent<CharacterStatsComponent>(entity, 'character-stats')!
@@ -28,6 +29,9 @@ export function attackTarget(world: TlbWorld, random: Random, entity: Entity, ta
 
   const hitChance = (baseChance - distancePenalty - brightnessPenalty - bodyPartPenalty) / 10
   const critChance = (baseChance - distancePenalty - bodyPartPenalty) / 10
+
+  const log: Log = world.getResource<LogResource>('log')
+  log.attack(world, entity, target, bodyPart, attack)
 
   if (random.decision(hitChance)) {
     attack.effects.forEach(effect =>
@@ -52,7 +56,7 @@ export function attackTarget(world: TlbWorld, random: Random, entity: Entity, ta
       )
     }
   } else {
-    console.log(`${entity} missed`)
+    log.missed(world, entity)
   }
 }
 

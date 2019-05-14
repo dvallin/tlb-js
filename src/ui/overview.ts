@@ -23,7 +23,6 @@ export interface State {
   environment: WindowDecoration
 
   focus: Entity
-  element: Entity
 
   stats?: CharacterStatsComponent
   takeTurn?: TakeTurnComponent
@@ -34,22 +33,17 @@ export interface State {
 export class Overview implements UIElement {
   private readonly state: State
 
-  public constructor(focus: Entity, element: Entity, topLeft: Vector, width: number) {
+  public constructor(public readonly entity: Entity, focus: Entity, topLeft: Vector, width: number) {
     const bodyParts = new WindowDecoration(new Rectangle(topLeft.x, topLeft.y, width, 2), 'body parts')
     const turn = new WindowDecoration(new Rectangle(topLeft.x, topLeft.y + 1, width, 2), 'turn')
     const environment = new WindowDecoration(new Rectangle(topLeft.x, topLeft.y + 2, width, 2), 'environment')
     this.state = {
       focus,
-      element,
       bodyParts,
       turn,
       environment,
       enemies: [],
     }
-  }
-
-  public get element(): Entity {
-    return this.state.element
   }
 
   public render(renderer: Renderer): void {
@@ -89,7 +83,7 @@ export class Overview implements UIElement {
           if (enemy.feature !== undefined) {
             const feature = features[enemy.feature]
             renderer.character(feature.character, this.state.turn.topLeft.add(new Vector(1, y)), feature.diffuse)
-            renderer.text(feature.description, this.state.turn.topLeft.add(new Vector(3, y)), primary[1])
+            renderer.text(feature.name, this.state.turn.topLeft.add(new Vector(3, y)), primary[1])
             y++
           }
         })
@@ -135,6 +129,7 @@ export class Overview implements UIElement {
     this.state.stats = world.getComponent<CharacterStatsComponent>(this.state.focus, 'character-stats')
     this.state.lighting = world.getComponent<LightingComponent>(this.state.focus, 'lighting')
   }
+
   public contains(position: Vector): boolean {
     return this.state.turn.containsVector(position) || this.state.bodyParts.containsVector(position)
   }
