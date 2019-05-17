@@ -78,7 +78,6 @@ export type ComponentName =
   | 'spawn'
   | 'take-turn'
   | 'took-turn'
-  | 'trigger'
   | 'triggered-by'
   | 'triggers'
   | 'viewport-focus'
@@ -133,7 +132,6 @@ export function registerComponents<S, R>(world: World<ComponentName, S, R>): voi
   world.registerComponentStorage('spawn', new SingletonStorage<{}>())
   world.registerComponentStorage('take-turn', new MapStorage<TakeTurnComponent>())
   world.registerComponentStorage('took-turn', new SetStorage())
-  world.registerComponentStorage('trigger', new SetStorage())
   world.registerComponentStorage('triggered-by', new MapStorage<TriggeredByComponent>())
   world.registerComponentStorage('triggers', new MapStorage<TriggersComponent>())
   world.registerComponentStorage('viewport-focus', new SingletonStorage<{}>())
@@ -142,7 +140,7 @@ export function registerComponents<S, R>(world: World<ComponentName, S, R>): voi
 
 export function registerResources(world: World<ComponentName, SystemName, ResourceName>, renderer: Renderer): void {
   world.registerResource(new WorldMapResource())
-  world.registerResource(new ViewportResource(renderer.boundary))
+  world.registerResource(new ViewportResource(renderer.boundaries))
   world.registerResource(new InputResource(e => renderer.eventToPosition(e)))
   world.registerResource(new UIResource())
   world.registerResource(new LogResource())

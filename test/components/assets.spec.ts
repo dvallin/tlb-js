@@ -1,10 +1,12 @@
-import { createAssetFromPosition } from '../../src/components/asset'
+import { createAssetFromPosition, createLocker, createTrash, createDoor } from '../../src/components/asset'
 import { Vector } from '../../src/spatial'
 import { World } from '../../src/ecs/world'
 import { TlbWorld, registerComponents, registerResources } from '../../src/tlb'
 import { WorldMap, WorldMapResource } from '../../src/resources/world-map'
 import { FeatureComponent } from '../../src/components/feature'
 import { mockRenderer } from '../mocks'
+import { Rectangle } from '../../src/geometry/rectangle'
+import { Entity } from '../../src/ecs/entity'
 
 describe('createAssetFromPosition', () => {
   let world: TlbWorld
@@ -37,19 +39,27 @@ describe('createAssetFromPosition', () => {
 
   it('creates doors', () => {
     // given
-    const position = new Vector(0, 0)
-    const ground = world.createEntity().withComponent<FeatureComponent>('feature', { type: 'corridor' }).entity
-    map.setTile(position, ground)
+    const shape = new Rectangle(0, 0, 2, 2)
+    const entities: Entity[] = []
+    shape.foreach(position => {
+      const ground = world.createEntity().withComponent<FeatureComponent>('feature', { type: 'corridor' }).entity
+      map.setTile(position, ground)
+      entities.push(ground)
+    })
 
     // when
-    const asset = createAssetFromPosition(world, map, position, 'door')
+    const asset = createDoor(world, map, shape)
 
     // then
-    const door = map.getTile(position)!
-    expect(world.getComponent(door, 'position')).toEqual({ position })
-    expect(world.getComponent(door, 'ground')).toEqual({ feature: 'corridor' })
-    expect(world.getComponent(door, 'feature')).toEqual({ type: 'door' })
-    expect(world.getComponent(door, 'parent')).toEqual({ entity: asset })
+    shape.foreach(position => {
+      const tile = map.getTile(position)!
+      expect(world.getComponent(tile, 'position')).toEqual({ position })
+      expect(world.getComponent(tile, 'ground')).toEqual({ feature: 'corridor' })
+      expect(world.getComponent(tile, 'feature')).toEqual({ type: 'door' })
+      expect(world.getComponent(tile, 'triggered-by')).toEqual({ entity: asset })
+    })
+
+    expect(world.getComponent(asset, 'triggers')).toEqual({ entities })
     expect(world.getComponent(asset, 'asset')).toEqual({ type: 'door' })
   })
 
@@ -60,14 +70,16 @@ describe('createAssetFromPosition', () => {
     map.setTile(position, ground)
 
     // when
-    const asset = createAssetFromPosition(world, map, position, 'locker')
+    const asset = createLocker(world, map, position)
 
     // then
-    const door = map.getTile(position)!
-    expect(world.getComponent(door, 'position')).toEqual({ position })
-    expect(world.getComponent(door, 'ground')).toEqual({ feature: 'corridor' })
-    expect(world.getComponent(door, 'feature')).toEqual({ type: 'locker' })
-    expect(world.getComponent(door, 'parent')).toEqual({ entity: asset })
+    const tile = map.getTile(position)!
+    expect(world.getComponent(tile, 'position')).toEqual({ position })
+    expect(world.getComponent(tile, 'ground')).toEqual({ feature: 'corridor' })
+    expect(world.getComponent(tile, 'feature')).toEqual({ type: 'locker' })
+    expect(world.getComponent(tile, 'triggered-by')).toEqual({ entity: asset })
+
+    expect(world.getComponent(asset, 'triggers')).toEqual({ entities: [ground] })
     expect(world.getComponent(asset, 'asset')).toEqual({ type: 'locker' })
   })
 
@@ -78,14 +90,16 @@ describe('createAssetFromPosition', () => {
     map.setTile(position, ground)
 
     // when
-    const asset = createAssetFromPosition(world, map, position, 'trash')
+    const asset = createTrash(world, map, position)
 
     // then
-    const door = map.getTile(position)!
-    expect(world.getComponent(door, 'position')).toEqual({ position })
-    expect(world.getComponent(door, 'ground')).toEqual({ feature: 'corridor' })
-    expect(world.getComponent(door, 'feature')).toEqual({ type: 'trash' })
-    expect(world.getComponent(door, 'parent')).toEqual({ entity: asset })
+    const tile = map.getTile(position)!
+    expect(world.getComponent(tile, 'position')).toEqual({ position })
+    expect(world.getComponent(tile, 'ground')).toEqual({ feature: 'corridor' })
+    expect(world.getComponent(tile, 'feature')).toEqual({ type: 'trash' })
+    expect(world.getComponent(tile, 'triggered-by')).toEqual({ entity: asset })
+
+    expect(world.getComponent(asset, 'triggers')).toEqual({ entities: [ground] })
     expect(world.getComponent(asset, 'asset')).toEqual({ type: 'trash' })
   })
 })

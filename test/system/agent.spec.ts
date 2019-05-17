@@ -319,7 +319,12 @@ describe('Agent', () => {
       mockComponent(world, 'npc')
       mockComponent(world, 'fov')
       mockComponent(world, 'ai')
+
+      mockComponent(world, 'item')
       mockComponent(world, 'character-stats')
+      mockComponent(world, 'has-action')
+      mockComponent(world, 'inventory')
+      mockComponent(world, 'equipment')
     })
 
     it('creates tiles for each cell in the shape', () => {

@@ -3,18 +3,18 @@ import { World } from '../../src/ecs/world'
 import { mockComponent, mockReturnValue, mockImplementation } from '../mocks'
 import { Storage } from '../../src/ecs/storage'
 import { AssetComponent } from '../../src/components/asset'
-import { ChildrenComponent } from '../../src/components/relation'
 import { FeatureComponent } from '../../src/components/feature'
 import { GroundComponent } from '../../src/components/ground'
 import { Trigger } from '../../src/systems/trigger'
 import { Entity } from '../../src/ecs/entity'
+import { TriggersComponent } from '../../src/components/trigger'
 
 describe('Trigger', () => {
   let world: TlbWorld
 
   let actives: Storage<{}>
   let assets: Storage<AssetComponent>
-  let children: Storage<ChildrenComponent>
+  let triggers: Storage<TriggersComponent>
   let features: Storage<FeatureComponent>
   let grounds: Storage<GroundComponent>
   beforeEach(() => {
@@ -22,7 +22,7 @@ describe('Trigger', () => {
 
     actives = mockComponent(world, 'active')
     assets = mockComponent<AssetComponent>(world, 'asset')
-    children = mockComponent<ChildrenComponent>(world, 'children')
+    triggers = mockComponent<TriggersComponent>(world, 'triggers')
     features = mockComponent<FeatureComponent>(world, 'feature')
     grounds = mockComponent<GroundComponent>(world, 'ground')
   })
@@ -37,8 +37,8 @@ describe('Trigger', () => {
       mockReturnValue<AssetComponent>(assets.get, { type: 'door' })
     })
 
-    it('swaps ground and feature of all children', () => {
-      mockReturnValue<ChildrenComponent>(children.get, { children: [1, 2] })
+    it('swaps ground and feature of all triggers', () => {
+      mockReturnValue<TriggersComponent>(triggers.get, { entities: [1, 2] })
 
       const featureComponents: FeatureComponent[] = [{ type: 'door' }, { type: 'corridor' }]
       const groundComponents: GroundComponent[] = [{ feature: 'corridor' }, { feature: 'door' }]

@@ -106,9 +106,11 @@ export function mockUi(world: TlbWorld): UI {
     update: jest.fn(),
     hasElement: jest.fn(),
     render: jest.fn(),
-    showSelectList: jest.fn(),
-    selectListSelection: jest.fn(),
-    hideSelectList: jest.fn(),
+    showActionSelector: jest.fn(),
+    hideActionSelector: jest.fn(),
+    selectedAction: jest.fn(),
+    setOverview: jest.fn(),
+    setLog: jest.fn(),
   }
   world.registerResource(ui)
   return ui
@@ -142,11 +144,13 @@ export function mockQueries(): Queries {
 
 export function mockRenderer(): Renderer {
   return {
+    boundaries: new Vector(0, 1, 2),
     render: jest.fn(),
     clear: jest.fn(),
     eventToPosition: jest.fn(),
     character: jest.fn(),
     text: jest.fn(),
+    flowText: jest.fn(),
   }
 }
 

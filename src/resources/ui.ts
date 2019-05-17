@@ -18,6 +18,9 @@ export interface UI {
   showActionSelector(world: TlbWorld, title: string, groups: ActionGroup[]): void
   selectedAction(): SelectedAction | undefined
   hideActionSelector(world: TlbWorld): void
+
+  setOverview(world: TlbWorld, focus: Entity): void
+  setLog(world: TlbWorld): void
 }
 
 export class UIResource implements TlbResource, UI {

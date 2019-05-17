@@ -18,7 +18,7 @@ import { Vector } from '../spatial'
 export interface Renderer {
   render(world: TlbWorld): void
 
-  boundary: Vector
+  boundaries: Vector
 
   clear(): void
   eventToPosition(e: UIEvent): Position | undefined
@@ -31,7 +31,7 @@ export interface Renderer {
 export class RotRenderer implements Renderer {
   public constructor(public readonly display: Display, public ambientColor: Color) {}
 
-  public get boundary(): Vector {
+  public get boundaries(): Vector {
     return new Vector(this.display.getOptions().width, this.display.getOptions().height)
   }
 

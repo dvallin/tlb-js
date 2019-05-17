@@ -9,7 +9,7 @@ describe('registerComponents', () => {
 
     registerComponents(world)
 
-    expect(world.registerComponentStorage).toHaveBeenCalledTimes(28)
+    expect(world.registerComponentStorage).toHaveBeenCalledTimes(32)
   })
 })
 
@@ -31,6 +31,6 @@ describe('registerSystems', () => {
 
     registerResources(world, mockRenderer())
 
-    expect(world.registerResource).toHaveBeenCalledTimes(4)
+    expect(world.registerResource).toHaveBeenCalledTimes(5)
   })
 })

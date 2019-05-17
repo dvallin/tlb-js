@@ -65,7 +65,15 @@ export const actions = {
     },
     subActions: [],
   },
-  move: {
+  shortMove: {
+    name: 'move',
+    cost: {
+      actions: 0,
+      movement: 2,
+    },
+    subActions: [movement(3)],
+  },
+  longMove: {
     name: 'move',
     cost: {
       actions: 0,

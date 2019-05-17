@@ -60,7 +60,6 @@ function createAsset(world: TlbWorld, type: AssetType): Entity {
   return world
     .createEntity()
     .withComponent<AssetComponent>('asset', { type })
-    .withComponent('trigger', {})
     .withComponent<TriggersComponent>('triggers', { entities: [] }).entity
 }
 

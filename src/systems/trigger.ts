@@ -6,7 +6,7 @@ import { Entity } from '../ecs/entity'
 import { TriggersComponent } from '../components/trigger'
 
 export class Trigger implements TlbSystem {
-  public readonly components: ComponentName[] = ['active', 'trigger']
+  public readonly components: ComponentName[] = ['active', 'triggers']
 
   public update(world: TlbWorld, entity: Entity): void {
     const asset = world.getComponent<AssetComponent>(entity, 'asset')

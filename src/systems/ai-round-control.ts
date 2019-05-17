@@ -79,7 +79,6 @@ export class AiRoundControl implements TlbSystem {
         selection,
       })
     } else {
-      console.log('did not find player')
       this.endTurn(world, entity)
     }
   }

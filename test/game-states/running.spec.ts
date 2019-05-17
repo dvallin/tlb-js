@@ -1,16 +1,21 @@
 import { Running } from '../../src/game-states/running'
 import { World } from '../../src/ecs/world'
-import { TlbWorld, registerSystems, registerComponents, registerResources } from '../../src/tlb'
-import { Vector } from '../../src/spatial'
-import { mockRenderer, mockQueries } from '../mocks'
+import { TlbWorld } from '../../src/tlb'
+import { mockComponent, mockReturnValue, mockImplementation } from '../mocks'
+import { Storage } from '../../src/ecs/storage'
+import { Entity } from '../../src/ecs/entity'
 
 describe('Running', () => {
   let world: TlbWorld
+  let viewportFocus: Storage<{}>
+  let spawn: Storage<{}>
   beforeEach(() => {
     world = new World()
-    registerResources(world, mockRenderer())
-    registerSystems(world, mockQueries(), jest.fn())
-    registerComponents(world)
+    viewportFocus = mockComponent(world, 'viewport-focus')
+    spawn = mockComponent(world, 'spawn')
+    mockComponent(world, 'free-mode-anchor')
+    mockComponent(world, 'player')
+    mockComponent(world, 'position')
   })
 
   it('is frame locked', () => {
@@ -22,39 +27,37 @@ describe('Running', () => {
   })
 
   describe('start', () => {
-    beforeEach(() => {})
+    let running: Running
+    beforeEach(() => {
+      running = new Running()
+      running.createUILayer = jest.fn()
+      running.spawnPlayer = jest.fn()
+      running.setupAnchor = jest.fn()
+    })
 
     it('starts systems', () => {
-      new Running().start(world)
+      running.start(world)
 
       expect(world.activeSystems).toContain('free-mode-control')
     })
 
     it('creates viewport anchored as free mode', () => {
-      new Running().start(world)
+      mockReturnValue(viewportFocus.size, 0)
+      mockReturnValue(spawn.size, 0)
 
-      expect(world.entityCount).toBe(1)
-      expect(world.getComponent(0, 'free-mode-anchor')).toBeDefined()
-      expect(world.getComponent(0, 'viewport-focus')).toBeDefined()
-      expect(world.getComponent(0, 'position')).toEqual({
-        position: new Vector(20, 20),
-      })
+      running.start(world)
+
+      expect(running.setupAnchor).toHaveBeenCalled()
     })
 
     it('creates player if spawn points exist', () => {
-      world
-        .createEntity()
-        .withComponent('spawn', {})
-        .withComponent('position', { position: new Vector(1, 2) })
+      mockReturnValue(viewportFocus.size, 0)
+      mockReturnValue(spawn.size, 1)
+      mockImplementation(spawn.foreach, (f: (entity: Entity) => void) => f(42))
 
-      new Running().start(world)
+      running.start(world)
 
-      expect(world.entityCount).toBe(2)
-      expect(world.getComponent(1, 'player')).toBeDefined()
-      expect(world.getComponent(1, 'viewport-focus')).toBeDefined()
-      expect(world.getComponent(1, 'position')).toEqual({
-        position: new Vector(1, 2),
-      })
+      expect(running.spawnPlayer).toHaveBeenCalled()
     })
   })
 

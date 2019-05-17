@@ -23,7 +23,7 @@ describe('Viewport', () => {
     world.registerComponentStorage('viewport-focus', new MapStorage<{}>())
     world.registerComponentStorage('position', new MapStorage<PositionComponent>())
 
-    viewport = new ViewportResource()
+    viewport = new ViewportResource(new Vector(30, 40))
   })
 
   describe('update', () => {
@@ -58,9 +58,9 @@ describe('Viewport', () => {
     it('keeps floats and centers if not grid locked', () => {
       viewport.gridLocked = false
       expect(viewport.toDisplay(point1, false)).toEqual({ x: 1, y: -2 })
-      expect(viewport.toDisplay(point1, true)).toEqual({ x: 0.5, y: -2.25 })
+      expect(viewport.toDisplay(point1, true)).toEqual({ x: 1.5, y: -1.75 })
       expect(viewport.toDisplay(point2, false)).toEqual({ x: 1.5, y: -2.5 })
-      expect(viewport.toDisplay(point2, true)).toEqual({ x: 1, y: -2.75 })
+      expect(viewport.toDisplay(point2, true)).toEqual({ x: 2, y: -2.25 })
     })
   })
 
@@ -70,14 +70,14 @@ describe('Viewport', () => {
 
     it('rounds down if grid locked', () => {
       viewport.gridLocked = true
-      focusAndCheck(point1, new Vector(-29, -22))
-      focusAndCheck(point2, new Vector(-29, -23))
+      focusAndCheck(point1, new Vector(-9, -17))
+      focusAndCheck(point2, new Vector(-9, -18))
     })
 
     it('keeps floats if not grid locked', () => {
       viewport.gridLocked = false
-      focusAndCheck(point1, new Vector(-29, -22))
-      focusAndCheck(point2, new Vector(-28.5, -22.5))
+      focusAndCheck(point1, new Vector(-9, -17))
+      focusAndCheck(point2, new Vector(-8.5, -17.5))
     })
 
     function focusAndCheck(point: Vector, topLeft: Vector) {

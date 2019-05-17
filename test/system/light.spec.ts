@@ -44,13 +44,13 @@ describe('Light', () => {
     mockImplementation(map.getTile, (position: Vector) => (position.key === '1,1' ? 42 : undefined))
     new Light(queries).update(world, 0)
     expect(callArgument(lightings.insert, 0, 0)).toEqual(42)
-    expect(callArgument<LightingComponent>(lightings.insert, 0, 1).incomingLight.get(0)).toEqual(new Color([2, 2, 2]))
+    expect(callArgument<LightingComponent>(lightings.insert, 0, 1).incomingLightInFrame.get(0)).toEqual(new Color([2, 2, 2]))
   })
 
   it('adds computed light to characters', () => {
     mockImplementation(map.getCharacter, (position: Vector) => (position.key === '1,1' ? 42 : undefined))
     new Light(queries).update(world, 0)
     expect(callArgument(lightings.insert, 0, 0)).toEqual(42)
-    expect(callArgument<LightingComponent>(lightings.insert, 0, 1).incomingLight.get(0)).toEqual(new Color([2, 2, 2]))
+    expect(callArgument<LightingComponent>(lightings.insert, 0, 1).incomingLightInFrame.get(0)).toEqual(new Color([2, 2, 2]))
   })
 })

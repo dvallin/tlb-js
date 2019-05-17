@@ -10,6 +10,7 @@ import { ViewportResource, Viewport } from '../resources/viewport'
 import { UIResource } from '../resources/ui'
 import { HasActionComponent } from '../components/action'
 import { InventoryComponent, ItemComponent, EquipmentComponent } from '../components/items'
+import { Entity } from '../ecs/entity'
 
 export class Running extends AbstractState {
   public constructor() {
@@ -28,37 +29,45 @@ export class Running extends AbstractState {
     if (spawns.size() === 1) {
       const map: WorldMap = world.getResource<WorldMapResource>('map')
       spawns.foreach(spawn => {
-        const position = world.getComponent<PositionComponent>(spawn, 'position')!.position
-        const nailgun = world.createEntity().withComponent<ItemComponent>('item', { type: 'nailGun' }).entity
-        const rifle = world.createEntity().withComponent<ItemComponent>('item', { type: 'rifle' }).entity
-        const player = world
-          .createEntity()
-          .withComponent<{}>('player', {})
-          .withComponent<{}>('viewport-focus', {})
-          .withComponent<PositionComponent>('position', { position })
-          .withComponent<FeatureComponent>('feature', { type: 'player' })
-          .withComponent<FovComponent>('fov', { fov: [] })
-          .withComponent<HasActionComponent>('has-action', { actions: ['move', 'hit', 'rush', 'endTurn'] })
-          .withComponent<CharacterStatsComponent>('character-stats', createCharacterStatsComponent('player'))
-          .withComponent<InventoryComponent>('inventory', { content: [nailgun, rifle] })
-          .withComponent<EquipmentComponent>('equipment', { equiped: [nailgun, rifle] }).entity
-        const ui = world.getResource<UIResource>('ui')
-        ui.setOverview(world, player)
-        ui.setLog(world)
-        map.setCharacter(position, player)
+        this.spawnPlayer(world, map, spawn)
       })
     } else {
-      const position = new Vector(20, 20)
-      world
-        .createEntity()
-        .withComponent<{}>('free-mode-anchor', {})
-        .withComponent<{}>('viewport-focus', {})
-        .withComponent<PositionComponent>('position', { position })
+      this.setupAnchor(world)
     }
     this.createUILayer(world)
   }
 
-  private createUILayer(world: TlbWorld) {
+  public spawnPlayer(world: TlbWorld, map: WorldMap, spawn: Entity): void {
+    const position = world.getComponent<PositionComponent>(spawn, 'position')!.position
+    const nailgun = world.createEntity().withComponent<ItemComponent>('item', { type: 'nailGun' }).entity
+    const rifle = world.createEntity().withComponent<ItemComponent>('item', { type: 'rifle' }).entity
+    const player = world
+      .createEntity()
+      .withComponent<{}>('player', {})
+      .withComponent<{}>('viewport-focus', {})
+      .withComponent<PositionComponent>('position', { position })
+      .withComponent<FeatureComponent>('feature', { type: 'player' })
+      .withComponent<FovComponent>('fov', { fov: [] })
+      .withComponent<HasActionComponent>('has-action', { actions: ['longMove', 'hit', 'rush', 'endTurn'] })
+      .withComponent<CharacterStatsComponent>('character-stats', createCharacterStatsComponent('player'))
+      .withComponent<InventoryComponent>('inventory', { content: [nailgun, rifle] })
+      .withComponent<EquipmentComponent>('equipment', { equiped: [nailgun, rifle] }).entity
+    const ui = world.getResource<UIResource>('ui')
+    ui.setOverview(world, player)
+    ui.setLog(world)
+    map.setCharacter(position, player)
+  }
+
+  public setupAnchor(world: TlbWorld): void {
+    const position = new Vector(20, 20)
+    world
+      .createEntity()
+      .withComponent<{}>('free-mode-anchor', {})
+      .withComponent<{}>('viewport-focus', {})
+      .withComponent<PositionComponent>('position', { position })
+  }
+
+  public createUILayer(world: TlbWorld): void {
     const viewport: Viewport = world.getResource<ViewportResource>('viewport')
     viewport.addLayer({
       getRenderable: (world, position) => {

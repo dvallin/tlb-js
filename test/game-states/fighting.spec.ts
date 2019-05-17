@@ -52,19 +52,11 @@ describe('Fighting', () => {
       expect(viewport.gridLocked).toBeTruthy()
     })
 
-    it('adds all characters to wait turn', () => {
-      const state = new Fighting()
-      state.start(world)
-      expect(waitTurn.insert).toHaveBeenCalledTimes(2)
-      expect(waitTurn.insert).toHaveBeenCalledWith(0, {})
-      expect(waitTurn.insert).toHaveBeenCalledWith(1, {})
-    })
-
     it('sets player to take turn', () => {
       const state = new Fighting()
       state.start(world)
       expect(stats.get).toHaveBeenCalledWith(0)
-      expect(takeTurn.insert).toHaveBeenCalledWith(0, { actions: 5, movements: 8 })
+      expect(takeTurn.insert).toHaveBeenCalledWith(0, { actions: 3, movements: 3 })
       expect(waitTurn.remove).toHaveBeenCalledWith(0)
     })
   })
@@ -84,7 +76,7 @@ describe('Fighting', () => {
         mockReturnValue(waitTurn.first, 1)
         state.update(world)
         expect(stats.get).toHaveBeenCalledWith(1)
-        expect(takeTurn.insert).toHaveBeenCalledWith(1, { actions: 5, movements: 4 })
+        expect(takeTurn.insert).toHaveBeenCalledWith(1, { actions: 5, movements: 2 })
         expect(waitTurn.remove).toHaveBeenCalledWith(1)
       })
 
