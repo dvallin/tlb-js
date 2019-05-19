@@ -48,6 +48,7 @@ import { AiRoundControl } from './systems/ai-round-control'
 import { TriggersComponent, TriggeredByComponent } from './components/trigger'
 import { EffectComponent, ActiveEffectsComponent } from './components/effects'
 import { InventoryComponent, ItemComponent, EquipedItemsComponent } from './components/items'
+import { StartRound } from './systems/start-round'
 
 export type ComponentName =
   | 'active'
@@ -76,6 +77,7 @@ export type ComponentName =
   | 'selected-action'
   | 'active-effects'
   | 'spawn'
+  | 'start-turn'
   | 'take-turn'
   | 'took-turn'
   | 'triggered-by'
@@ -85,6 +87,7 @@ export type ComponentName =
 export type SystemName =
   | 'agent'
   | 'ai-round-control'
+  | 'start-round'
   | 'effect'
   | 'fov'
   | 'free-mode-control'
@@ -132,6 +135,7 @@ export function registerComponents<S, R>(world: World<ComponentName, S, R>): voi
   world.registerComponentStorage('spawn', new SingletonStorage<{}>())
   world.registerComponentStorage('take-turn', new MapStorage<TakeTurnComponent>())
   world.registerComponentStorage('took-turn', new SetStorage())
+  world.registerComponentStorage('start-turn', new SetStorage())
   world.registerComponentStorage('triggered-by', new MapStorage<TriggeredByComponent>())
   world.registerComponentStorage('triggers', new MapStorage<TriggersComponent>())
   world.registerComponentStorage('viewport-focus', new SingletonStorage<{}>())
@@ -165,4 +169,5 @@ export function registerSystems(
   world.registerSystem('region-creator', new RegionCreator(new Random(uniform)))
   world.registerSystem('script', new Script())
   world.registerSystem('trigger', new Trigger())
+  world.registerSystem('start-round', new StartRound(new Random(uniform)))
 }

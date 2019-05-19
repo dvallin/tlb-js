@@ -1,11 +1,10 @@
 import { ComponentName, TlbSystem, TlbWorld } from '../tlb'
 import { EffectComponent, ActiveEffectsComponent, Effect } from '../components/effects'
 import { Entity } from '../ecs/entity'
-import { CharacterStatsComponent, characterStats } from '../components/character-stats'
-import { WorldMap, WorldMapResource } from '../resources/world-map'
-import { PositionComponent } from '../components/position'
+import { CharacterStatsComponent } from '../components/character-stats'
 import { LogResource, Log } from '../resources/log'
 import { EquipedItemsComponent, ItemComponent, items } from '../components/items'
+import { damageBodyPart, healBodyPart, kill } from '../component-reducers/damage-bodypart'
 
 export class ApplyEffects implements TlbSystem {
   public readonly components: ComponentName[] = ['effect']
@@ -21,14 +20,11 @@ export class ApplyEffects implements TlbSystem {
           this.applyDamage(world, effectComponent)
         }
         break
-      case 'confuse':
-        this.applyStatusEffect(world, effectComponent)
-        break
-      case 'stun':
-        this.applyStatusEffect(world, effectComponent)
-        break
       case 'kill':
-        this.kill(world, effectComponent.target)
+        kill(world, effectComponent.target)
+        break
+      default:
+        this.applyStatusEffect(world, effectComponent)
         break
     }
     world.deleteEntity(entity)
@@ -58,26 +54,7 @@ export class ApplyEffects implements TlbSystem {
       const defense = defensiveEffects.reduce((a, b) => a + b.value! * (b.negated ? -1 : 1), 0)
       const effectiveDamage = Math.max(0, effect.value! - defense)
 
-      const bodyPart = stats.current.bodyParts[effectComponent.bodyPart]
-      bodyPart.health = Math.max(0, bodyPart.health - effectiveDamage)
-
-      if (bodyPart.health === 0) {
-        const isLethal = bodyPart.type === 'torso' || bodyPart.type === 'head'
-        if (isLethal) {
-          this.kill(world, effectComponent.target)
-        } else {
-          world.createEntity().withComponent<EffectComponent>('effect', {
-            effect: {
-              type: 'bleed',
-              negated: false,
-              global: false,
-            },
-            bodyPart: 'torso',
-            source: effectComponent.source,
-            target: effectComponent.target,
-          })
-        }
-      }
+      damageBodyPart(world, effectComponent.source, effectComponent.target, stats, effectComponent.bodyPart, effectiveDamage)
     }
   }
 
@@ -86,37 +63,14 @@ export class ApplyEffects implements TlbSystem {
     const { effect } = effectComponent
 
     if (stats !== undefined) {
-      const bodyPart = stats.current.bodyParts[effectComponent.bodyPart]
-      const maximum = characterStats[stats.type].bodyParts[effectComponent.bodyPart]
-      bodyPart.health = Math.max(bodyPart.health + effect.value!, maximum.health)
-
+      healBodyPart(stats, effectComponent.bodyPart, effect.value!)
       const log: Log = world.getResource<LogResource>('log')
       log.effectApplied(world, effectComponent)
     }
   }
 
   public applyStatusEffect(world: TlbWorld, effectComponent: EffectComponent) {
-    const activeEffects = world.getComponent<ActiveEffectsComponent>(effectComponent.target, 'active-effects')
-    if (activeEffects !== undefined) {
-      activeEffects.effects.push(effectComponent.effect)
-    }
-  }
-
-  public kill(world: TlbWorld, entity: Entity) {
-    if (world.hasComponent(entity, 'position')) {
-      const position = world.getComponent<PositionComponent>(entity, 'position')!
-      const map: WorldMap = world.getResource<WorldMapResource>('map')
-      map.removeCharacter(position.position)
-
-      world
-        .editEntity(entity)
-        .removeComponent('position')
-        .removeComponent('take-turn')
-        .removeComponent('took-turn')
-        .removeComponent('wait-turn')
-
-      const log: Log = world.getResource<LogResource>('log')
-      log.died(world, entity)
-    }
+    const activeEffects = world.getComponent<ActiveEffectsComponent>(effectComponent.target, 'active-effects')!
+    activeEffects.effects.push({ effect: effectComponent.effect, bodyPart: effectComponent.bodyPart })
   }
 }

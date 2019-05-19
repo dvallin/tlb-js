@@ -11,6 +11,7 @@ import { UIResource } from '../resources/ui'
 import { HasActionComponent } from '../components/action'
 import { InventoryComponent, ItemComponent, EquipedItemsComponent } from '../components/items'
 import { Entity } from '../ecs/entity'
+import { ActiveEffectsComponent } from '../components/effects'
 
 export class Running extends AbstractState {
   public constructor() {
@@ -54,6 +55,7 @@ export class Running extends AbstractState {
       .withComponent<HasActionComponent>('has-action', { actions: ['longMove', 'hit', 'rush', 'endTurn'] })
       .withComponent<CharacterStatsComponent>('character-stats', stats)
       .withComponent<InventoryComponent>('inventory', { content: [nailgun, rifle] })
+      .withComponent<ActiveEffectsComponent>('active-effects', { effects: [] })
       .withComponent<EquipedItemsComponent>('equiped-items', {
         equipment: [{ entity: nailgun, bodyParts: ['leftArm'] }, { entity: jacket, bodyParts: ['torso', 'leftArm', 'rightArm'] }],
       }).entity

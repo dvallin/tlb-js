@@ -22,6 +22,7 @@ import { createCharacterStatsComponent, CharacterStatsComponent } from '../compo
 import { AiComponent } from '../components/ai'
 import { ItemComponent, InventoryComponent, EquipedItemsComponent } from '../components/items'
 import { HasActionComponent } from '../components/action'
+import { ActiveEffectsComponent } from '../components/effects'
 
 export interface PositionedAgent {
   position: PositionComponent
@@ -347,7 +348,8 @@ export class Agent implements TlbSystem {
       .withComponent<HasActionComponent>('has-action', { actions: ['longMove', 'hit', 'rush', 'endTurn'] })
       .withComponent<CharacterStatsComponent>('character-stats', createCharacterStatsComponent(characterType))
       .withComponent<InventoryComponent>('inventory', { content: [weapon] })
-      .withComponent<EquipedItemsComponent>('equiped-items', { equipment: [{ entity: weapon, bodyParts: ['leftArm'] }] }).entity
+      .withComponent<EquipedItemsComponent>('equiped-items', { equipment: [{ entity: weapon, bodyParts: ['leftArm'] }] })
+      .withComponent<ActiveEffectsComponent>('active-effects', { effects: [] }).entity
     map.setCharacter(position, entity)
   }
 

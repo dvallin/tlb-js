@@ -12,6 +12,7 @@ import { WindowDecoration } from './window-decoration'
 import { Rectangle } from '../geometry/rectangle'
 import { calculateBrightness } from '../component-reducers/brigthness'
 import { FeatureType, FeatureComponent, features } from '../components/feature'
+import { ActiveEffectsComponent } from '../components/effects'
 
 export interface CharacterDescription {
   feature?: FeatureType
@@ -25,6 +26,7 @@ export interface State {
   focus: Entity
 
   stats?: CharacterStatsComponent
+  activeEffects?: ActiveEffectsComponent
   takeTurn?: TakeTurnComponent
   enemies: CharacterDescription[]
   lighting?: LightingComponent
@@ -58,13 +60,27 @@ export class Overview implements UIElement {
           const currentValue = current.bodyParts[key].health
           const maximumValue = maximum.bodyParts[key].health
           const bars = Math.ceil((5 * currentValue) / maximumValue)
+          const effects = this.state.activeEffects!.effects.filter(e => e.bodyPart === key && !e.effect.global).map(e => e.effect.type[0])
+
           renderer.text(
             `${key}${' '.repeat(8 - key.length)}${'|'.repeat(bars)}`,
             this.state.bodyParts.topLeft.add(new Vector(1, y)),
-            primary[1]
+            effects.length > 0 || bars <= 2 ? primary[3] : primary[1]
           )
+
+          effects.forEach((name, index) => {
+            renderer.text(name, this.state.bodyParts.topLeft.add(new Vector(index + 14, y)), primary[2])
+          })
           y++
         })
+
+        const globalEffects = this.state.activeEffects!.effects.filter(e => e.effect.global).map(e => e.effect.type[0])
+
+        globalEffects.forEach((name, index) => {
+          renderer.text(name, this.state.bodyParts.topLeft.add(new Vector(1 + index, y)), primary[2])
+        })
+        y++
+
         this.state.bodyParts.setHeight(y + 1)
       }
     } else {
@@ -131,6 +147,7 @@ export class Overview implements UIElement {
       const feature = world.getComponent<FeatureComponent>(entity, 'feature') || { type: undefined }
       this.state.enemies.push({ feature: feature.type })
     })
+    this.state.activeEffects = world.getComponent<ActiveEffectsComponent>(this.state.focus, 'active-effects')
     this.state.stats = world.getComponent<CharacterStatsComponent>(this.state.focus, 'character-stats')
     this.state.lighting = world.getComponent<LightingComponent>(this.state.focus, 'lighting')
   }

@@ -12,7 +12,10 @@ export interface Effect {
 }
 
 export interface ActiveEffectsComponent {
-  effects: Effect[]
+  effects: {
+    effect: Effect
+    bodyPart: string
+  }[]
 }
 
 export interface EffectComponent {
@@ -26,8 +29,16 @@ export function damage(value: number): Effect {
   return { type: 'damage', global: false, negated: false, value }
 }
 
-export function confuse(): Effect {
-  return { type: 'confuse', global: true, negated: false }
+export function confuse(duration: number): Effect {
+  return { type: 'confuse', global: true, negated: false, duration }
+}
+
+export function stun(duration: number): Effect {
+  return { type: 'stun', global: true, negated: false, duration }
+}
+
+export function immobilize(duration: number): Effect {
+  return { type: 'immobilize', global: true, negated: false, duration }
 }
 
 export function kill(): Effect {

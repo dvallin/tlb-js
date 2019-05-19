@@ -1,5 +1,5 @@
 import { Entity } from '../ecs/entity'
-import { damage, Effect, confuse } from './effects'
+import { damage, Effect, confuse, stun, immobilize } from './effects'
 
 export interface Cost {
   actions: number
@@ -120,7 +120,7 @@ export const actions = {
       movement: 0,
     },
     attack: {},
-    subActions: [attack(3, 4, [damage(3)])],
+    subActions: [attack(3, 4, [damage(3), immobilize(1)])],
   },
   bolt: {
     name: 'bolt',
@@ -128,7 +128,7 @@ export const actions = {
       actions: 3,
       movement: 0,
     },
-    subActions: [attack(1, 5, [damage(7), confuse()])],
+    subActions: [attack(1, 5, [damage(7), stun(1)])],
   },
   hitAndRun: {
     name: 'hit and run',
@@ -136,7 +136,7 @@ export const actions = {
       actions: 3,
       movement: 3,
     },
-    subActions: [attack(1, 4, [damage(3)]), movement(5)],
+    subActions: [attack(1, 4, [damage(3), confuse(1)]), movement(6)],
   },
 }
 export const actionsTypeguard: { [key: string]: Action } = actions
