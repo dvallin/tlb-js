@@ -18,43 +18,35 @@ export function attackTarget(world: TlbWorld, random: Random, entity: Entity, ta
     .floor()
     .minus(targetPosition.position.floor())
     .lN()
-  const normalizedDistance = Math.floor((10 * distance) / attack.range)
+  const normalizedDistance = Math.floor((10 * (distance - 1)) / attack.range)
   const lighting = world.getComponent<LightingComponent>(target, 'lighting')!
   const brightness = calculateBrightness(lighting)
 
   const baseChance = stats.current.aim + attack.accuracy
-  const brightnessPenalty = brightness > 5 ? 0 : brightness > 3 ? 2 : 3
+  const brightnessPenalty = brightness > 5 ? 0 : brightness > 3 ? 3 : 4
   const distancePenalty = normalizedDistance < 5 ? 0 : normalizedDistance < 7 ? 2 : 3
   const bodyPartPenalty = calculateBodyPartPenalty(targetStats.current.bodyParts[bodyPart].type)
 
   const hitChance = (baseChance - distancePenalty - brightnessPenalty - bodyPartPenalty) / 10
-  const critChance = (baseChance - distancePenalty - bodyPartPenalty) / 10
+  const critChance = (stats.current.aim - distancePenalty - bodyPartPenalty) / 20
 
   const log: Log = world.getResource<LogResource>('log')
   log.attack(world, entity, target, bodyPart, attack)
-
+  console.log('try to hit: ', hitChance, critChance)
   if (random.decision(hitChance)) {
-    attack.effects.forEach(effect =>
+    const isCritial = random.decision(critChance)
+    attack.effects.forEach(effect => {
+      const value = effect.type === 'damage' && isCritial ? effect.value! * 2 : effect.value
       world.createEntity().withComponent<EffectComponent>('effect', {
         source: entity,
         target: target!,
-        value: attack.damage,
-        effect,
         bodyPart,
+        effect: {
+          ...effect,
+          value,
+        },
       })
-    )
-    const isCritial = random.decision(critChance)
-    if (isCritial) {
-      attack.effects.forEach(effect =>
-        world.createEntity().withComponent<EffectComponent>('effect', {
-          source: entity,
-          target: target!,
-          value: attack.damage,
-          effect,
-          bodyPart,
-        })
-      )
-    }
+    })
   } else {
     log.missed(world, entity)
   }
@@ -69,6 +61,6 @@ function calculateBodyPartPenalty(type: bodyPartType): number {
     case 'torso':
       return 0
     case 'head':
-      return 2
+      return 3
   }
 }

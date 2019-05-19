@@ -30,7 +30,7 @@ describe('PlayerInteraction', () => {
     mockReturnValue(positions.get, { position: new Vector(1.2, 1.3) })
 
     actives = mockComponent<PositionComponent>(world, 'active')
-    triggers = mockComponent<PositionComponent>(world, 'trigger')
+    triggers = mockComponent<PositionComponent>(world, 'triggers')
     triggeredBy = mockComponent<TriggeredByComponent>(world, 'triggered-by')
   })
 

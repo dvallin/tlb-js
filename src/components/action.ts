@@ -1,5 +1,5 @@
 import { Entity } from '../ecs/entity'
-import { effect } from './effects'
+import { damage, Effect, confuse } from './effects'
 
 export interface Cost {
   actions: number
@@ -14,8 +14,7 @@ export interface Movement {
 
 export interface Attack {
   kind: 'attack'
-  effects: effect[]
-  damage: number
+  effects: Effect[]
   range: number
   accuracy: number
 }
@@ -51,8 +50,8 @@ function movement(range: number): Movement {
   return { kind: 'movement', range }
 }
 
-function attack(range: number, damage: number, accuracy: number, effects: effect[] = ['damage']): Attack {
-  return { kind: 'attack', damage, range, accuracy, effects }
+function attack(range: number, accuracy: number, effects: Effect[]): Attack {
+  return { kind: 'attack', range, accuracy, effects }
 }
 
 export const actions = {
@@ -73,6 +72,14 @@ export const actions = {
     },
     subActions: [movement(3)],
   },
+  consume: {
+    name: 'consume',
+    cost: {
+      actions: 1,
+      movement: 0,
+    },
+    subActions: [],
+  },
   longMove: {
     name: 'move',
     cost: {
@@ -87,7 +94,7 @@ export const actions = {
       actions: 2,
       movement: 0,
     },
-    subActions: [attack(1, 1, 10)],
+    subActions: [attack(1, 8, [damage(3)])],
   },
   rush: {
     name: 'rush',
@@ -104,7 +111,7 @@ export const actions = {
       actions: 3,
       movement: 0,
     },
-    subActions: [attack(5, 2, 5)],
+    subActions: [attack(5, 4, [damage(5)])],
   },
   overcharge: {
     name: 'overcharge',
@@ -113,15 +120,15 @@ export const actions = {
       movement: 0,
     },
     attack: {},
-    subActions: [attack(3, 3, 3)],
+    subActions: [attack(3, 4, [damage(3)])],
   },
-  execute: {
-    name: 'execute',
+  bolt: {
+    name: 'bolt',
     cost: {
       actions: 3,
       movement: 0,
     },
-    subActions: [attack(1, 5, 10, ['damage', 'confuse'])],
+    subActions: [attack(1, 5, [damage(7), confuse()])],
   },
   hitAndRun: {
     name: 'hit and run',
@@ -129,7 +136,7 @@ export const actions = {
       actions: 3,
       movement: 3,
     },
-    subActions: [attack(1, 2, 3, ['damage']), movement(5)],
+    subActions: [attack(1, 4, [damage(3)]), movement(5)],
   },
 }
 export const actionsTypeguard: { [key: string]: Action } = actions

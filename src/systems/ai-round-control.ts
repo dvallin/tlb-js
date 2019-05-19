@@ -41,33 +41,40 @@ export class AiRoundControl implements TlbSystem {
   public selectAction(world: TlbWorld, entity: Entity, actionGroups: ActionGroup[]) {
     const position = world.getComponent<PositionComponent>(entity, 'position')!
     let target = this.findTarget(world, position.position)
-    const movementActions: SelectedAction[] = []
-    const fightActions: SelectedAction[] = []
-    const allActions: SelectedAction[] = []
-    for (const group of actionGroups) {
-      group.actions
-        .filter(action => action.available)
-        .map(availableAction => {
-          const selectedAction = { entity: group.entity, action: availableAction.action }
-          const hasMovement = availableAction.action.subActions.find(s => s.kind === 'movement') !== undefined
-          if (hasMovement) {
-            movementActions.push(selectedAction)
-          }
-          const hasAttack = availableAction.action.subActions.find(s => s.kind === 'attack') !== undefined
-          if (hasAttack) {
-            fightActions.push(selectedAction)
-          }
-          allActions.push(selectedAction)
-        })
-    }
+
     if (target !== undefined) {
       const targetPosition = world.getComponent<PositionComponent>(target, 'position')!
+      const path = this.queries.ray(world, position.position, targetPosition.position, {})
+
+      const movementActions: SelectedAction[] = []
+      const fightActions: SelectedAction[] = []
+      const allActions: SelectedAction[] = []
+      for (const group of actionGroups) {
+        group.actions
+          .filter(action => action.available)
+          .map(availableAction => {
+            const selectedAction = { entity: group.entity, action: availableAction.action }
+            const hasMovement = availableAction.action.subActions.find(s => s.kind === 'movement') !== undefined
+            if (hasMovement) {
+              movementActions.push(selectedAction)
+            }
+            const hasAttack =
+              availableAction.action.subActions.filter(s => path !== undefined && s.range >= path.cost).find(s => s.kind === 'attack') !==
+              undefined
+            if (hasAttack) {
+              fightActions.push(selectedAction)
+            }
+            allActions.push(selectedAction)
+          })
+      }
+
       const dist = targetPosition.position.minus(position.position)
       let selection: SelectedAction
       const canGetCloser = dist.lN() > 1 && movementActions.length > 0
+      const isInSight = path !== undefined
       if (canGetCloser) {
         selection = this.random.pick(movementActions)
-      } else if (fightActions.length > 0) {
+      } else if (fightActions.length > 0 && isInSight) {
         selection = this.random.pick(fightActions)
       } else {
         selection = this.random.pick(allActions)
@@ -102,8 +109,13 @@ export class AiRoundControl implements TlbSystem {
           this.move(world, entity, selectedAction.target!, currentAction)
           break
         case 'attack':
-          const bodyPart = this.chooseBodyPart(world, selectedAction.target!)
-          attackTarget(world, this.random, entity, selectedAction.target!, bodyPart!, currentAction)
+          const position = world.getComponent<PositionComponent>(entity, 'position')!
+          const targetPosition = world.getComponent<PositionComponent>(selectedAction.target!, 'position')!
+          const path = this.queries.ray(world, position.position, targetPosition.position, {})
+          if (path !== undefined && path.cost <= currentAction.range) {
+            const bodyPart = this.chooseBodyPart(world, selectedAction.target!)
+            attackTarget(world, this.random, entity, selectedAction.target!, bodyPart!, currentAction)
+          }
           break
       }
       selectedAction.currentSubAction++
@@ -128,11 +140,13 @@ export class AiRoundControl implements TlbSystem {
     let nearestPlayer: Entity | undefined
     let bestDist = Number.MAX_SAFE_INTEGER
     world.getStorage('player').foreach(player => {
-      const playerPosition = world.getComponent<PositionComponent>(player, 'position')!
-      const dist = position.minus(playerPosition.position).squaredLength()
-      if (nearestPlayer === undefined && dist < bestDist) {
-        nearestPlayer = player
-        bestDist = dist
+      const playerPosition = world.getComponent<PositionComponent>(player, 'position')
+      if (playerPosition !== undefined) {
+        const dist = position.minus(playerPosition.position).squaredLength()
+        if (nearestPlayer === undefined && dist < bestDist) {
+          nearestPlayer = player
+          bestDist = dist
+        }
       }
     })
     return nearestPlayer

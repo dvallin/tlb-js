@@ -31,13 +31,13 @@ export class PlayerInteraction implements TlbSystem {
     shape.some(p => {
       const entity = map.getTile(p)
       if (entity !== undefined) {
-        if (world.getComponent(entity, 'trigger') !== undefined) {
+        if (world.getComponent(entity, 'triggers') !== undefined) {
           trigger = entity
           return true
         }
         const triggeredBy = world.getComponent<TriggeredByComponent>(entity, 'triggered-by')
         if (triggeredBy !== undefined) {
-          if (world.getComponent(triggeredBy.entity, 'trigger') !== undefined) {
+          if (world.getComponent(triggeredBy.entity, 'triggers') !== undefined) {
             trigger = triggeredBy.entity
             return true
           }

@@ -37,6 +37,10 @@ export class World<C, S, R> {
     return undefined
   }
 
+  public hasEntity(entity: Entity): boolean {
+    return entity <= this.lastEntity && !this.openEntities.has(entity)
+  }
+
   public hasComponent(entity: Entity, component: C): boolean {
     const storage = this.getStorage(component)
     if (storage !== undefined) {

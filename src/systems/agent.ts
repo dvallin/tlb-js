@@ -20,7 +20,7 @@ import { Color } from '../renderer/color'
 import { FovComponent } from '../components/fov'
 import { createCharacterStatsComponent, CharacterStatsComponent } from '../components/character-stats'
 import { AiComponent } from '../components/ai'
-import { ItemComponent, InventoryComponent, EquipmentComponent } from '../components/items'
+import { ItemComponent, InventoryComponent, EquipedItemsComponent } from '../components/items'
 import { HasActionComponent } from '../components/action'
 
 export interface PositionedAgent {
@@ -344,10 +344,10 @@ export class Agent implements TlbSystem {
       .withComponent<PositionComponent>('position', { position: centeredPosition })
       .withComponent<FovComponent>('fov', { fov: [] })
       .withComponent<AiComponent>('ai', { type: 'rushing', state: 'idle' })
-      .withComponent<HasActionComponent>('has-action', { actions: ['move', 'hit', 'rush', 'endTurn'] })
+      .withComponent<HasActionComponent>('has-action', { actions: ['longMove', 'hit', 'rush', 'endTurn'] })
       .withComponent<CharacterStatsComponent>('character-stats', createCharacterStatsComponent(characterType))
       .withComponent<InventoryComponent>('inventory', { content: [weapon] })
-      .withComponent<EquipmentComponent>('equipment', { equiped: [weapon] }).entity
+      .withComponent<EquipedItemsComponent>('equiped-items', { equipment: [{ entity: weapon, bodyParts: ['leftArm'] }] }).entity
     map.setCharacter(position, entity)
   }
 

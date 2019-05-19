@@ -11,6 +11,7 @@ import { Rectangle } from '../src/geometry/rectangle'
 import { Input } from '../src/resources/input'
 import { UI } from '../src/resources/ui'
 import { Viewport } from '../src/resources/viewport'
+import { Log, LogResource } from '../src/resources/log'
 
 export function mockComponent<T>(world: TlbWorld, component: ComponentName): Storage<T> {
   const storage = {
@@ -130,6 +131,25 @@ export function mockViewport(world: TlbWorld): Viewport {
   }
   world.registerResource(viewport)
   return viewport
+}
+
+export function mockLog(world: TlbWorld): Log {
+  const log: LogResource = {
+    kind: 'log' as ResourceName,
+    update: jest.fn(),
+    getEntries: jest.fn(),
+    effectApplied: jest.fn(),
+    died: jest.fn(),
+    missed: jest.fn(),
+    attack: jest.fn(),
+    render: jest.fn(),
+    objectify: jest.fn(),
+    verbify: jest.fn(),
+    entries: [],
+    getName: jest.fn(),
+  }
+  world.registerResource(log)
+  return log
 }
 
 export function mockQueries(): Queries {

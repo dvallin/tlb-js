@@ -2,7 +2,7 @@ import { TlbWorld } from '../tlb'
 import { Entity } from '../ecs/entity'
 import { TakeTurnComponent } from '../components/rounds'
 import { HasActionComponent, ActionType, actions } from '../components/action'
-import { EquipmentComponent, ItemComponent, items } from '../components/items'
+import { EquipedItemsComponent, ItemComponent, items } from '../components/items'
 import { SelectableAction, ActionGroup } from '../ui/action-selector'
 
 export function calculateAvailableActions(world: TlbWorld, entity: Entity, takeTurn: TakeTurnComponent): ActionGroup[] {
@@ -18,11 +18,11 @@ function buildPlayerActionGroup(world: TlbWorld, entity: Entity, takeTurn: TakeT
 }
 
 function buildEquipmentActionGroups(world: TlbWorld, entity: Entity, takeTurn: TakeTurnComponent): ActionGroup[] {
-  const equipment = world.getComponent<EquipmentComponent>(entity, 'equipment')!
-  return equipment.equiped.map(entity => {
-    const item = items[world.getComponent<ItemComponent>(entity, 'item')!.type]
+  const equipment = world.getComponent<EquipedItemsComponent>(entity, 'equiped-items')!
+  return equipment.equipment.map(equiped => {
+    const item = items[world.getComponent<ItemComponent>(equiped.entity, 'item')!.type]
     const actions: SelectableAction[] = buildSelectableActions(item.actions, takeTurn)
-    return { actions, description: item.description, name: item.name, entity }
+    return { actions, description: item.description, name: item.name, entity: equiped.entity }
   })
 }
 

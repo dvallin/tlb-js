@@ -57,7 +57,12 @@ export class Overview implements UIElement {
         Object.keys(current.bodyParts).forEach(key => {
           const currentValue = current.bodyParts[key].health
           const maximumValue = maximum.bodyParts[key].health
-          renderer.text(`${key}: ${(currentValue / maximumValue) * 100}%`, this.state.bodyParts.topLeft.add(new Vector(1, y)), primary[1])
+          const bars = Math.ceil((5 * currentValue) / maximumValue)
+          renderer.text(
+            `${key}${' '.repeat(8 - key.length)}${'|'.repeat(bars)}`,
+            this.state.bodyParts.topLeft.add(new Vector(1, y)),
+            primary[1]
+          )
           y++
         })
         this.state.bodyParts.setHeight(y + 1)

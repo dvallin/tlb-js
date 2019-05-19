@@ -9,7 +9,7 @@ import { CharacterStatsComponent, createCharacterStatsComponent } from '../compo
 import { ViewportResource, Viewport } from '../resources/viewport'
 import { UIResource } from '../resources/ui'
 import { HasActionComponent } from '../components/action'
-import { InventoryComponent, ItemComponent, EquipmentComponent } from '../components/items'
+import { InventoryComponent, ItemComponent, EquipedItemsComponent } from '../components/items'
 import { Entity } from '../ecs/entity'
 
 export class Running extends AbstractState {
@@ -39,8 +39,11 @@ export class Running extends AbstractState {
 
   public spawnPlayer(world: TlbWorld, map: WorldMap, spawn: Entity): void {
     const position = world.getComponent<PositionComponent>(spawn, 'position')!.position
+    const stats = createCharacterStatsComponent('player')
     const nailgun = world.createEntity().withComponent<ItemComponent>('item', { type: 'nailGun' }).entity
     const rifle = world.createEntity().withComponent<ItemComponent>('item', { type: 'rifle' }).entity
+    const jacket = world.createEntity().withComponent<ItemComponent>('item', { type: 'leatherJacket' }).entity
+
     const player = world
       .createEntity()
       .withComponent<{}>('player', {})
@@ -49,9 +52,11 @@ export class Running extends AbstractState {
       .withComponent<FeatureComponent>('feature', { type: 'player' })
       .withComponent<FovComponent>('fov', { fov: [] })
       .withComponent<HasActionComponent>('has-action', { actions: ['longMove', 'hit', 'rush', 'endTurn'] })
-      .withComponent<CharacterStatsComponent>('character-stats', createCharacterStatsComponent('player'))
+      .withComponent<CharacterStatsComponent>('character-stats', stats)
       .withComponent<InventoryComponent>('inventory', { content: [nailgun, rifle] })
-      .withComponent<EquipmentComponent>('equipment', { equiped: [nailgun, rifle] }).entity
+      .withComponent<EquipedItemsComponent>('equiped-items', {
+        equipment: [{ entity: nailgun, bodyParts: ['leftArm'] }, { entity: jacket, bodyParts: ['torso', 'leftArm', 'rightArm'] }],
+      }).entity
     const ui = world.getResource<UIResource>('ui')
     ui.setOverview(world, player)
     ui.setLog(world)

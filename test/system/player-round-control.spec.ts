@@ -4,7 +4,7 @@ import { World } from '../../src/ecs/world'
 import { mockComponent, mockReturnValue, mockQueries, mockRandom } from '../mocks'
 import { Storage } from '../../src/ecs/storage'
 import { HasActionComponent } from '../../src/components/action'
-import { EquipmentComponent } from '../../src/components/items'
+import { EquipedItemsComponent } from '../../src/components/items'
 
 describe('PlayerRoundControl', () => {
   let world: TlbWorld
@@ -12,7 +12,7 @@ describe('PlayerRoundControl', () => {
   let scripts: Storage<{}>
   let takeTurns: Storage<{}>
   let hasAction: Storage<HasActionComponent>
-  let equipment: Storage<EquipmentComponent>
+  let equipment: Storage<EquipedItemsComponent>
   let system: PlayerRoundControl
   beforeEach(() => {
     world = new World()
@@ -23,7 +23,7 @@ describe('PlayerRoundControl', () => {
     scripts = mockComponent(world, 'script')
     takeTurns = mockComponent(world, 'take-turn')
     hasAction = mockComponent(world, 'has-action')
-    equipment = mockComponent(world, 'equipment')
+    equipment = mockComponent(world, 'equiped-items')
   })
 
   describe('update', () => {
@@ -32,7 +32,7 @@ describe('PlayerRoundControl', () => {
       system.endTurn = jest.fn()
 
       mockReturnValue<HasActionComponent>(hasAction.get, { actions: ['endTurn', 'hit'] })
-      mockReturnValue<EquipmentComponent>(equipment.get, { equiped: [] })
+      mockReturnValue<EquipedItemsComponent>(equipment.get, { equipment: [] })
     })
 
     it('does nothing if is scripting', () => {

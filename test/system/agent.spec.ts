@@ -324,7 +324,7 @@ describe('Agent', () => {
       mockComponent(world, 'character-stats')
       mockComponent(world, 'has-action')
       mockComponent(world, 'inventory')
-      mockComponent(world, 'equipment')
+      mockComponent(world, 'equiped-items')
     })
 
     it('creates tiles for each cell in the shape', () => {

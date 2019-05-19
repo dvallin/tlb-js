@@ -35,19 +35,19 @@ function humanoidBodyParts(health: number): { [key: string]: BodyPart } {
 
 export const characterStats = {
   player: {
-    bodyParts: humanoidBodyParts(4),
+    bodyParts: humanoidBodyParts(14),
     movement: 3,
     actions: 3,
     aim: 7,
   },
   guard: {
-    bodyParts: humanoidBodyParts(4),
+    bodyParts: humanoidBodyParts(8),
     movement: 3,
     actions: 3,
     aim: 3,
   },
   eliteGuard: {
-    bodyParts: humanoidBodyParts(5),
+    bodyParts: humanoidBodyParts(12),
     movement: 2,
     actions: 5,
     aim: 6,

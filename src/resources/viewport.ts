@@ -44,8 +44,10 @@ export class ViewportResource implements TlbResource, Viewport {
     }
 
     world.components.get('viewport-focus')!.foreach(focus => {
-      const position = world.getComponent<PositionComponent>(focus, 'position')!
-      this.focus(position.position)
+      const position = world.getComponent<PositionComponent>(focus, 'position')
+      if (position !== undefined) {
+        this.focus(position.position)
+      }
     })
   }
 

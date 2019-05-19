@@ -29,14 +29,15 @@ export class LogResource implements TlbResource, Log {
     return this.entries.slice(start, end)
   }
 
-  public effectApplied(world: TlbWorld, effect: EffectComponent): void {
-    const source = this.getName(world, effect.source)
-    const target = this.getName(world, effect.target)
+  public effectApplied(world: TlbWorld, effectComponent: EffectComponent): void {
+    const { effect } = effectComponent
+    const source = this.getName(world, effectComponent.source)
+    const target = this.getName(world, effectComponent.target)
 
-    const verb = this.verbify(source, effect.effect)
+    const verb = this.verbify(source, effect.type)
     const objectName = this.objectify(target)
 
-    this.entries.push(`${source} ${verb} ${objectName} ${effect.bodyPart} (${effect.value})`)
+    this.entries.push(`${source} ${verb} ${objectName} ${effectComponent.bodyPart} (${effect.value})`)
   }
 
   public attack(world: TlbWorld, source: Entity, target: Entity, bodyPart: string, attack: Attack): void {
@@ -46,7 +47,7 @@ export class LogResource implements TlbResource, Log {
     let verb = this.verbify(sourceName, 'try')
     const objectName = this.objectify(targetName)
 
-    this.entries.push(`${source} ${verb} to ${attack.kind} ${objectName} ${bodyPart}`)
+    this.entries.push(`${sourceName} ${verb} to ${attack.kind} ${objectName} ${bodyPart}`)
   }
 
   public died(world: TlbWorld, entity: Entity): void {
@@ -59,7 +60,7 @@ export class LogResource implements TlbResource, Log {
     this.entries.push(`${subject} missed`)
   }
 
-  private getName(world: TlbWorld, entity: Entity): string {
+  public getName(world: TlbWorld, entity: Entity): string {
     const feature = getFeature(world, entity)
     if (feature !== undefined) {
       return feature.name
@@ -67,7 +68,7 @@ export class LogResource implements TlbResource, Log {
     return 'something'
   }
 
-  private verbify(source: string, verb: string): string {
+  public verbify(source: string, verb: string): string {
     if (source !== 'you') {
       if (verb === 'try') {
         return 'tries'
@@ -77,7 +78,7 @@ export class LogResource implements TlbResource, Log {
     return verb
   }
 
-  private objectify(target: string): string {
+  public objectify(target: string): string {
     if (target === 'you') {
       return 'your'
     }

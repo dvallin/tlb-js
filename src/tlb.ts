@@ -24,7 +24,7 @@ import { PlayerInteraction } from './systems/player-interaction'
 import { RegionCreator } from './systems/region-creator'
 import { PlayerRoundControl } from './systems/player-round-control'
 import { Trigger } from './systems/trigger'
-import { Effect } from './systems/effect'
+import { ApplyEffects } from './systems/apply-effect'
 import { Script } from './systems/script'
 
 import { WorldMapResource } from './resources/world-map'
@@ -46,8 +46,8 @@ import { ScriptComponent } from './components/script'
 import { AiComponent } from './components/ai'
 import { AiRoundControl } from './systems/ai-round-control'
 import { TriggersComponent, TriggeredByComponent } from './components/trigger'
-import { EffectComponent, StatusEffect } from './components/effects'
-import { InventoryComponent, ItemComponent, EquipmentComponent } from './components/items'
+import { EffectComponent, ActiveEffectsComponent } from './components/effects'
+import { InventoryComponent, ItemComponent, EquipedItemsComponent } from './components/items'
 
 export type ComponentName =
   | 'active'
@@ -57,7 +57,7 @@ export type ComponentName =
   | 'asset'
   | 'character-stats'
   | 'effect'
-  | 'equipment'
+  | 'equiped-items'
   | 'feature'
   | 'fov'
   | 'free-mode-anchor'
@@ -74,7 +74,7 @@ export type ComponentName =
   | 'region'
   | 'script'
   | 'selected-action'
-  | 'status-effect'
+  | 'active-effects'
   | 'spawn'
   | 'take-turn'
   | 'took-turn'
@@ -117,7 +117,7 @@ export function registerComponents<S, R>(world: World<ComponentName, S, R>): voi
   world.registerComponentStorage('ground', new MapStorage<GroundComponent>())
   world.registerComponentStorage('has-action', new MapStorage<HasActionComponent>())
   world.registerComponentStorage('inventory', new MapStorage<InventoryComponent>())
-  world.registerComponentStorage('equipment', new MapStorage<EquipmentComponent>())
+  world.registerComponentStorage('equiped-items', new MapStorage<EquipedItemsComponent>())
   world.registerComponentStorage('item', new MapStorage<ItemComponent>())
   world.registerComponentStorage('light', new MapStorage<LightComponent>())
   world.registerComponentStorage('lighting', new VectorStorage<LightingComponent>())
@@ -128,7 +128,7 @@ export function registerComponents<S, R>(world: World<ComponentName, S, R>): voi
   world.registerComponentStorage('region', new MapStorage<RegionComponent>())
   world.registerComponentStorage('script', new MapStorage<ScriptComponent>())
   world.registerComponentStorage('selected-action', new SingletonStorage<SelectedActionComponent>())
-  world.registerComponentStorage('status-effect', new MapStorage<StatusEffect>())
+  world.registerComponentStorage('active-effects', new MapStorage<ActiveEffectsComponent>())
   world.registerComponentStorage('spawn', new SingletonStorage<{}>())
   world.registerComponentStorage('take-turn', new MapStorage<TakeTurnComponent>())
   world.registerComponentStorage('took-turn', new SetStorage())
@@ -154,7 +154,7 @@ export function registerSystems(
   const uniform = new Uniform('some seed')
   world.registerSystem('agent', new Agent(new Random(uniform)))
   world.registerSystem('ai-round-control', new AiRoundControl(queries, new Random(uniform)))
-  world.registerSystem('effect', new Effect())
+  world.registerSystem('effect', new ApplyEffects())
   world.registerSystem('fov', new Fov(queries))
   world.registerSystem('free-mode-control', new FreeModeControl())
   world.registerSystem('light', new Light(queries))
