@@ -19,6 +19,10 @@ export interface UI {
   selectedAction(): SelectedAction | undefined
   hideActionSelector(world: TlbWorld): void
 
+  showBodyPartSelector(world: TlbWorld, target: Entity): void
+  selectedBodyPart(): string | undefined
+  hideBodyPartSelector(world: TlbWorld): void
+
   setOverview(world: TlbWorld, focus: Entity): void
   setLog(world: TlbWorld): void
 }
@@ -72,7 +76,7 @@ export class UIResource implements TlbResource, UI {
     const viewport: Viewport = world.getResource<ViewportResource>('viewport')
 
     const rows = groups.map(g => g.actions.length + 1).reduce((a, b) => a + b)
-    const height = rows + 2
+    const height = 13
 
     const actionsWindow = new WindowDecoration(
       new Rectangle(viewport.boundaries.x - 40, viewport.boundaries.y - height, 20, height),
@@ -92,16 +96,9 @@ export class UIResource implements TlbResource, UI {
       descriptionWindow,
       title,
       hovered: 0,
+      firstRow: 0,
       selected: undefined,
     })
-  }
-
-  public getOrCreateElement(world: TlbWorld, uiElement: UIElement | undefined): Entity {
-    if (uiElement !== undefined) {
-      return uiElement.entity
-    } else {
-      return world.createEntity().entity
-    }
   }
 
   public hideActionSelector(world: TlbWorld) {
@@ -118,6 +115,21 @@ export class UIResource implements TlbResource, UI {
     return undefined
   }
 
+  public showBodyPartSelector({  }: TlbWorld, {  }: Entity): void {}
+
+  public selectedBodyPart(): string | undefined {
+    return undefined
+  }
+
+  public hideBodyPartSelector({  }: TlbWorld): void {}
+
+  public getOrCreateElement(world: TlbWorld, uiElement: UIElement | undefined): Entity {
+    if (uiElement !== undefined) {
+      return uiElement.entity
+    } else {
+      return world.createEntity().entity
+    }
+  }
   public hasElement(position: Vector): boolean {
     return (
       (this.actionSelector !== undefined && this.actionSelector.contains(position)) ||

@@ -8,7 +8,7 @@ import { primary } from '../renderer/palettes'
 import { InputResource, Input } from '../resources/input'
 import { Viewport, ViewportResource } from '../resources/viewport'
 import { Entity } from '../ecs/entity'
-import { SelectedActionComponent, Movement, Attack } from '../components/action'
+import { SelectedActionComponent, Movement, Attack, Status } from '../components/action'
 import { UIResource, UI } from '../resources/ui'
 import { Path } from '../renderer/astar'
 import { KEYS } from 'rot-js'
@@ -17,6 +17,7 @@ import { calculateAvailableActions } from '../component-reducers/available-actio
 import { ActionGroup } from '../ui/action-selector'
 import { Random } from '../random'
 import { attackTarget } from '../component-reducers/attack-target'
+import { EffectComponent } from '../components/effects'
 
 export class PlayerRoundControl implements TlbSystem {
   public readonly components: ComponentName[] = ['take-turn', 'player', 'position']
@@ -59,7 +60,7 @@ export class PlayerRoundControl implements TlbSystem {
           selectedAction.skippedActions += 1
         } else {
           const currentSubAction = action.subActions[selectedAction.currentSubAction]
-          const done = this.handleSubAction(world, entity, currentSubAction)
+          const done = this.handleSubAction(world, entity, currentSubAction, selectedAction)
           if (done) {
             selectedAction.currentSubAction += 1
           }
@@ -82,15 +83,31 @@ export class PlayerRoundControl implements TlbSystem {
     }
   }
 
-  public handleSubAction(world: TlbWorld, entity: Entity, subAction: Movement | Attack): boolean {
+  public handleSubAction(
+    world: TlbWorld,
+    entity: Entity,
+    subAction: Movement | Attack | Status,
+    selectedAction: SelectedActionComponent
+  ): boolean {
     const viewport: Viewport = world.getResource<ViewportResource>('viewport')
     const input: Input = world.getResource<InputResource>('input')
+    const ui: UI = world.getResource<UIResource>('map')
     const map: WorldMap = world.getResource<WorldMapResource>('map')
     switch (subAction.kind) {
       case 'attack':
-        return this.attack(world, input, viewport, map, entity, subAction)
+        if (selectedAction.target === undefined) {
+          selectedAction.target = this.findTarget(world, input, viewport, map, entity, subAction)
+          if (selectedAction.target !== undefined) {
+            this.showBodyPartDialog(world, ui, selectedAction.target)
+          }
+          return false
+        } else {
+          return this.attackTarget(world, ui, entity, subAction, selectedAction.target!)
+        }
       case 'movement':
         return this.move(world, input, viewport, map, entity, subAction)
+      case 'status':
+        return this.status(world, entity, subAction)
     }
   }
 
@@ -109,6 +126,10 @@ export class PlayerRoundControl implements TlbSystem {
     })
   }
 
+  public showBodyPartDialog(world: TlbWorld, ui: UI, target: Entity) {
+    ui.showBodyPartSelector(world, target)
+  }
+
   public clearAction(world: TlbWorld, entity: Entity): void {
     world.editEntity(entity).removeComponent('selected-action')
   }
@@ -119,6 +140,14 @@ export class PlayerRoundControl implements TlbSystem {
       selectedAction.selection = selection
       ui.hideActionSelector(world)
     }
+  }
+
+  public selectBodyPart(world: TlbWorld, ui: UI): string | undefined {
+    const bodyPart = ui.selectedBodyPart()
+    if (bodyPart !== undefined) {
+      ui.hideBodyPartSelector(world)
+    }
+    return bodyPart
   }
 
   public move(world: TlbWorld, input: Input, viewport: Viewport, map: WorldMap, entity: Entity, movement: Movement): boolean {
@@ -132,21 +161,39 @@ export class PlayerRoundControl implements TlbSystem {
     return false
   }
 
-  public attack(world: TlbWorld, input: Input, viewport: Viewport, map: WorldMap, entity: Entity, attack: Attack): boolean {
+  public findTarget(world: TlbWorld, input: Input, viewport: Viewport, map: WorldMap, entity: Entity, attack: Attack): Entity | undefined {
     const range = attack.range
     const path = this.selectAttackPath(world, input, viewport, map, entity, range)
     if (path !== undefined) {
-      const hitEnemy = path.path.some(p => {
-        const target = map.getCharacter(p)
+      for (let i = 0; i < path.path.length; ++i) {
+        let target = map.getCharacter(path.path[i])
         const hasEnemy = target !== undefined && target !== entity
         if (hasEnemy) {
-          attackTarget(world, this.random, entity, target!, 'head', attack)
+          return target
         }
-        return hasEnemy
-      })
-      return hitEnemy
+      }
+    }
+    return undefined
+  }
+
+  public attackTarget(world: TlbWorld, ui: UI, entity: Entity, attack: Attack, target: Entity): boolean {
+    const bodyPart = this.selectBodyPart(world, ui)
+    if (bodyPart !== undefined) {
+      attackTarget(world, this.random, entity, target!, bodyPart, attack)
+      return true
     }
     return false
+  }
+
+  public status(world: TlbWorld, entity: Entity, status: Status): boolean {
+    status.effects.forEach(effect => {
+      world.createEntity().withComponent<EffectComponent>('effect', {
+        source: entity,
+        target: entity,
+        effect,
+      })
+    })
+    return true
   }
 
   public selectMovementPath(

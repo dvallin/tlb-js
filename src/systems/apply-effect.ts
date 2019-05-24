@@ -36,7 +36,6 @@ export class ApplyEffects implements TlbSystem {
 
     if (stats !== undefined) {
       const log: Log = world.getResource<LogResource>('log')
-      log.effectApplied(world, effectComponent)
 
       const equipment = world.getComponent<EquipedItemsComponent>(effectComponent.target, 'equiped-items')!
       const defensiveEffects: Effect[] = []
@@ -51,10 +50,20 @@ export class ApplyEffects implements TlbSystem {
         })
       })
 
-      const defense = defensiveEffects.reduce((a, b) => a + b.value! * (b.negated ? -1 : 1), 0)
-      const effectiveDamage = Math.max(0, effect.value! - defense)
+      const activeEffects = world.getComponent<ActiveEffectsComponent>(effectComponent.target, 'active-effects')!
+      activeEffects.effects.forEach(e => {
+        if (e.effect.global || e.bodyPart === effectComponent.bodyPart) {
+          if (e.effect.type === 'defend') {
+            defensiveEffects.push(e.effect)
+          }
+        }
+      })
 
-      damageBodyPart(world, effectComponent.source, effectComponent.target, stats, effectComponent.bodyPart, effectiveDamage)
+      const defense = defensiveEffects.reduce((a, b) => a + b.value! * (b.negated ? -1 : 1), 0)
+      effectComponent.effect.value = Math.max(0, effect.value! - defense)
+
+      log.effectApplied(world, effectComponent)
+      damageBodyPart(world, effectComponent.source, effectComponent.target, stats, effectComponent.bodyPart!, effectComponent.effect.value!)
     }
   }
 
@@ -63,7 +72,7 @@ export class ApplyEffects implements TlbSystem {
     const { effect } = effectComponent
 
     if (stats !== undefined) {
-      healBodyPart(stats, effectComponent.bodyPart, effect.value!)
+      healBodyPart(stats, effectComponent.bodyPart!, effect.value!)
       const log: Log = world.getResource<LogResource>('log')
       log.effectApplied(world, effectComponent)
     }

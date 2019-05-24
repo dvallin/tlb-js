@@ -14,13 +14,13 @@ export interface Effect {
 export interface ActiveEffectsComponent {
   effects: {
     effect: Effect
-    bodyPart: string
+    bodyPart?: string
   }[]
 }
 
 export interface EffectComponent {
   effect: Effect
-  bodyPart: string
+  bodyPart?: string
   source: Entity
   target: Entity
 }
@@ -31,6 +31,10 @@ export function damage(value: number): Effect {
 
 export function confuse(duration: number): Effect {
   return { type: 'confuse', global: true, negated: false, duration }
+}
+
+export function defend(value: number, duration: number): Effect {
+  return { type: 'defend', global: true, negated: false, duration, value }
 }
 
 export function stun(duration: number): Effect {

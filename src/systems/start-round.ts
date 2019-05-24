@@ -24,7 +24,7 @@ export class StartRound implements TlbSystem {
     activeEffects.effects.forEach(effect => {
       switch (effect.effect.type) {
         case 'bleed':
-          damageBodyPart(world, entity, entity, stats, effect.bodyPart, 1)
+          damageBodyPart(world, entity, entity, stats, effect.bodyPart!, 1)
           break
         case 'confuse':
           canAim = false

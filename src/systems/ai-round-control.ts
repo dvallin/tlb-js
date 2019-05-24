@@ -59,8 +59,7 @@ export class AiRoundControl implements TlbSystem {
               movementActions.push(selectedAction)
             }
             const hasAttack =
-              availableAction.action.subActions.filter(s => path !== undefined && s.range >= path.cost).find(s => s.kind === 'attack') !==
-              undefined
+              availableAction.action.subActions.find(s => path !== undefined && s.kind === 'attack' && s.range >= path.cost) !== undefined
             if (hasAttack) {
               fightActions.push(selectedAction)
             }

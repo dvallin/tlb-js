@@ -17,6 +17,7 @@ export interface SelectableAction {
 }
 
 export interface ActionGroup {
+  collapsed: boolean
   entity: number
   description: string
   name: string
@@ -33,6 +34,7 @@ export interface State {
 
   selected: number | undefined
   hovered: number
+  firstRow: number
 }
 
 export class ActionSelector implements UIElement {
@@ -57,9 +59,10 @@ export class ActionSelector implements UIElement {
     const content = this.state.actionsWindow.content
     if (position && content.containsVector(position)) {
       const delta = position.minus(content.topLeft)
-      this.state.hovered = delta.y
+      this.state.hovered = delta.y + this.state.firstRow
       if (input.mousePressed) {
-        this.state.selected = delta.y
+        this.state.selected = delta.y + this.state.firstRow
+        this.collapseSelected()
       }
     }
     if (up) {
@@ -71,8 +74,23 @@ export class ActionSelector implements UIElement {
     this.state.hovered += this.state.rows
     this.state.hovered %= this.state.rows
 
+    if (this.state.firstRow > this.state.hovered) {
+      this.state.firstRow = this.state.hovered
+    } else if (this.state.firstRow <= this.state.hovered - this.state.actionsWindow.content.height) {
+      this.state.firstRow = this.state.hovered - this.state.actionsWindow.content.height + 1
+    }
+
     if (input.keyPressed.has(KEYS.VK_RETURN)) {
       this.state.selected = this.state.hovered
+      this.collapseSelected()
+    }
+  }
+
+  public collapseSelected(): void {
+    const group = this.groupAtLine(this.state.groups, this.state.selected!)
+    if (group !== undefined) {
+      this.state.selected = undefined
+      group.collapsed = !group.collapsed
     }
   }
 
@@ -88,25 +106,38 @@ export class ActionSelector implements UIElement {
     window.render(renderer)
 
     let index = 0
+    let row = 0
     groups.forEach(group => {
       const hasActions = group.actions.find(a => a.available)
-      renderer.text(
-        `- ${group.name}`,
-        window.topLeft.add(new Vector(1, index + 1)),
-        hasActions ? primary[1] : gray[3],
-        hovered === index ? gray[1] : undefined
-      )
-      index++
-      group.actions.forEach(action => {
+      if (this.isLineVisible(index)) {
         renderer.text(
-          ` | ${action.action.name}`,
-          window.topLeft.add(new Vector(1, index + 1)),
-          action.available ? primary[1] : gray[3],
-          hovered === index && action.available ? gray[1] : undefined
+          `${group.collapsed ? '+' : '-'} ${group.name}`,
+          window.topLeft.add(new Vector(1, row + 1)),
+          hasActions ? primary[1] : gray[3],
+          hovered === index ? gray[1] : undefined
         )
-        index++
-      })
+        row++
+      }
+      index++
+      if (!group.collapsed) {
+        group.actions.forEach(action => {
+          if (this.isLineVisible(index)) {
+            renderer.text(
+              ` | ${action.action.name}`,
+              window.topLeft.add(new Vector(1, row + 1)),
+              action.available ? primary[1] : gray[3],
+              hovered === index && action.available ? gray[1] : undefined
+            )
+            row++
+          }
+          index++
+        })
+      }
     })
+  }
+
+  private isLineVisible(index: number): boolean {
+    return index >= this.state.firstRow && index < this.state.firstRow + this.state.actionsWindow.content.height
   }
 
   private renderDescription(renderer: Renderer, window: WindowDecoration, groups: ActionGroup[], hovered: number) {
@@ -137,7 +168,11 @@ export class ActionSelector implements UIElement {
       if (line === 0) {
         return group
       }
-      line -= group.actions.length + 1
+      line -= 1
+      if (group.collapsed) {
+        continue
+      }
+      line -= group.actions.length
     }
     return undefined
   }
@@ -145,6 +180,9 @@ export class ActionSelector implements UIElement {
   private actionAtLine(groups: ActionGroup[], line: number): SelectedAction | undefined {
     for (const group of groups) {
       line -= 1
+      if (group.collapsed) {
+        continue
+      }
       if (line < 0) {
         return undefined
       } else if (line >= group.actions.length) {

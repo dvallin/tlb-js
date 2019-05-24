@@ -1,5 +1,5 @@
 import { Entity } from '../ecs/entity'
-import { damage, Effect, confuse, stun, immobilize } from './effects'
+import { damage, Effect, confuse, stun, immobilize, defend } from './effects'
 
 export interface Cost {
   actions: number
@@ -17,6 +17,11 @@ export interface Attack {
   effects: Effect[]
   range: number
   accuracy: number
+}
+
+export interface Status {
+  kind: 'status'
+  effects: Effect[]
 }
 
 export interface SelectedAction {
@@ -43,7 +48,7 @@ export interface FeatureComponent {
 export interface Action {
   cost: Cost
   name: string
-  subActions: (Movement | Attack)[]
+  subActions: (Movement | Attack | Status)[]
 }
 
 function movement(range: number): Movement {
@@ -52,6 +57,10 @@ function movement(range: number): Movement {
 
 function attack(range: number, accuracy: number, effects: Effect[]): Attack {
   return { kind: 'attack', range, accuracy, effects }
+}
+
+function status(effects: Effect[]): Status {
+  return { kind: 'status', effects }
 }
 
 export const actions = {
@@ -137,6 +146,14 @@ export const actions = {
       movement: 3,
     },
     subActions: [attack(1, 4, [damage(3), confuse(1)]), movement(6)],
+  },
+  tighten: {
+    name: 'tighten',
+    cost: {
+      actions: 1,
+      movement: 0,
+    },
+    subActions: [status([defend(2, 1)])],
   },
 }
 export const actionsTypeguard: { [key: string]: Action } = actions
