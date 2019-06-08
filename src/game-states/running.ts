@@ -66,7 +66,7 @@ export class Running extends AbstractState {
   }
 
   public setupAnchor(world: TlbWorld): void {
-    const position = new Vector(20, 20)
+    const position = new Vector([20, 20])
     world
       .createEntity()
       .withComponent<{}>('free-mode-anchor', {})

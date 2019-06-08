@@ -20,7 +20,7 @@ export function bresenham(from: Vector, direction: Vector, overshoot: boolean = 
       return undefined
     }
 
-    const result = new Vector(current.x, current.y)
+    const result = new Vector([current.x, current.y])
     if (overshoot || index < delta.x) {
       while (d > 0) {
         d -= 2 * delta.x

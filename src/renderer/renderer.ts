@@ -32,7 +32,7 @@ export class RotRenderer implements Renderer {
   public constructor(public readonly display: Display, public ambientColor: Color) {}
 
   public get boundaries(): Vector {
-    return new Vector(this.display.getOptions().width, this.display.getOptions().height)
+    return new Vector([this.display.getOptions().width, this.display.getOptions().height])
   }
 
   public static createAndMount(

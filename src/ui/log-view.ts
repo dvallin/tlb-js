@@ -28,7 +28,7 @@ export class LogView implements UIElement {
   public render(renderer: Renderer): void {
     this.state.window.render(renderer)
     this.state.entries.forEach((entry, index) => {
-      renderer.text(entry, this.state.window.topLeft.add(new Vector(1, index + 1)), primary[1])
+      renderer.text(entry, this.state.window.topLeft.add(new Vector([1, index + 1])), primary[1])
     })
   }
 

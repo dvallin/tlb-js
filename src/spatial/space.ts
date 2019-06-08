@@ -1,5 +1,6 @@
 import { Vector } from './vector'
 import { Shape } from '../geometry/shape'
+import { Root, get, insert, Leaf } from './tree'
 
 export interface Space<A> {
   get(pos: Vector): A | undefined
@@ -9,14 +10,14 @@ export interface Space<A> {
 }
 
 export class DiscreteSpace<A> implements Space<A> {
-  private readonly objects: Map<string, A> = new Map()
+  private readonly objects: Root<A> = { kind: 'root' }
 
   public get(pos: Vector): A | undefined {
-    return this.objects.get(pos.key)
+    return get(this.objects, pos.coordinates)
   }
 
   public set(pos: Vector, object: A): void {
-    this.objects.set(pos.key, object)
+    insert(this.objects, pos.coordinates, object)
   }
 
   public setAll(shape: Shape, object: A): void {
@@ -24,9 +25,20 @@ export class DiscreteSpace<A> implements Space<A> {
   }
 
   public remove(pos: Vector): A | undefined {
-    const key = pos.key
-    const value = this.objects.get(key)
-    this.objects.delete(key)
+    let root: Root<A> = this.objects
+    for (let d = 0; d < pos.dimensions - 1; d++) {
+      let leaf: Leaf<A> | Root<A> | undefined = root[pos.at(d)]
+      if (leaf === undefined) {
+        return undefined
+      } else if (leaf.kind === 'root') {
+        root = leaf
+      } else {
+        throw Error()
+      }
+    }
+    const leaf = root[pos.at(pos.dimensions - 1)] as Leaf<A>
+    const value = leaf.value
+    delete root[pos.at(pos.dimensions - 1)]
     return value
   }
 }

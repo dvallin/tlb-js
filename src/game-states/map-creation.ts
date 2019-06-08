@@ -22,17 +22,16 @@ export class MapCreation extends AbstractState {
     super.start(world)
 
     const viewport: Viewport = world.getResource<ViewportResource>('viewport')
+    const map = world.getResource<WorldMapResource>('map')
     viewport.addLayer({
-      getRenderable: (world, position) => {
-        const map = world.getResource<WorldMapResource>('map')
+      getRenderable: (_world, position) => {
         const entity = map.getTile(position.floor())
         return { entity, opaque: true, centered: true }
       },
       transformed: true,
     })
     viewport.addLayer({
-      getRenderable: (world, position) => {
-        const map = world.getResource<WorldMapResource>('map')
+      getRenderable: (_world, position) => {
         const entity = map.getCharacter(position.floor())
         return { entity, opaque: true, centered: false }
       },

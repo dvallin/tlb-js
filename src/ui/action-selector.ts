@@ -50,7 +50,7 @@ export class ActionSelector implements UIElement {
     const input: Input = world.getResource<InputResource>('input')
     let position
     if (input.position) {
-      position = new Vector(input.position.x, input.position.y)
+      position = new Vector([input.position.x, input.position.y])
     }
     const up = input.keyPressed.has(KEYS.VK_K)
     const down = input.keyPressed.has(KEYS.VK_J)
@@ -112,7 +112,7 @@ export class ActionSelector implements UIElement {
       if (this.isLineVisible(index)) {
         renderer.text(
           `${group.collapsed ? '+' : '-'} ${group.name}`,
-          window.topLeft.add(new Vector(1, row + 1)),
+          window.topLeft.add(new Vector([1, row + 1])),
           hasActions ? primary[1] : gray[3],
           hovered === index ? gray[1] : undefined
         )
@@ -124,7 +124,7 @@ export class ActionSelector implements UIElement {
           if (this.isLineVisible(index)) {
             renderer.text(
               ` | ${action.action.name}`,
-              window.topLeft.add(new Vector(1, row + 1)),
+              window.topLeft.add(new Vector([1, row + 1])),
               action.available ? primary[1] : gray[3],
               hovered === index && action.available ? gray[1] : undefined
             )
@@ -145,20 +145,20 @@ export class ActionSelector implements UIElement {
 
     const action = this.actionAtLine(groups, hovered)
     if (action !== undefined) {
-      renderer.text(action.action.name, window.topLeft.add(new Vector(1, 1)), primary[1])
+      renderer.text(action.action.name, window.topLeft.add(new Vector([1, 1])), primary[1])
       const cost = action.action.cost
       if (cost.costsAll) {
-        renderer.text('costs all AP and MP', window.topLeft.add(new Vector(1, 2)), primary[1])
+        renderer.text('costs all AP and MP', window.topLeft.add(new Vector([1, 2])), primary[1])
       } else {
-        renderer.text(`cost: ${cost.actions}AP ${cost.movement}MP`, window.topLeft.add(new Vector(1, 2)), primary[1])
+        renderer.text(`cost: ${cost.actions}AP ${cost.movement}MP`, window.topLeft.add(new Vector([1, 2])), primary[1])
       }
     } else {
       const group = this.groupAtLine(groups, hovered)
       if (group !== undefined) {
-        renderer.text(group.name, window.topLeft.add(new Vector(1, 1)), primary[1])
-        renderer.flowText(group.description, window.topLeft.add(new Vector(1, 2)), window.width - 2, primary[1])
+        renderer.text(group.name, window.topLeft.add(new Vector([1, 1])), primary[1])
+        renderer.flowText(group.description, window.topLeft.add(new Vector([1, 2])), window.width - 2, primary[1])
       } else {
-        renderer.text('choose an action to perform', window.topLeft.add(new Vector(1, 1)), primary[1])
+        renderer.text('choose an action to perform', window.topLeft.add(new Vector([1, 1])), primary[1])
       }
     }
   }

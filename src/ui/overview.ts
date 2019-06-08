@@ -64,12 +64,12 @@ export class Overview implements UIElement {
 
           renderer.text(
             `${key}${' '.repeat(8 - key.length)}${'|'.repeat(bars)}`,
-            this.state.bodyParts.topLeft.add(new Vector(1, y)),
+            this.state.bodyParts.topLeft.add(new Vector([1, y])),
             effects.length > 0 || bars <= 2 ? primary[3] : primary[1]
           )
 
           effects.forEach((name, index) => {
-            renderer.text(name, this.state.bodyParts.topLeft.add(new Vector(index + 14, y)), primary[2])
+            renderer.text(name, this.state.bodyParts.topLeft.add(new Vector([index + 14, y])), primary[2])
           })
           y++
         })
@@ -77,7 +77,7 @@ export class Overview implements UIElement {
         const globalEffects = this.state.activeEffects!.effects.filter(e => e.effect.global).map(e => e.effect.type[0])
 
         globalEffects.forEach((name, index) => {
-          renderer.text(name, this.state.bodyParts.topLeft.add(new Vector(1 + index, y)), primary[2])
+          renderer.text(name, this.state.bodyParts.topLeft.add(new Vector([1 + index, y])), primary[2])
         })
         y++
 
@@ -96,15 +96,15 @@ export class Overview implements UIElement {
         const current = this.state.stats.current
         renderer.text(
           `${this.state.takeTurn.actions}/${current.actions} AP ${this.state.takeTurn.movements}/${current.movement} MP`,
-          this.state.turn.topLeft.add(new Vector(1, y)),
+          this.state.turn.topLeft.add(new Vector([1, y])),
           primary[1]
         )
         y++
         this.state.enemies.forEach(enemy => {
           if (enemy.feature !== undefined) {
             const feature = features[enemy.feature]
-            renderer.character(feature.character, this.state.turn.topLeft.add(new Vector(1, y)), feature.diffuse)
-            renderer.text(feature.name, this.state.turn.topLeft.add(new Vector(3, y)), primary[1])
+            renderer.character(feature.character, this.state.turn.topLeft.add(new Vector([1, y])), feature.diffuse)
+            renderer.text(feature.name, this.state.turn.topLeft.add(new Vector([3, y])), primary[1])
             y++
           }
         })
@@ -119,7 +119,7 @@ export class Overview implements UIElement {
       let y = 1
       if (!this.state.environment.collapsed) {
         const brightness = calculateBrightness(this.state.lighting)
-        renderer.text(`brightness: ${brightness}`, this.state.environment.topLeft.add(new Vector(1, y)), primary[1])
+        renderer.text(`brightness: ${brightness}`, this.state.environment.topLeft.add(new Vector([1, y])), primary[1])
         y++
         this.state.environment.setHeight(y + 1)
       }

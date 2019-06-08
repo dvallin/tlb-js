@@ -31,45 +31,45 @@ export class Rectangle extends AbstractShape {
   }
 
   public get topLeft(): Vector {
-    return new Vector(this.left, this.top)
+    return new Vector([this.left, this.top])
   }
 
   public get topRight(): Vector {
-    return new Vector(this.right, this.top)
+    return new Vector([this.right, this.top])
   }
 
   public get bottomRight(): Vector {
-    return new Vector(this.right, this.bottom)
+    return new Vector([this.right, this.bottom])
   }
 
   public get bottomLeft(): Vector {
-    return new Vector(this.left, this.bottom)
+    return new Vector([this.left, this.bottom])
   }
 
   public get center(): Vector {
     const cx = (this.left + this.right) / 2
     const cy = (this.top + this.bottom) / 2
-    return new Vector(Math.floor(cx), Math.floor(cy))
+    return new Vector([Math.floor(cx), Math.floor(cy)])
   }
 
   public get centerLeft(): Vector {
     const cy = (this.top + this.bottom) / 2
-    return new Vector(this.left, Math.floor(cy))
+    return new Vector([this.left, Math.floor(cy)])
   }
 
   public get centerRight(): Vector {
     const cy = (this.top + this.bottom) / 2
-    return new Vector(this.right, Math.floor(cy))
+    return new Vector([this.right, Math.floor(cy)])
   }
 
   public get centerTop(): Vector {
     const cx = (this.left + this.right) / 2
-    return new Vector(Math.floor(cx), this.top)
+    return new Vector([Math.floor(cx), this.top])
   }
 
   public get centerBottom(): Vector {
     const cx = (this.left + this.right) / 2
-    return new Vector(Math.floor(cx), this.bottom)
+    return new Vector([Math.floor(cx), this.bottom])
   }
 
   public plus(other: Rectangle): Rectangle {
@@ -115,7 +115,7 @@ export class Rectangle extends AbstractShape {
   public all(f: (position: Vector) => boolean): boolean {
     for (let i = 0; i < this.height; i++) {
       for (let j = 0; j < this.width; j++) {
-        const position = new Vector(j + this.x, i + this.y)
+        const position = new Vector([j + this.x, i + this.y])
         if (!f(position)) {
           return false
         }

@@ -337,7 +337,7 @@ export class Agent implements TlbSystem {
 
     const weapon = world.createEntity().withComponent<ItemComponent>('item', { type: weaponType }).entity
 
-    const centeredPosition = new Vector(position.x, position.y).center
+    const centeredPosition = new Vector([position.x, position.y]).center
     const entity = world
       .createEntity()
       .withComponent('npc', {})

@@ -4,13 +4,13 @@ export class Vector {
   public static fromDirection(direction: Direction): Vector {
     switch (direction) {
       case 'up':
-        return new Vector(0, -1)
+        return new Vector([0, -1])
       case 'right':
-        return new Vector(1, 0)
+        return new Vector([1, 0])
       case 'down':
-        return new Vector(0, 1)
+        return new Vector([0, 1])
       case 'left':
-        return new Vector(-1, 0)
+        return new Vector([-1, 0])
     }
   }
 
@@ -25,9 +25,9 @@ export class Vector {
     }
   }
 
-  private readonly coordinates: number[]
+  public readonly coordinates: number[]
 
-  public constructor(...coords: number[]) {
+  public constructor(coords: number[]) {
     this.coordinates = coords
   }
 
@@ -40,7 +40,7 @@ export class Vector {
   }
 
   public get center(): Vector {
-    return this.add(new Vector(0.5, 0.25))
+    return this.add(new Vector([0.5, 0.25]))
   }
 
   public get x(): number {
@@ -77,7 +77,7 @@ export class Vector {
     for (let i = 0; i < this.dimensions; i++) {
       result.push(this.at(i) + other.at(i))
     }
-    return new Vector(...result)
+    return new Vector(result)
   }
 
   public minus(other: Vector): Vector {
@@ -86,7 +86,7 @@ export class Vector {
     for (let i = 0; i < this.dimensions; i++) {
       result.push(this.at(i) - other.at(i))
     }
-    return new Vector(...result)
+    return new Vector(result)
   }
 
   public floor(): Vector {
@@ -94,7 +94,7 @@ export class Vector {
     for (let i = 0; i < this.dimensions; i++) {
       result.push(Math.floor(this.at(i)))
     }
-    return new Vector(...result)
+    return new Vector(result)
   }
 
   public mult(scale: number): Vector {
@@ -102,7 +102,7 @@ export class Vector {
     for (let i = 0; i < this.dimensions; i++) {
       result.push(this.at(i) * scale)
     }
-    return new Vector(...result)
+    return new Vector(result)
   }
 
   public abs(): Vector {
@@ -110,7 +110,7 @@ export class Vector {
     for (let i = 0; i < this.dimensions; i++) {
       result.push(Math.abs(this.at(i)))
     }
-    return new Vector(...result)
+    return new Vector(result)
   }
 
   public bounds(other: Vector): boolean {
@@ -127,7 +127,7 @@ export class Vector {
     if (this.dimensions !== 2) {
       throw new Error('wrong dimension')
     }
-    return new Vector(-this.y, this.x)
+    return new Vector([-this.y, this.x])
   }
 
   public squaredLength(): number {

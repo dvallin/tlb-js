@@ -91,7 +91,7 @@ export class PlayerRoundControl implements TlbSystem {
   ): boolean {
     const viewport: Viewport = world.getResource<ViewportResource>('viewport')
     const input: Input = world.getResource<InputResource>('input')
-    const ui: UI = world.getResource<UIResource>('map')
+    const ui: UI = world.getResource<UIResource>('ui')
     const map: WorldMap = world.getResource<WorldMapResource>('map')
     switch (subAction.kind) {
       case 'attack':

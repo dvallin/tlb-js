@@ -31,7 +31,7 @@ export class ViewportResource implements TlbResource, Viewport {
   public readonly kind: ResourceName = 'viewport'
 
   public gridLocked: boolean = false
-  public topLeft: Vector = new Vector(0, 0)
+  public topLeft: Vector = new Vector([0, 0])
 
   public readonly layers: Layer[] = []
 
@@ -55,14 +55,13 @@ export class ViewportResource implements TlbResource, Viewport {
     const renderables: Renderable[] = []
     for (let y = 0; y < this.boundaries.y; y++) {
       for (let x = 0; x < this.boundaries.x; x++) {
-        const p = this.fromDisplay({ x, y })
         for (let l = this.layers.length - 1; l >= 0; l--) {
           const layer = this.layers[l]
           let renderable
           if (layer.transformed) {
-            renderable = layer.getRenderable(world, p)
+            renderable = layer.getRenderable(world, this.fromDisplay({ x, y }))
           } else {
-            renderable = layer.getRenderable(world, new Vector(x, y))
+            renderable = layer.getRenderable(world, new Vector([x, y]))
           }
           if (renderable.entity !== undefined) {
             renderables.push(renderable)
@@ -81,7 +80,7 @@ export class ViewportResource implements TlbResource, Viewport {
   }
 
   public fromDisplay(p: Position): Vector {
-    return this.topLeft.add(new Vector(p.x, p.y))
+    return this.topLeft.add(new Vector([p.x, p.y]))
   }
 
   public toDisplay(p: Vector, centered: boolean): Position {
@@ -101,9 +100,9 @@ export class ViewportResource implements TlbResource, Viewport {
     const x = position.x - Math.floor(this.boundaries.x / 2) + 5
     const y = position.y - Math.floor(this.boundaries.y / 2) + 5
     if (this.gridLocked) {
-      this.topLeft = new Vector(Math.floor(x), Math.floor(y))
+      this.topLeft = new Vector([Math.floor(x), Math.floor(y)])
     } else {
-      this.topLeft = new Vector(x, y)
+      this.topLeft = new Vector([x, y])
     }
   }
 }

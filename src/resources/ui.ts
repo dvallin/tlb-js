@@ -63,7 +63,7 @@ export class UIResource implements TlbResource, UI {
   public setOverview(world: TlbWorld, focus: Entity) {
     const viewport: Viewport = world.getResource<ViewportResource>('viewport')
     const entity = this.getOrCreateElement(world, this.overview)
-    this.overview = new Overview(entity, focus, new Vector(viewport.boundaries.x - 20, 0), 20)
+    this.overview = new Overview(entity, focus, new Vector([viewport.boundaries.x - 20, 0]), 20)
   }
 
   public setLog(world: TlbWorld) {
@@ -130,6 +130,7 @@ export class UIResource implements TlbResource, UI {
       return world.createEntity().entity
     }
   }
+
   public hasElement(position: Vector): boolean {
     return (
       (this.actionSelector !== undefined && this.actionSelector.contains(position)) ||

@@ -20,10 +20,10 @@ export class Queries {
   public fov(world: TlbWorld, origin: Vector, callback: (pos: Vector, distance: number) => void) {
     const originFloor = origin.floor()
     const map: WorldMap = world.getResource<WorldMapResource>('map')
-    const fov = new FOV.RecursiveShadowcasting((x, y) => !map.isLightBlocking(world, new Vector(x, y)), { topology: 8 })
+    const fov = new FOV.RecursiveShadowcasting((x, y) => !map.isLightBlocking(world, new Vector([x, y])), { topology: 8 })
     const seenAlready = new Set<string>()
     fov.compute(originFloor.x, originFloor.y, 20, (x, y, distance) => {
-      const position = new Vector(x, y)
+      const position = new Vector([x, y])
       const key = position.key
       if (!seenAlready.has(key)) {
         seenAlready.add(key)
@@ -35,13 +35,13 @@ export class Queries {
   public lighting(world: TlbWorld, origin: Vector, color: Color, callback: (pos: Vector, color: Color) => void) {
     const originFloor = origin.floor()
     const map: WorldMap = world.getResource<WorldMapResource>('map')
-    const fov = new FOV.RecursiveShadowcasting((x, y) => !map.isLightBlocking(world, new Vector(x, y)), { topology: 8 })
-    const lighting = new Lighting((x, y) => (map.isLightBlocking(world, new Vector(x, y)) ? 0.0 : 1.0), { passes: 1 })
+    const fov = new FOV.RecursiveShadowcasting((x, y) => !map.isLightBlocking(world, new Vector([x, y])), { topology: 8 })
+    const lighting = new Lighting((x, y) => (map.isLightBlocking(world, new Vector([x, y])) ? 0.0 : 1.0), { passes: 1 })
     lighting.setLight(originFloor.x, originFloor.y, color.color)
     lighting.setFOV(fov)
     lighting.setOptions({ range: 6 })
     lighting.compute((x: number, y: number, c: [number, number, number]) => {
-      callback(new Vector(x, y), new Color(c))
+      callback(new Vector([x, y]), new Color(c))
     })
   }
 

@@ -45,6 +45,6 @@ export class Random {
   }
 
   public insideRectangle(rectangle: Rectangle): Vector {
-    return new Vector(this.integerBetween(rectangle.left, rectangle.right), this.integerBetween(rectangle.top, rectangle.bottom))
+    return new Vector([this.integerBetween(rectangle.left, rectangle.right), this.integerBetween(rectangle.top, rectangle.bottom)])
   }
 }
