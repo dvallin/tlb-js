@@ -18,6 +18,9 @@ import { ActionGroup } from '../ui/action-selector'
 import { Random } from '../random'
 import { attackTarget } from '../component-reducers/attack-target'
 import { EffectComponent } from '../components/effects'
+import { CharacterStatsComponent } from '../components/character-stats'
+import { BodyPartInfo } from '../ui/body-part-selector'
+import { calculateHitChance } from '../component-reducers/calculate-hit-chance'
 
 export class PlayerRoundControl implements TlbSystem {
   public readonly components: ComponentName[] = ['take-turn', 'player', 'position']
@@ -98,7 +101,7 @@ export class PlayerRoundControl implements TlbSystem {
         if (selectedAction.target === undefined) {
           selectedAction.target = this.findTarget(world, input, viewport, map, entity, subAction)
           if (selectedAction.target !== undefined) {
-            this.showBodyPartDialog(world, ui, selectedAction.target)
+            this.showBodyPartDialog(world, ui, entity, selectedAction.target, subAction)
           }
           return false
         } else {
@@ -119,15 +122,21 @@ export class PlayerRoundControl implements TlbSystem {
   }
 
   public showActionDialog(world: TlbWorld, ui: UI, entity: Entity, availableActions: ActionGroup[]) {
-    ui.showActionSelector(world, 'actions', availableActions)
+    ui.showActionSelector(world, availableActions)
     world.editEntity(entity).withComponent<SelectedActionComponent>('selected-action', {
       currentSubAction: 0,
       skippedActions: 0,
     })
   }
 
-  public showBodyPartDialog(world: TlbWorld, ui: UI, target: Entity) {
-    ui.showBodyPartSelector(world, target)
+  public showBodyPartDialog(world: TlbWorld, ui: UI, entity: Entity, target: Entity, attack: Attack) {
+    const stats = world.getComponent<CharacterStatsComponent>(target, 'character-stats')!
+    const bodyParts: BodyPartInfo[] = []
+    Object.keys(stats.current.bodyParts).forEach(name => {
+      const hitChance = calculateHitChance(world, entity, target, name, attack)
+      bodyParts.push({ name, hitChance })
+    })
+    ui.showBodyPartSelector(world, target, bodyParts)
   }
 
   public clearAction(world: TlbWorld, entity: Entity): void {

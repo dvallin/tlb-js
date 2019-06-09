@@ -8,6 +8,7 @@ import { FunctionalShape } from '../geometry/functional-shape'
 import { astar, Path } from './astar'
 import { LineSegment } from '../geometry/line-segment'
 import { Entity } from '../ecs/entity'
+import { DiscreteSetSpace } from '../spatial/set-space'
 
 export interface QueryParameters {
   onlyDiscovered: boolean
@@ -21,12 +22,11 @@ export class Queries {
     const originFloor = origin.floor()
     const map: WorldMap = world.getResource<WorldMapResource>('map')
     const fov = new FOV.RecursiveShadowcasting((x, y) => !map.isLightBlocking(world, new Vector([x, y])), { topology: 8 })
-    const seenAlready = new Set<string>()
+    const seenAlready = new DiscreteSetSpace()
     fov.compute(originFloor.x, originFloor.y, 20, (x, y, distance) => {
       const position = new Vector([x, y])
-      const key = position.key
-      if (!seenAlready.has(key)) {
-        seenAlready.add(key)
+      if (!seenAlready.has(position)) {
+        seenAlready.set(position)
         callback(position, distance)
       }
     })

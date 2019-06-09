@@ -25,13 +25,12 @@ export interface ActionGroup {
 }
 
 export interface State {
-  title: string
   actionsWindow: WindowDecoration
   descriptionWindow: WindowDecoration
-  rows: number
 
   groups: ActionGroup[]
 
+  rows: number
   selected: number | undefined
   hovered: number
   firstRow: number
@@ -41,9 +40,8 @@ export class ActionSelector implements UIElement {
   public constructor(public readonly entity: Entity, private readonly state: State) {}
 
   public render(renderer: Renderer) {
-    const { actionsWindow, descriptionWindow, groups, hovered } = this.state
-    this.renderActions(renderer, actionsWindow, groups, hovered)
-    this.renderDescription(renderer, descriptionWindow, groups, hovered)
+    this.renderActions(renderer)
+    this.renderDescription(renderer)
   }
 
   public update(world: TlbWorld) {
@@ -87,7 +85,7 @@ export class ActionSelector implements UIElement {
   }
 
   public collapseSelected(): void {
-    const group = this.groupAtLine(this.state.groups, this.state.selected!)
+    const group = this.groupAtLine(this.state.selected!)
     if (group !== undefined) {
       this.state.selected = undefined
       group.collapsed = !group.collapsed
@@ -96,25 +94,25 @@ export class ActionSelector implements UIElement {
 
   public get selectedAction(): SelectedAction | undefined {
     if (this.state.selected !== undefined) {
-      const { groups, selected } = this.state
-      return this.actionAtLine(groups, selected)
+      const { selected } = this.state
+      return this.actionAtLine(selected)
     }
     return undefined
   }
 
-  private renderActions(renderer: Renderer, window: WindowDecoration, groups: ActionGroup[], hovered: number) {
-    window.render(renderer)
+  private renderActions(renderer: Renderer) {
+    this.state.actionsWindow.render(renderer)
 
     let index = 0
     let row = 0
-    groups.forEach(group => {
+    this.state.groups.forEach(group => {
       const hasActions = group.actions.find(a => a.available)
       if (this.isLineVisible(index)) {
         renderer.text(
           `${group.collapsed ? '+' : '-'} ${group.name}`,
-          window.topLeft.add(new Vector([1, row + 1])),
+          this.state.actionsWindow.topLeft.add(new Vector([1, row + 1])),
           hasActions ? primary[1] : gray[3],
-          hovered === index ? gray[1] : undefined
+          this.state.hovered === index ? gray[1] : undefined
         )
         row++
       }
@@ -124,9 +122,9 @@ export class ActionSelector implements UIElement {
           if (this.isLineVisible(index)) {
             renderer.text(
               ` | ${action.action.name}`,
-              window.topLeft.add(new Vector([1, row + 1])),
+              this.state.actionsWindow.topLeft.add(new Vector([1, row + 1])),
               action.available ? primary[1] : gray[3],
-              hovered === index && action.available ? gray[1] : undefined
+              this.state.hovered === index && action.available ? gray[1] : undefined
             )
             row++
           }
@@ -140,31 +138,40 @@ export class ActionSelector implements UIElement {
     return index >= this.state.firstRow && index < this.state.firstRow + this.state.actionsWindow.content.height
   }
 
-  private renderDescription(renderer: Renderer, window: WindowDecoration, groups: ActionGroup[], hovered: number) {
-    window.render(renderer)
+  private renderDescription(renderer: Renderer) {
+    this.state.descriptionWindow.render(renderer)
 
-    const action = this.actionAtLine(groups, hovered)
+    const action = this.actionAtLine(this.state.hovered)
     if (action !== undefined) {
-      renderer.text(action.action.name, window.topLeft.add(new Vector([1, 1])), primary[1])
+      renderer.text(action.action.name, this.state.descriptionWindow.topLeft.add(new Vector([1, 1])), primary[1])
       const cost = action.action.cost
       if (cost.costsAll) {
-        renderer.text('costs all AP and MP', window.topLeft.add(new Vector([1, 2])), primary[1])
+        renderer.text('costs all AP and MP', this.state.descriptionWindow.topLeft.add(new Vector([1, 2])), primary[1])
       } else {
-        renderer.text(`cost: ${cost.actions}AP ${cost.movement}MP`, window.topLeft.add(new Vector([1, 2])), primary[1])
+        renderer.text(
+          `cost: ${cost.actions}AP ${cost.movement}MP`,
+          this.state.descriptionWindow.topLeft.add(new Vector([1, 2])),
+          primary[1]
+        )
       }
     } else {
-      const group = this.groupAtLine(groups, hovered)
+      const group = this.groupAtLine(this.state.hovered)
       if (group !== undefined) {
-        renderer.text(group.name, window.topLeft.add(new Vector([1, 1])), primary[1])
-        renderer.flowText(group.description, window.topLeft.add(new Vector([1, 2])), window.width - 2, primary[1])
+        renderer.text(group.name, this.state.descriptionWindow.topLeft.add(new Vector([1, 1])), primary[1])
+        renderer.flowText(
+          group.description,
+          this.state.descriptionWindow.topLeft.add(new Vector([1, 2])),
+          this.state.descriptionWindow.width - 2,
+          primary[1]
+        )
       } else {
-        renderer.text('choose an action to perform', window.topLeft.add(new Vector([1, 1])), primary[1])
+        renderer.text('choose an action to perform', this.state.descriptionWindow.topLeft.add(new Vector([1, 1])), primary[1])
       }
     }
   }
 
-  private groupAtLine(groups: ActionGroup[], line: number): ActionGroup | undefined {
-    for (const group of groups) {
+  private groupAtLine(line: number): ActionGroup | undefined {
+    for (const group of this.state.groups) {
       if (line === 0) {
         return group
       }
@@ -177,8 +184,8 @@ export class ActionSelector implements UIElement {
     return undefined
   }
 
-  private actionAtLine(groups: ActionGroup[], line: number): SelectedAction | undefined {
-    for (const group of groups) {
+  private actionAtLine(line: number): SelectedAction | undefined {
+    for (const group of this.state.groups) {
       line -= 1
       if (group.collapsed) {
         continue

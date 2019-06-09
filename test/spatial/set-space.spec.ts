@@ -3,11 +3,11 @@ import { DiscreteSetSpace, SetSpace, SubSetSpace } from '../../src/spatial/set-s
 import { Rectangle } from '../../src/geometry/rectangle'
 
 describe('DiscreteStackedSpace', () => {
-  testSetSpace(new Vector(0, 2), () => new DiscreteSetSpace())
+  testSetSpace(new Vector([0, 2]), () => new DiscreteSetSpace())
 })
 
 describe('SubStackedSpace', () => {
-  testSetSpace(new Vector(0), () => new SubSetSpace(new DiscreteSetSpace(), (v: Vector) => new Vector(v.x, 2)))
+  testSetSpace(new Vector([0]), () => new SubSetSpace(new DiscreteSetSpace(), (v: Vector) => new Vector([v.x, 2])))
 })
 
 function testSetSpace(position: Vector, spaceBuilder: () => SetSpace): void {
@@ -43,10 +43,10 @@ function testSetSpace(position: Vector, spaceBuilder: () => SetSpace): void {
   describe('setAll', () => {
     it('sets all cells', () => {
       space.setAll(new Rectangle(0, 0, 1, 1))
-      space.has(new Vector(0, 0))
-      space.has(new Vector(1, 0))
-      space.has(new Vector(0, 1))
-      space.has(new Vector(1, 1))
+      space.has(new Vector([0, 0]))
+      space.has(new Vector([1, 0]))
+      space.has(new Vector([0, 1]))
+      space.has(new Vector([1, 1]))
     })
   })
 }

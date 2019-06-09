@@ -80,6 +80,13 @@ export const features = {
     lightBlocking: true,
     name: 'you',
   },
+  loot: {
+    character: 'l',
+    diffuse: primary[1],
+    blocking: false,
+    lightBlocking: false,
+    name: 'some loot',
+  },
   guard: enemy('g', 'guard'),
   eliteGuard: eliteEnemy('g', 'elite guard'),
 }

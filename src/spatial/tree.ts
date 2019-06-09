@@ -1,9 +1,9 @@
 export type Leaf<T> = { value: T; kind: 'leaf' }
-export type Root<T> = { [c: number]: Root<T> | undefined | Leaf<T>; kind: 'root' }
+export type Tree<T> = { [c: number]: Tree<T> | undefined | Leaf<T>; kind: 'root' }
 
-export function getLeaf<T>(root: Root<T>, indices: number[]): Leaf<T> | undefined {
+export function getLeaf<T>(root: Tree<T>, indices: number[]): Leaf<T> | undefined {
   for (let d = 0; d < indices.length; d++) {
-    const leaf: Leaf<T> | Root<T> | undefined = root[indices[d]]
+    const leaf: Leaf<T> | Tree<T> | undefined = root[indices[d]]
     if (leaf === undefined) {
       return undefined
     } else if (leaf.kind === 'root') {
@@ -15,7 +15,7 @@ export function getLeaf<T>(root: Root<T>, indices: number[]): Leaf<T> | undefine
   return undefined
 }
 
-export function get<T>(root: Root<T>, indices: number[]): T | undefined {
+export function get<T>(root: Tree<T>, indices: number[]): T | undefined {
   const leaf = getLeaf(root, indices)
   if (leaf !== undefined) {
     return leaf.value
@@ -23,10 +23,10 @@ export function get<T>(root: Root<T>, indices: number[]): T | undefined {
   return undefined
 }
 
-export function insert<T>(root: Root<T>, indices: number[], value: T) {
+export function insert<T>(root: Tree<T>, indices: number[], value: T) {
   for (let d = 0; d < indices.length - 1; d++) {
     const pos = indices[d]
-    let leaf: Leaf<T> | Root<T> | undefined = root[pos]
+    let leaf: Leaf<T> | Tree<T> | undefined = root[pos]
     if (leaf === undefined) {
       leaf = { kind: 'root' }
       root[pos] = leaf
@@ -36,4 +36,21 @@ export function insert<T>(root: Root<T>, indices: number[], value: T) {
     root = leaf
   }
   root[indices[indices.length - 1]] = { value, kind: 'leaf' }
+}
+
+export function remove<T>(root: Tree<T>, indices: number[]): T | undefined {
+  for (let d = 0; d < indices.length - 1; d++) {
+    let leaf: Leaf<T> | Tree<T> | undefined = root[indices[d]]
+    if (leaf === undefined) {
+      return undefined
+    } else if (leaf.kind === 'root') {
+      root = leaf
+    } else {
+      throw Error()
+    }
+  }
+  const leaf = root[indices[indices.length - 1]] as Leaf<T>
+  const value = leaf.value
+  delete root[indices[indices.length - 1]]
+  return value
 }

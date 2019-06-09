@@ -1,5 +1,6 @@
 import { Vector } from './vector'
 import { Shape } from '../geometry/shape'
+import { Tree, get, insert, remove } from './tree'
 
 export interface SetSpace {
   has(pos: Vector): boolean
@@ -9,14 +10,14 @@ export interface SetSpace {
 }
 
 export class DiscreteSetSpace implements SetSpace {
-  private readonly objects: Set<string> = new Set()
+  private readonly objects: Tree<{}> = { kind: 'root' }
 
   public has(pos: Vector): boolean {
-    return this.objects.has(pos.key)
+    return get(this.objects, pos.coordinates) !== undefined
   }
 
   public set(pos: Vector): void {
-    this.objects.add(pos.key)
+    insert(this.objects, pos.coordinates, {})
   }
 
   public setAll(shape: Shape): void {
@@ -24,10 +25,7 @@ export class DiscreteSetSpace implements SetSpace {
   }
 
   public remove(pos: Vector): boolean {
-    const key = pos.key
-    const value = this.objects.has(key)
-    this.objects.delete(key)
-    return value
+    return remove(this.objects, pos.coordinates) !== undefined
   }
 }
 

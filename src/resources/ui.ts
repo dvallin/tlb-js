@@ -10,16 +10,17 @@ import { Entity } from '../ecs/entity'
 import { WindowDecoration } from '../ui/window-decoration'
 import { LogView } from '../ui/log-view'
 import { UIElement } from '../ui/ui-element'
+import { BodyPartSelector, BodyPartInfo } from '../ui/body-part-selector'
 
 export interface UI {
   hasElement(position: Vector): boolean
   render(renderer: Renderer): void
 
-  showActionSelector(world: TlbWorld, title: string, groups: ActionGroup[]): void
+  showActionSelector(world: TlbWorld, groups: ActionGroup[]): void
   selectedAction(): SelectedAction | undefined
   hideActionSelector(world: TlbWorld): void
 
-  showBodyPartSelector(world: TlbWorld, target: Entity): void
+  showBodyPartSelector(world: TlbWorld, target: Entity, bodyParts: BodyPartInfo[]): void
   selectedBodyPart(): string | undefined
   hideBodyPartSelector(world: TlbWorld): void
 
@@ -32,6 +33,7 @@ export class UIResource implements TlbResource, UI {
 
   public visibleElements: Rectangle[] = []
 
+  private bodyPartSelector: BodyPartSelector | undefined = undefined
   private actionSelector: ActionSelector | undefined = undefined
   private overview: Overview | undefined = undefined
   private log: LogView | undefined = undefined
@@ -46,6 +48,9 @@ export class UIResource implements TlbResource, UI {
     if (this.log !== undefined) {
       this.log.update(world)
     }
+    if (this.bodyPartSelector !== undefined) {
+      this.bodyPartSelector.update(world)
+    }
   }
 
   public render(renderer: Renderer): void {
@@ -57,6 +62,9 @@ export class UIResource implements TlbResource, UI {
     }
     if (this.log !== undefined) {
       this.log.render(renderer)
+    }
+    if (this.bodyPartSelector !== undefined) {
+      this.bodyPartSelector.render(renderer)
     }
   }
 
@@ -72,7 +80,9 @@ export class UIResource implements TlbResource, UI {
     this.log = new LogView(entity, new Rectangle(0, viewport.boundaries.y - 13, 41, 13))
   }
 
-  public showActionSelector(world: TlbWorld, title: string, groups: ActionGroup[]) {
+  public showActionSelector(world: TlbWorld, groups: ActionGroup[]) {
+    this.hideBodyPartSelector(world)
+
     const viewport: Viewport = world.getResource<ViewportResource>('viewport')
 
     const rows = groups.map(g => g.actions.length + 1).reduce((a, b) => a + b)
@@ -94,7 +104,6 @@ export class UIResource implements TlbResource, UI {
       rows,
       actionsWindow,
       descriptionWindow,
-      title,
       hovered: 0,
       firstRow: 0,
       selected: undefined,
@@ -115,13 +124,48 @@ export class UIResource implements TlbResource, UI {
     return undefined
   }
 
-  public showBodyPartSelector({  }: TlbWorld, {  }: Entity): void {}
+  public showBodyPartSelector(world: TlbWorld, target: Entity, bodyParts: BodyPartInfo[]): void {
+    const viewport: Viewport = world.getResource<ViewportResource>('viewport')
+
+    const rows = bodyParts.length
+    const height = 13
+
+    const bodyPartWindow = new WindowDecoration(
+      new Rectangle(viewport.boundaries.x - 40, viewport.boundaries.y - height, 20, height),
+      'body parts'
+    )
+
+    const descriptionWindow = new WindowDecoration(
+      new Rectangle(bodyPartWindow.right, viewport.boundaries.y - height, 20, height),
+      'description'
+    )
+
+    const entity = this.getOrCreateElement(world, this.actionSelector)
+    this.bodyPartSelector = new BodyPartSelector(entity, {
+      rows,
+      bodyParts,
+      bodyPartWindow,
+      descriptionWindow,
+      target,
+      hovered: 0,
+      firstRow: 0,
+      selected: undefined,
+    })
+  }
 
   public selectedBodyPart(): string | undefined {
+    if (this.bodyPartSelector !== undefined) {
+      return this.bodyPartSelector.selectedBodyPart
+    }
     return undefined
   }
 
-  public hideBodyPartSelector({  }: TlbWorld): void {}
+  public hideBodyPartSelector(world: TlbWorld): void {
+    if (this.bodyPartSelector !== undefined) {
+      world.deleteEntity(this.bodyPartSelector.entity)
+      this.bodyPartSelector = undefined
+    }
+  }
 
   public getOrCreateElement(world: TlbWorld, uiElement: UIElement | undefined): Entity {
     if (uiElement !== undefined) {
@@ -135,7 +179,8 @@ export class UIResource implements TlbResource, UI {
     return (
       (this.actionSelector !== undefined && this.actionSelector.contains(position)) ||
       (this.overview !== undefined && this.overview.contains(position)) ||
-      (this.log !== undefined && this.log.contains(position))
+      (this.log !== undefined && this.log.contains(position)) ||
+      (this.bodyPartSelector !== undefined && this.bodyPartSelector.contains(position))
     )
   }
 }

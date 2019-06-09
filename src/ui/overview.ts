@@ -3,7 +3,7 @@ import { Renderer } from '../renderer/renderer'
 import { Vector } from '../spatial'
 import { Entity } from '../ecs/entity'
 import { TlbWorld } from '../tlb'
-import { CharacterStatsComponent, characterStats } from '../components/character-stats'
+import { CharacterStatsComponent } from '../components/character-stats'
 import { TakeTurnComponent } from '../components/rounds'
 import { LightingComponent } from '../components/light'
 import { primary } from '../renderer/palettes'
@@ -13,6 +13,8 @@ import { Rectangle } from '../geometry/rectangle'
 import { calculateBrightness } from '../component-reducers/brigthness'
 import { FeatureType, FeatureComponent, features } from '../components/feature'
 import { ActiveEffectsComponent } from '../components/effects'
+import { renderBodyPartInfo } from './render-helpers'
+import { InventoryComponent, ItemComponent, items, EquipedItemsComponent, EquipmentAttachement } from '../components/items'
 
 export interface CharacterDescription {
   feature?: FeatureType
@@ -22,6 +24,7 @@ export interface State {
   bodyParts: WindowDecoration
   turn: WindowDecoration
   environment: WindowDecoration
+  inventoryWindow: WindowDecoration
 
   focus: Entity
 
@@ -30,6 +33,10 @@ export interface State {
   takeTurn?: TakeTurnComponent
   enemies: CharacterDescription[]
   lighting?: LightingComponent
+  inventory?: {
+    item: ItemComponent
+    equipment: EquipmentAttachement | undefined
+  }[]
 }
 
 export class Overview implements UIElement {
@@ -39,9 +46,11 @@ export class Overview implements UIElement {
     const bodyParts = new WindowDecoration(new Rectangle(topLeft.x, topLeft.y, width, 2), 'body parts')
     const turn = new WindowDecoration(new Rectangle(topLeft.x, topLeft.y + 1, width, 2), 'turn')
     const environment = new WindowDecoration(new Rectangle(topLeft.x, topLeft.y + 2, width, 2), 'environment')
+    const inventoryWindow = new WindowDecoration(new Rectangle(topLeft.x, topLeft.y + 3, width, 2), 'inventory')
     this.state = {
       focus,
       bodyParts,
+      inventoryWindow,
       turn,
       environment,
       enemies: [],
@@ -54,23 +63,9 @@ export class Overview implements UIElement {
       this.state.bodyParts.render(renderer)
 
       if (!this.state.bodyParts.collapsed) {
-        const current = this.state.stats.current
-        const maximum = characterStats[this.state.stats.type]
-        Object.keys(current.bodyParts).forEach(key => {
-          const currentValue = current.bodyParts[key].health
-          const maximumValue = maximum.bodyParts[key].health
-          const bars = Math.ceil((5 * currentValue) / maximumValue)
-          const effects = this.state.activeEffects!.effects.filter(e => e.bodyPart === key && !e.effect.global).map(e => e.effect.type[0])
-
-          renderer.text(
-            `${key}${' '.repeat(8 - key.length)}${'|'.repeat(bars)}`,
-            this.state.bodyParts.topLeft.add(new Vector([1, y])),
-            effects.length > 0 || bars <= 2 ? primary[3] : primary[1]
-          )
-
-          effects.forEach((name, index) => {
-            renderer.text(name, this.state.bodyParts.topLeft.add(new Vector([index + 14, y])), primary[2])
-          })
+        const stats = this.state.stats
+        Object.keys(stats.current.bodyParts).forEach(key => {
+          renderBodyPartInfo(renderer, this.state.bodyParts.topLeft.add(new Vector([1, y])), key, stats, this.state.activeEffects!)
           y++
         })
 
@@ -87,7 +82,28 @@ export class Overview implements UIElement {
       this.state.bodyParts.setHeight(0)
     }
 
-    this.state.turn.setY(this.state.bodyParts.bottom + 1)
+    this.state.inventoryWindow.setY(this.state.bodyParts.bottom + 1)
+    if (this.state.inventory !== undefined) {
+      let y = 1
+      if (!this.state.inventoryWindow.collapsed) {
+        this.state.inventory.forEach(entry => {
+          const item = items[entry.item.type]
+          let bodyPart = ''
+          if (entry.equipment !== undefined) {
+            bodyPart = '@ ' + entry.equipment.bodyParts.join('&')
+          }
+          renderer.text(`${item.name} ${bodyPart}`, this.state.inventoryWindow.topLeft.add(new Vector([1, y])), primary[1])
+          y++
+        })
+        this.state.inventoryWindow.setHeight(y + 1)
+      }
+
+      this.state.inventoryWindow.render(renderer)
+    } else {
+      this.state.inventoryWindow.setHeight(0)
+    }
+
+    this.state.turn.setY(this.state.inventoryWindow.bottom + 1)
     if (this.state.stats !== undefined && this.state.takeTurn !== undefined) {
       let y = 1
       this.state.turn.render(renderer)
@@ -133,8 +149,10 @@ export class Overview implements UIElement {
   public update(world: TlbWorld): void {
     const input: Input = world.getResource<InputResource>('input')
     this.state.bodyParts.update(input)
+    this.state.inventoryWindow.update(input)
     this.state.turn.update(input)
     this.state.environment.update(input)
+
     this.state.takeTurn = world.getComponent<TakeTurnComponent>(this.state.focus, 'take-turn')
     this.state.enemies = []
     world.getStorage('took-turn').foreach(entity => {
@@ -150,9 +168,22 @@ export class Overview implements UIElement {
     this.state.activeEffects = world.getComponent<ActiveEffectsComponent>(this.state.focus, 'active-effects')
     this.state.stats = world.getComponent<CharacterStatsComponent>(this.state.focus, 'character-stats')
     this.state.lighting = world.getComponent<LightingComponent>(this.state.focus, 'lighting')
+
+    const inventory = world.getComponent<InventoryComponent>(this.state.focus, 'inventory')!
+    const equipped = world.getComponent<EquipedItemsComponent>(this.state.focus, 'equiped-items')!
+    this.state.inventory = inventory.content.map(entity => {
+      const item = world.getComponent<ItemComponent>(entity, 'item')!
+      const equipment = equipped.equipment.find(e => e.entity === entity)
+      return { item, equipment }
+    })
   }
 
   public contains(position: Vector): boolean {
-    return this.state.turn.containsVector(position) || this.state.bodyParts.containsVector(position)
+    return (
+      this.state.turn.containsVector(position) ||
+      this.state.bodyParts.containsVector(position) ||
+      this.state.environment.containsVector(position) ||
+      this.state.inventoryWindow.containsVector(position)
+    )
   }
 }

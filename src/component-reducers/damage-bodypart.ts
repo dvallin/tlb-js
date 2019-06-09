@@ -5,6 +5,8 @@ import { Log, LogResource } from '../resources/log'
 import { PositionComponent } from '../components/position'
 import { TlbWorld } from '../tlb'
 import { EffectComponent } from '../components/effects'
+import { InventoryComponent } from '../components/items'
+import { createLoot } from '../components/asset'
 
 export function damageBodyPart(
   world: TlbWorld,
@@ -45,16 +47,19 @@ export function healBodyPart(stats: CharacterStatsComponent, bodyPartName: strin
 export function kill(world: TlbWorld, entity: Entity) {
   if (world.hasComponent(entity, 'position')) {
     const position = world.getComponent<PositionComponent>(entity, 'position')!
+    const inventory = world.getComponent<InventoryComponent>(entity, 'inventory')!
     const map: WorldMap = world.getResource<WorldMapResource>('map')
-    map.removeCharacter(position.position)
+    map.removeCharacter(position.position.floor())
 
     world
       .editEntity(entity)
-      .removeComponent('position')
       .removeComponent('take-turn')
       .removeComponent('start-turn')
       .removeComponent('took-turn')
       .removeComponent('wait-turn')
+
+    const loot = createLoot(world, map, position.position.floor())
+    world.editEntity(loot).withComponent<InventoryComponent>('inventory', { ...inventory })
 
     const log: Log = world.getResource<LogResource>('log')
     log.died(world, entity)

@@ -21,7 +21,10 @@ export class PlayerInteraction implements TlbSystem {
 
       const trigger = this.findTrigger(world, map, neighbourhood)
       if (trigger !== undefined) {
-        world.editEntity(trigger).withComponent('active', {})
+        world
+          .editEntity(trigger)
+          .withComponent('active', {})
+          .withComponent<TriggeredByComponent>('triggered-by', { entity })
       }
     }
   }

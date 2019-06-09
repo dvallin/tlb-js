@@ -1,5 +1,6 @@
 import { Vector } from '../spatial'
 import { Shape } from '../geometry/shape'
+import { DiscreteSetSpace } from '../spatial/set-space'
 
 export function bfs(
   origin: Vector,
@@ -7,7 +8,8 @@ export function bfs(
   visit: (target: Vector, depth: number) => boolean,
   canVisit: (target: Vector, depth: number) => boolean
 ): void {
-  const visited: Set<string> = new Set([origin.key])
+  const visited: DiscreteSetSpace = new DiscreteSetSpace()
+  visited.set(origin)
   let currentDepth: number = 1
   let currentLayer: Vector[] = []
   let nextLayer: Vector[] = []
@@ -31,16 +33,15 @@ export function bfs(
 }
 
 function putNeighboursIntoNextLayer(
-  visited: Set<string>,
+  visited: DiscreteSetSpace,
   neighbourhood: Shape,
   layer: Vector[],
   canVisit: (neighbour: Vector) => boolean
 ): void {
   neighbourhood.foreach(neighbour => {
-    const key = neighbour.key
-    if (!visited.has(key) && canVisit(neighbour)) {
+    if (!visited.has(neighbour) && canVisit(neighbour)) {
       layer.push(neighbour)
-      visited.add(key)
+      visited.set(neighbour)
     }
   })
 }

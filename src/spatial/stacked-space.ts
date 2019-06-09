@@ -1,6 +1,6 @@
 import { Shape } from '../geometry/shape'
 import { Vector } from './vector'
-import { Root, get, insert, getLeaf } from './tree'
+import { Tree, get, insert, getLeaf } from './tree'
 
 export interface StackedSpace<A> {
   get(pos: Vector): A[]
@@ -12,7 +12,7 @@ export interface StackedSpace<A> {
 }
 
 export class DiscreteStackedSpace<A> implements StackedSpace<A> {
-  private readonly objects: Root<A[]> = { kind: 'root' }
+  private readonly objects: Tree<A[]> = { kind: 'root' }
 
   public get(pos: Vector): A[] {
     return get(this.objects, pos.coordinates) || []
