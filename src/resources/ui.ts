@@ -11,10 +11,17 @@ import { WindowDecoration } from '../ui/window-decoration'
 import { LogView } from '../ui/log-view'
 import { UIElement } from '../ui/ui-element'
 import { BodyPartSelector, BodyPartInfo } from '../ui/body-part-selector'
+import { InventoryTransferModal } from '../ui/inventory-transfer-modal'
 
 export interface UI {
   hasElement(position: Vector): boolean
   render(renderer: Renderer): void
+
+  isModal: boolean
+
+  showInventoryTransferModal(world: TlbWorld, source: Entity, target: Entity): void
+  inventoryTransferModalShowing(): boolean
+  hideInventoryTransferModal(world: TlbWorld): void
 
   showActionSelector(world: TlbWorld, groups: ActionGroup[]): void
   selectedAction(): SelectedAction | undefined
@@ -33,12 +40,24 @@ export class UIResource implements TlbResource, UI {
 
   public visibleElements: Rectangle[] = []
 
+  public isModal: boolean = false
+
   private bodyPartSelector: BodyPartSelector | undefined = undefined
   private actionSelector: ActionSelector | undefined = undefined
+  private inventoryTransferModal: InventoryTransferModal | undefined = undefined
   private overview: Overview | undefined = undefined
   private log: LogView | undefined = undefined
 
   public update(world: TlbWorld): void {
+    if (this.isModal) {
+      if (this.inventoryTransferModal !== undefined) {
+        this.inventoryTransferModal.update(world)
+        if (this.inventoryTransferModal.closed) {
+          this.hideInventoryTransferModal(world)
+        }
+      }
+    }
+
     if (this.actionSelector !== undefined) {
       this.actionSelector.update(world)
     }
@@ -54,6 +73,9 @@ export class UIResource implements TlbResource, UI {
   }
 
   public render(renderer: Renderer): void {
+    if (this.inventoryTransferModal !== undefined) {
+      this.inventoryTransferModal.render(renderer)
+    }
     if (this.actionSelector !== undefined) {
       this.actionSelector.render(renderer)
     }
@@ -78,6 +100,41 @@ export class UIResource implements TlbResource, UI {
     const viewport: Viewport = world.getResource<ViewportResource>('viewport')
     const entity = this.getOrCreateElement(world, this.log)
     this.log = new LogView(entity, new Rectangle(0, viewport.boundaries.y - 13, 41, 13))
+  }
+
+  public showInventoryTransferModal(world: TlbWorld, source: Entity, target: Entity): void {
+    this.isModal = true
+
+    const viewport: Viewport = world.getResource<ViewportResource>('viewport')
+    const leftWindow = new WindowDecoration(
+      new Rectangle(viewport.boundaries.x / 2 - 20, viewport.boundaries.y / 2 - 20, 20, 20),
+      'other inventory'
+    )
+    const rightWindow = new WindowDecoration(
+      new Rectangle(viewport.boundaries.x / 2, viewport.boundaries.y / 2 - 20, 20, 20),
+      'your inventory'
+    )
+
+    const entity = this.getOrCreateElement(world, this.actionSelector)
+    this.inventoryTransferModal = new InventoryTransferModal(entity, {
+      left: source,
+      right: target,
+      leftWindow,
+      rightWindow,
+      leftActive: true,
+      hovered: 0,
+    })
+  }
+
+  public inventoryTransferModalShowing(): boolean {
+    return this.inventoryTransferModal !== undefined
+  }
+
+  public hideInventoryTransferModal(world: TlbWorld) {
+    if (this.inventoryTransferModal !== undefined) {
+      world.deleteEntity(this.inventoryTransferModal.entity)
+      this.inventoryTransferModal = undefined
+    }
   }
 
   public showActionSelector(world: TlbWorld, groups: ActionGroup[]) {
@@ -126,8 +183,6 @@ export class UIResource implements TlbResource, UI {
 
   public showBodyPartSelector(world: TlbWorld, target: Entity, bodyParts: BodyPartInfo[]): void {
     const viewport: Viewport = world.getResource<ViewportResource>('viewport')
-
-    const rows = bodyParts.length
     const height = 13
 
     const bodyPartWindow = new WindowDecoration(
@@ -142,13 +197,11 @@ export class UIResource implements TlbResource, UI {
 
     const entity = this.getOrCreateElement(world, this.actionSelector)
     this.bodyPartSelector = new BodyPartSelector(entity, {
-      rows,
       bodyParts,
       bodyPartWindow,
       descriptionWindow,
       target,
       hovered: 0,
-      firstRow: 0,
       selected: undefined,
     })
   }
@@ -180,7 +233,8 @@ export class UIResource implements TlbResource, UI {
       (this.actionSelector !== undefined && this.actionSelector.contains(position)) ||
       (this.overview !== undefined && this.overview.contains(position)) ||
       (this.log !== undefined && this.log.contains(position)) ||
-      (this.bodyPartSelector !== undefined && this.bodyPartSelector.contains(position))
+      (this.bodyPartSelector !== undefined && this.bodyPartSelector.contains(position)) ||
+      (this.isModal && this.inventoryTransferModal !== undefined && this.inventoryTransferModal.contains(position))
     )
   }
 }

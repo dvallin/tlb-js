@@ -168,6 +168,6 @@ export function registerSystems(
   world.registerSystem('player-round-control', new PlayerRoundControl(queries, new Random(uniform)))
   world.registerSystem('region-creator', new RegionCreator(new Random(uniform)))
   world.registerSystem('script', new Script())
-  world.registerSystem('trigger', new Trigger())
+  world.registerSystem('trigger', new Trigger(pushState))
   world.registerSystem('start-round', new StartRound(new Random(uniform)))
 }

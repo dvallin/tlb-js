@@ -23,6 +23,7 @@ export class Fighting extends AbstractState {
   }
 
   public stop(world: TlbWorld): void {
+    super.stop(world)
     const viewport: Viewport = world.getResource<ViewportResource>('viewport')
     viewport.gridLocked = this.wasGridLocked
   }

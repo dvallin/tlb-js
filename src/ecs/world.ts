@@ -81,6 +81,12 @@ export class World<C, S, R> {
     this.activeSystems.delete(name)
   }
 
+  public activeSystemsList(): S[] {
+    const l: S[] = []
+    this.activeSystems.forEach(s => l.push(s))
+    return l
+  }
+
   public registerResource(resource: Resource<C, S, R>): void {
     this.resources.set(resource.kind, resource)
   }

@@ -6,42 +6,60 @@ import { Entity } from '../ecs/entity'
 import { TriggersComponent, TriggeredByComponent } from '../components/trigger'
 import { InventoryComponent } from '../components/items'
 import { WorldMap, WorldMapResource } from '../resources/world-map'
+import { State } from '../game-states/state'
+import { UIResource, UI } from '../resources/ui'
+import { Modal } from '../game-states/modal'
 
 export class Trigger implements TlbSystem {
   public readonly components: ComponentName[] = ['active', 'triggers']
 
+  public constructor(public readonly pushState: (state: State) => void) {}
+
   public update(world: TlbWorld, entity: Entity): void {
     const asset = world.getComponent<AssetComponent>(entity, 'asset')
+    let handled = true
     if (asset !== undefined) {
       switch (asset.type) {
         case 'door':
-          this.door(world, entity)
+          handled = this.door(world, entity)
           break
         case 'loot':
-          this.loot(world, entity)
+          handled = this.loot(world, entity)
           break
       }
     }
-    world
-      .editEntity(entity)
-      .removeComponent('active')
-      .removeComponent('triggered-by')
+    if (handled) {
+      world
+        .editEntity(entity)
+        .removeComponent('active')
+        .removeComponent('triggered-by')
+    }
   }
 
-  public door(world: TlbWorld, entity: Entity): void {
+  public door(world: TlbWorld, entity: Entity): boolean {
     const triggers = world.getComponent<TriggersComponent>(entity, 'triggers')!
     triggers.entities.forEach(doorPart => this.swapGroundAndFeature(world, doorPart))
+    return true
   }
 
-  public loot(world: TlbWorld, entity: Entity): void {
+  public loot(world: TlbWorld, entity: Entity): boolean {
     const map: WorldMap = world.getResource<WorldMapResource>('map')
-    const triggeredBy = world.getComponent<TriggeredByComponent>(entity, 'triggered-by')!
-    const triggerInventory = world.getComponent<InventoryComponent>(entity, 'inventory')
-    const targetInventory = world.getComponent<InventoryComponent>(triggeredBy.entity, 'inventory')
-    if (triggerInventory !== undefined && targetInventory !== undefined) {
-      targetInventory.content = triggerInventory.content.concat(targetInventory.content)
+    const ui: UI = world.getResource<UIResource>('ui')
+    if (!ui.isModal) {
+      const triggeredBy = world.getComponent<TriggeredByComponent>(entity, 'triggered-by')!
+      ui.showInventoryTransferModal(world, entity, triggeredBy.entity)
+      this.pushState(new Modal(world.activeSystemsList()))
+      console.log('entered modal')
+    } else if (!ui.inventoryTransferModalShowing()) {
+      ui.isModal = false
+      console.log('left modal')
+      const inventory = world.getComponent<InventoryComponent>(entity, 'inventory')!
+      if (inventory.content.length === 0) {
+        removeAsset(world, map, entity)
+      }
+      return true
     }
-    removeAsset(world, map, entity)
+    return false
   }
 
   public swapGroundAndFeature(world: TlbWorld, entity: Entity): void {

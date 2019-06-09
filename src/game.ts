@@ -97,13 +97,8 @@ export class Game {
   }
 
   private pushState(state: State): void {
-    this.leaveState()
     this.states.push(state)
     this.enterState()
-  }
-
-  private leaveState(): void {
-    this.states[this.states.length - 1].stop(this.world)
   }
 
   private enterState(): void {

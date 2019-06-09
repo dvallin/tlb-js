@@ -52,17 +52,6 @@ export class ActionSelector implements UIElement {
     }
     const up = input.keyPressed.has(KEYS.VK_K)
     const down = input.keyPressed.has(KEYS.VK_J)
-
-    this.state.selected = undefined
-    const content = this.state.actionsWindow.content
-    if (position && content.containsVector(position)) {
-      const delta = position.minus(content.topLeft)
-      this.state.hovered = delta.y + this.state.firstRow
-      if (input.mousePressed) {
-        this.state.selected = delta.y + this.state.firstRow
-        this.collapseSelected()
-      }
-    }
     if (up) {
       this.state.hovered--
     }
@@ -76,6 +65,17 @@ export class ActionSelector implements UIElement {
       this.state.firstRow = this.state.hovered
     } else if (this.state.firstRow <= this.state.hovered - this.state.actionsWindow.content.height) {
       this.state.firstRow = this.state.hovered - this.state.actionsWindow.content.height + 1
+    }
+
+    this.state.selected = undefined
+    const content = this.state.actionsWindow.content
+    if (position && content.containsVector(position)) {
+      const delta = position.minus(content.topLeft)
+      this.state.hovered = delta.y + this.state.firstRow
+      if (input.mousePressed) {
+        this.state.selected = delta.y + this.state.firstRow
+        this.collapseSelected()
+      }
     }
 
     if (input.keyPressed.has(KEYS.VK_RETURN)) {
