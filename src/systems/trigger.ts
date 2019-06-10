@@ -1,6 +1,6 @@
 import { ComponentName, TlbSystem, TlbWorld } from '../tlb'
 import { AssetComponent, removeAsset } from '../components/asset'
-import { FeatureComponent } from '../components/feature'
+import { FeatureComponent, features } from '../components/feature'
 import { GroundComponent } from '../components/ground'
 import { Entity } from '../ecs/entity'
 import { TriggersComponent, TriggeredByComponent } from '../components/trigger'
@@ -24,7 +24,11 @@ export class Trigger implements TlbSystem {
           handled = this.door(world, entity)
           break
         case 'loot':
-          handled = this.loot(world, entity)
+          handled = this.loot(world, entity, true)
+          break
+        case 'trash':
+        case 'locker':
+          handled = this.loot(world, entity, false)
           break
       }
     }
@@ -42,19 +46,24 @@ export class Trigger implements TlbSystem {
     return true
   }
 
-  public loot(world: TlbWorld, entity: Entity): boolean {
+  public loot(world: TlbWorld, entity: Entity, remove: boolean): boolean {
     const map: WorldMap = world.getResource<WorldMapResource>('map')
     const ui: UI = world.getResource<UIResource>('ui')
     if (!ui.isModal) {
       const triggeredBy = world.getComponent<TriggeredByComponent>(entity, 'triggered-by')!
-      ui.showInventoryTransferModal(world, entity, triggeredBy.entity)
+      const triggers = world.getComponent<TriggersComponent>(entity, 'triggers')!
+      const sourceFeature = world.getComponent<FeatureComponent>(triggers.entities[0], 'feature')!
+      const targetFeature = world.getComponent<FeatureComponent>(triggeredBy.entity, 'feature')!
+      const targetText = features[targetFeature.type].name
+      const sourceText = features[sourceFeature.type].name
+      ui.showInventoryTransferModal(world, entity, sourceText, triggeredBy.entity, targetText)
       this.pushState(new Modal(world.activeSystemsList()))
       console.log('entered modal')
     } else if (!ui.inventoryTransferModalShowing()) {
       ui.isModal = false
       console.log('left modal')
       const inventory = world.getComponent<InventoryComponent>(entity, 'inventory')!
-      if (inventory.content.length === 0) {
+      if (remove && inventory.content.length === 0) {
         removeAsset(world, map, entity)
       }
       return true

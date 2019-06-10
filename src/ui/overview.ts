@@ -74,7 +74,6 @@ export class Overview implements UIElement {
         globalEffects.forEach((name, index) => {
           renderer.text(name, this.state.bodyParts.topLeft.add(new Vector([1 + index, y])), primary[2])
         })
-        y++
 
         this.state.bodyParts.setHeight(y + 1)
       }

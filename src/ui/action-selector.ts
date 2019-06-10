@@ -3,6 +3,7 @@ import { Entity } from '../ecs/entity'
 import { Vector } from '../spatial'
 import { Renderer } from '../renderer/renderer'
 import { primary, gray } from '../renderer/palettes'
+import { subactionStringify } from '../component-reducers/subaction-stringify'
 
 import { UIElement } from './ui-element'
 import { TlbWorld } from '../tlb'
@@ -146,7 +147,7 @@ export class ActionSelector implements UIElement {
       renderer.text(action.action.name, this.state.descriptionWindow.topLeft.add(new Vector([1, 1])), primary[1])
       const cost = action.action.cost
       if (cost.costsAll) {
-        renderer.text('costs all AP and MP', this.state.descriptionWindow.topLeft.add(new Vector([1, 2])), primary[1])
+        renderer.text('cost: all AP, MP', this.state.descriptionWindow.topLeft.add(new Vector([1, 2])), primary[1])
       } else {
         renderer.text(
           `cost: ${cost.actions}AP ${cost.movement}MP`,
@@ -154,6 +155,12 @@ export class ActionSelector implements UIElement {
           primary[1]
         )
       }
+
+      let y = 3
+      action.action.subActions.forEach(subAction => {
+        renderer.text(subactionStringify(subAction), this.state.descriptionWindow.topLeft.add(new Vector([1, y])), primary[1])
+        y++
+      })
     } else {
       const group = this.groupAtLine(this.state.hovered)
       if (group !== undefined) {

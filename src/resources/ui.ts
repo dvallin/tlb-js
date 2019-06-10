@@ -19,7 +19,7 @@ export interface UI {
 
   isModal: boolean
 
-  showInventoryTransferModal(world: TlbWorld, source: Entity, target: Entity): void
+  showInventoryTransferModal(world: TlbWorld, source: Entity, sourceTitle: string, target: Entity, targetTitle: string): void
   inventoryTransferModalShowing(): boolean
   hideInventoryTransferModal(world: TlbWorld): void
 
@@ -102,18 +102,15 @@ export class UIResource implements TlbResource, UI {
     this.log = new LogView(entity, new Rectangle(0, viewport.boundaries.y - 13, 41, 13))
   }
 
-  public showInventoryTransferModal(world: TlbWorld, source: Entity, target: Entity): void {
+  public showInventoryTransferModal(world: TlbWorld, source: Entity, sourceTitle: string, target: Entity, targetTitle: string): void {
     this.isModal = true
 
     const viewport: Viewport = world.getResource<ViewportResource>('viewport')
     const leftWindow = new WindowDecoration(
       new Rectangle(viewport.boundaries.x / 2 - 20, viewport.boundaries.y / 2 - 20, 20, 20),
-      'other inventory'
+      sourceTitle
     )
-    const rightWindow = new WindowDecoration(
-      new Rectangle(viewport.boundaries.x / 2, viewport.boundaries.y / 2 - 20, 20, 20),
-      'your inventory'
-    )
+    const rightWindow = new WindowDecoration(new Rectangle(viewport.boundaries.x / 2, viewport.boundaries.y / 2 - 20, 20, 20), targetTitle)
 
     const entity = this.getOrCreateElement(world, this.actionSelector)
     this.inventoryTransferModal = new InventoryTransferModal(entity, {

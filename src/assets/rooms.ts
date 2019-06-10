@@ -25,7 +25,7 @@ export const rectangular: Room = {
     { position: new Vector([7, 3]), direction: 'left', width: 3 },
     { position: new Vector([4, 7]), direction: 'up', width: 3 },
   ],
-  availableAssets: [],
+  availableAssets: [{ position: new Vector([0, 0]) }, { position: new Vector([5, 5]) }, { position: new Vector([6, 4]) }],
 }
 
 export const largeRectangular: Room = {
@@ -46,7 +46,7 @@ export const largeRectangular: Room = {
     { position: new Vector([7, 14]), direction: 'up', width: 3 },
     { position: new Vector([11, 14]), direction: 'up', width: 3 },
   ],
-  availableAssets: [],
+  availableAssets: [{ position: new Vector([0, 0]) }, { position: new Vector([5, 5]) }, { position: new Vector([7, 4]) }],
 }
 
 export const lShaped: Room = {

@@ -193,7 +193,7 @@ export class Agent implements TlbSystem {
     while (remainingAssets-- > 0 && room.availableAssets.length > 0) {
       const assetIndex = this.random.integerBetween(0, room.availableAssets.length - 1)
       const assetSlot = room.availableAssets[assetIndex]
-      const hasWall = map.shapeHasSome(world, FunctionalShape.lN(assetSlot.position), f => f === undefined || f.type === 'wall')
+      const hasWall = map.shapeHasSome(world, FunctionalShape.lN(assetSlot.position, 2), f => f === undefined || f.type === 'wall')
 
       const possibleAssets: AssetType[] = []
       if (hasWall) {
@@ -202,7 +202,13 @@ export class Agent implements TlbSystem {
       possibleAssets.push('trash')
       const assetType = this.random.pick<AssetType>(possibleAssets)
       dropAt(room.availableAssets, assetIndex)
-      createAssetFromPosition(world, map, assetSlot.position, assetType)
+
+      const entity = createAssetFromPosition(world, map, assetSlot.position, assetType)
+      switch (assetType) {
+        case 'trash':
+        case 'locker':
+          world.editEntity(entity).withComponent<InventoryComponent>('inventory', { content: [] })
+      }
     }
   }
 

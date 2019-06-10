@@ -41,9 +41,6 @@ export interface SelectedActionComponent {
 }
 
 export type ActionType = keyof typeof actions
-export interface FeatureComponent {
-  type: ActionType
-}
 
 export interface Action {
   cost: Cost
