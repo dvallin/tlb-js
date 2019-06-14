@@ -11,7 +11,7 @@ export class WindowDecoration {
 
   private effectiveRectangle: Rectangle
 
-  public constructor(private rectangle: Rectangle, public title: string) {
+  public constructor(private rectangle: Rectangle, public title: string, public bottomCollapse: boolean = false) {
     this.effectiveRectangle = new Rectangle(rectangle.x, rectangle.y, rectangle.width, rectangle.height)
   }
 
@@ -50,7 +50,11 @@ export class WindowDecoration {
   }
 
   public collapse(): void {
-    this.effectiveRectangle = new Rectangle(this.rectangle.x, this.rectangle.y, this.rectangle.width, 1)
+    if (this.bottomCollapse) {
+      this.effectiveRectangle = new Rectangle(this.rectangle.x, this.rectangle.bottom, this.rectangle.width, 1)
+    } else {
+      this.effectiveRectangle = new Rectangle(this.rectangle.x, this.rectangle.y, this.rectangle.width, 1)
+    }
   }
   public expand(): void {
     this.effectiveRectangle = new Rectangle(this.rectangle.x, this.rectangle.y, this.rectangle.width, this.rectangle.height)

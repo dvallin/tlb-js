@@ -50,7 +50,7 @@ export class AiRoundControl implements TlbSystem {
       const fightActions: SelectedAction[] = []
       const allActions: SelectedAction[] = []
       for (const group of actionGroups) {
-        group.actions
+        group.items
           .filter(action => action.available)
           .map(availableAction => {
             const selectedAction = { entity: group.entity, action: availableAction.action }

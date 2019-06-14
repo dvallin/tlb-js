@@ -136,32 +136,12 @@ export class UIResource implements TlbResource, UI {
 
   public showActionSelector(world: TlbWorld, groups: ActionGroup[]) {
     this.hideBodyPartSelector(world)
-
     const viewport: Viewport = world.getResource<ViewportResource>('viewport')
-
-    const rows = groups.map(g => g.actions.length + 1).reduce((a, b) => a + b)
     const height = 13
-
-    const actionsWindow = new WindowDecoration(
-      new Rectangle(viewport.boundaries.x - 40, viewport.boundaries.y - height, 20, height),
-      'actions'
-    )
-
-    const descriptionWindow = new WindowDecoration(
-      new Rectangle(actionsWindow.right, viewport.boundaries.y - height, 20, height),
-      'description'
-    )
-
+    const width = 40
     const entity = this.getOrCreateElement(world, this.actionSelector)
-    this.actionSelector = new ActionSelector(entity, {
-      groups,
-      rows,
-      actionsWindow,
-      descriptionWindow,
-      hovered: 0,
-      firstRow: 0,
-      selected: undefined,
-    })
+    const bounds = new Rectangle(viewport.boundaries.x - width, viewport.boundaries.y - height, width, height)
+    this.actionSelector = ActionSelector.build(entity, bounds, groups)
   }
 
   public hideActionSelector(world: TlbWorld) {
@@ -173,7 +153,7 @@ export class UIResource implements TlbResource, UI {
 
   public selectedAction(): SelectedAction | undefined {
     if (this.actionSelector !== undefined) {
-      return this.actionSelector.selectedAction
+      return this.actionSelector.selected
     }
     return undefined
   }
@@ -181,31 +161,15 @@ export class UIResource implements TlbResource, UI {
   public showBodyPartSelector(world: TlbWorld, target: Entity, bodyParts: BodyPartInfo[]): void {
     const viewport: Viewport = world.getResource<ViewportResource>('viewport')
     const height = 13
-
-    const bodyPartWindow = new WindowDecoration(
-      new Rectangle(viewport.boundaries.x - 40, viewport.boundaries.y - height, 20, height),
-      'body parts'
-    )
-
-    const descriptionWindow = new WindowDecoration(
-      new Rectangle(bodyPartWindow.right, viewport.boundaries.y - height, 20, height),
-      'description'
-    )
-
+    const width = 40
     const entity = this.getOrCreateElement(world, this.actionSelector)
-    this.bodyPartSelector = new BodyPartSelector(entity, {
-      bodyParts,
-      bodyPartWindow,
-      descriptionWindow,
-      target,
-      hovered: 0,
-      selected: undefined,
-    })
+    const bounds = new Rectangle(viewport.boundaries.x - width, viewport.boundaries.y - height, width, height)
+    this.bodyPartSelector = BodyPartSelector.build(entity, bounds, target, bodyParts)
   }
 
   public selectedBodyPart(): string | undefined {
     if (this.bodyPartSelector !== undefined) {
-      return this.bodyPartSelector.selectedBodyPart
+      return this.bodyPartSelector.selected
     }
     return undefined
   }

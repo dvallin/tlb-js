@@ -223,35 +223,35 @@ describe('Input', () => {
   describe('createMovementDelta', () => {
     it('moves left on h', () => {
       input.keyDown.add(KEYS.VK_H)
-      expect(input.createMovementDelta()).toEqual(new Vector(-1, 0))
+      expect(input.createMovementDelta()).toEqual(new Vector([-1, 0]))
     })
 
     it('moves right on l', () => {
       input.keyDown.add(KEYS.VK_L)
-      expect(input.createMovementDelta()).toEqual(new Vector(1, 0))
+      expect(input.createMovementDelta()).toEqual(new Vector([1, 0]))
     })
 
     it('moves down on j', () => {
       input.keyDown.add(KEYS.VK_J)
-      expect(input.createMovementDelta()).toEqual(new Vector(0, 1))
+      expect(input.createMovementDelta()).toEqual(new Vector([0, 1]))
     })
 
     it('moves up on k', () => {
       input.keyDown.add(KEYS.VK_K)
-      expect(input.createMovementDelta()).toEqual(new Vector(0, -1))
+      expect(input.createMovementDelta()).toEqual(new Vector([0, -1]))
     })
 
     it('normalizes movement', () => {
       input.keyDown.add(KEYS.VK_H)
       input.keyDown.add(KEYS.VK_K)
-      expect(input.createMovementDelta()).toEqual(new Vector(-1, -1).normalize())
+      expect(input.createMovementDelta()).toEqual(new Vector([-1, -1]).normalize())
     })
 
     it('cancels out movement', () => {
       input.keyDown.add(KEYS.VK_H)
       input.keyDown.add(KEYS.VK_L)
       input.keyDown.add(KEYS.VK_J)
-      expect(input.createMovementDelta()).toEqual(new Vector(0, 1))
+      expect(input.createMovementDelta()).toEqual(new Vector([0, 1]))
     })
   })
 })

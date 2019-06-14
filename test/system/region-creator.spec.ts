@@ -50,16 +50,16 @@ describe('RegionCreator', () => {
 
     it('spawns an agent at each entry', () => {
       expect(world.getComponent<AgentComponent>(0, 'agent')!.direction).toEqual('up')
-      expect(world.getComponent(0, 'position')).toEqual({ position: new Vector(9, 5) })
+      expect(world.getComponent(0, 'position')).toEqual({ position: new Vector([9, 5]) })
 
       expect(world.getComponent<AgentComponent>(1, 'agent')!.direction).toEqual('left')
-      expect(world.getComponent(1, 'position')).toEqual({ position: new Vector(5, 9) })
+      expect(world.getComponent(1, 'position')).toEqual({ position: new Vector([5, 9]) })
 
       expect(world.getComponent<AgentComponent>(2, 'agent')!.direction).toEqual('right')
-      expect(world.getComponent(2, 'position')).toEqual({ position: new Vector(13, 9) })
+      expect(world.getComponent(2, 'position')).toEqual({ position: new Vector([13, 9]) })
 
       expect(world.getComponent<AgentComponent>(3, 'agent')!.direction).toEqual('down')
-      expect(world.getComponent(3, 'position')).toEqual({ position: new Vector(10, 13) })
+      expect(world.getComponent(3, 'position')).toEqual({ position: new Vector([10, 13]) })
     })
 
     it('renders the landmark', () => {
@@ -93,11 +93,11 @@ describe('RegionCreator', () => {
     it('spawns an agent at each entry', () => {
       expect(world.getComponent<AgentComponent>(1, 'agent')!.direction).toEqual('left')
       expect(world.getComponent<AgentComponent>(1, 'agent')!.allowedRegion).toEqual(42)
-      expect(world.getComponent(1, 'position')).toEqual({ position: new Vector(15, 9) })
+      expect(world.getComponent(1, 'position')).toEqual({ position: new Vector([15, 9]) })
 
       expect(world.getComponent<AgentComponent>(2, 'agent')!.direction).toEqual('right')
       expect(world.getComponent<AgentComponent>(2, 'agent')!.allowedRegion).toEqual(0)
-      expect(world.getComponent(2, 'position')).toEqual({ position: new Vector(23, 9) })
+      expect(world.getComponent(2, 'position')).toEqual({ position: new Vector([23, 9]) })
     })
 
     it('renders the landmark', () => {

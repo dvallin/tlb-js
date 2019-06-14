@@ -27,7 +27,7 @@ describe('Light', () => {
     const lights: Storage<FovComponent> = mockComponent<FovComponent>(world, 'light')
     lightings = mockComponent<LightingComponent>(world, 'lighting')
 
-    position = { position: new Vector(1.2, 1.2) }
+    position = { position: new Vector([1.2, 1.2]) }
     light = { color: new Color([180, 180, 180]) }
 
     mockReturnValue<PositionComponent>(positions.get, position)
@@ -35,8 +35,8 @@ describe('Light', () => {
 
     queries = mockQueries()
     mockImplementation4(queries.lighting, ({}, {}, {}, callback: (pos: Vector, color: Color) => void) => {
-      callback(new Vector(1, 1), new Color([2, 2, 2]))
-      callback(new Vector(0, 0), new Color([1, 1, 1]))
+      callback(new Vector([1, 1]), new Color([2, 2, 2]))
+      callback(new Vector([0, 0]), new Color([1, 1, 1]))
     })
   })
 

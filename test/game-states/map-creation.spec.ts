@@ -58,11 +58,6 @@ describe('MapCreation', () => {
       state.stop(world)
     })
 
-    it('stops systems', () => {
-      expect(world.activeSystems).not.toContain('region-creator')
-      expect(world.activeSystems).not.toContain('agent')
-    })
-
     it('creates a spawn point at first landmark', () => {
       expect(world.getComponent(1, 'spawn')).toBeDefined()
       expect(world.getComponent(1, 'position')).toEqual({ position: shape.center })

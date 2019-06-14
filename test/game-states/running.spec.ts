@@ -60,17 +60,4 @@ describe('Running', () => {
       expect(running.spawnPlayer).toHaveBeenCalled()
     })
   })
-
-  describe('stop', () => {
-    beforeEach(() => {
-      const state = new Running()
-      state.start(world)
-      state.stop(world)
-    })
-
-    it('stops systems', () => {
-      expect(world.activeSystems).not.toContain('free-mode-control')
-      expect(world.activeSystems).not.toContain('viewport-focus')
-    })
-  })
 })

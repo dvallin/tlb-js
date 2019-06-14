@@ -23,7 +23,7 @@ describe('Viewport', () => {
     world.registerComponentStorage('viewport-focus', new MapStorage<{}>())
     world.registerComponentStorage('position', new MapStorage<PositionComponent>())
 
-    viewport = new ViewportResource(new Vector(30, 40))
+    viewport = new ViewportResource(new Vector([30, 40]))
   })
 
   describe('update', () => {
@@ -32,20 +32,20 @@ describe('Viewport', () => {
       viewport.focus = jest.fn()
       world
         .createEntity()
-        .withComponent<PositionComponent>('position', { position: new Vector(1, 2) })
+        .withComponent<PositionComponent>('position', { position: new Vector([1, 2]) })
         .withComponent('viewport-focus', {}).entity
 
       // when
       viewport.update(world)
 
       // then
-      expect(viewport.focus).toHaveBeenCalledWith(new Vector(1, 2))
+      expect(viewport.focus).toHaveBeenCalledWith(new Vector([1, 2]))
     })
   })
 
   describe('toDisplay', () => {
-    const point1 = new Vector(1, -2)
-    const point2 = new Vector(1.5, -2.5)
+    const point1 = new Vector([1, -2])
+    const point2 = new Vector([1.5, -2.5])
 
     it('rounds down if grid locked', () => {
       viewport.gridLocked = true
@@ -65,19 +65,19 @@ describe('Viewport', () => {
   })
 
   describe('focus', () => {
-    const point1 = new Vector(1, -2)
-    const point2 = new Vector(1.5, -2.5)
+    const point1 = new Vector([1, -2])
+    const point2 = new Vector([1.5, -2.5])
 
     it('rounds down if grid locked', () => {
       viewport.gridLocked = true
-      focusAndCheck(point1, new Vector(-9, -17))
-      focusAndCheck(point2, new Vector(-9, -18))
+      focusAndCheck(point1, new Vector([-9, -17]))
+      focusAndCheck(point2, new Vector([-9, -18]))
     })
 
     it('keeps floats if not grid locked', () => {
       viewport.gridLocked = false
-      focusAndCheck(point1, new Vector(-9, -17))
-      focusAndCheck(point2, new Vector(-8.5, -17.5))
+      focusAndCheck(point1, new Vector([-9, -17]))
+      focusAndCheck(point2, new Vector([-8.5, -17.5]))
     })
 
     function focusAndCheck(point: Vector, topLeft: Vector) {

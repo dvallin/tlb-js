@@ -20,7 +20,7 @@ describe('Fov', () => {
     const positions: Storage<PositionComponent> = mockComponent<PositionComponent>(world, 'position')
     const fovs: Storage<FovComponent> = mockComponent<FovComponent>(world, 'fov')
 
-    position = { position: new Vector(1.2, 1.2) }
+    position = { position: new Vector([1.2, 1.2]) }
     fov = { fov: [] }
 
     mockReturnValue<PositionComponent>(positions.get, position)
@@ -28,14 +28,14 @@ describe('Fov', () => {
 
     queries = mockQueries()
     mockImplementation3(queries.fov, ({}, {}, callback: (pos: Vector, distance: number) => void) => {
-      callback(new Vector(1, 1), 2)
-      callback(new Vector(0, 0), 1)
+      callback(new Vector([1, 1]), 2)
+      callback(new Vector([0, 0]), 1)
     })
 
     new Fov(queries).update(world, 0)
   })
 
   it('pushes all fov cells', () => {
-    expect(fov.fov).toEqual([{ position: new Vector(1, 1), distance: 2 }, { position: new Vector(0, 0), distance: 1 }])
+    expect(fov.fov).toEqual([{ position: new Vector([1, 1]), distance: 2 }, { position: new Vector([0, 0]), distance: 1 }])
   })
 })

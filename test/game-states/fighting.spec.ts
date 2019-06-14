@@ -16,6 +16,7 @@ describe('Fighting', () => {
 
   let world: TlbWorld
   let viewport: Viewport
+  let startTurn: Storage<{}>
   let takeTurn: Storage<TakeTurnComponent>
   let tookTurn: Storage<{}>
   let waitTurn: Storage<{}>
@@ -33,6 +34,7 @@ describe('Fighting', () => {
       f(1, npcStat)
     })
 
+    startTurn = mockComponent(world, 'start-turn')
     takeTurn = mockComponent(world, 'take-turn')
     tookTurn = mockComponent(world, 'took-turn')
     waitTurn = mockComponent(world, 'wait-turn')
@@ -52,11 +54,10 @@ describe('Fighting', () => {
       expect(viewport.gridLocked).toBeTruthy()
     })
 
-    it('sets player to take turn', () => {
+    it('sets player to start turn', () => {
       const state = new Fighting()
       state.start(world)
-      expect(stats.get).toHaveBeenCalledWith(0)
-      expect(takeTurn.insert).toHaveBeenCalledWith(0, { actions: 3, movements: 3 })
+      expect(startTurn.insert).toHaveBeenCalledWith(0, {})
       expect(waitTurn.remove).toHaveBeenCalledWith(0)
     })
   })
@@ -67,16 +68,16 @@ describe('Fighting', () => {
       mockReturnValue(waitTurn.first, 1)
     })
 
-    describe('when no one is taking turn', () => {
+    describe('when no one is taking or starting turn', () => {
       beforeEach(() => {
         mockReturnValue(takeTurn.size, 0)
+        mockReturnValue(startTurn.size, 0)
       })
 
-      it('sets npc to take turn if he is waiting', () => {
+      it('sets npc to start turn if he is waiting', () => {
         mockReturnValue(waitTurn.first, 1)
         state.update(world)
-        expect(stats.get).toHaveBeenCalledWith(1)
-        expect(takeTurn.insert).toHaveBeenCalledWith(1, { actions: 5, movements: 2 })
+        expect(startTurn.insert).toHaveBeenCalledWith(1, {})
         expect(waitTurn.remove).toHaveBeenCalledWith(1)
       })
 
@@ -90,7 +91,6 @@ describe('Fighting', () => {
         expect(waitTurn.insert).toHaveBeenCalledWith(0, {})
         expect(waitTurn.insert).toHaveBeenCalledWith(1, {})
         expect(tookTurn.clear).toHaveBeenCalled()
-        expect(stats.get).toHaveBeenCalledWith(42)
       })
     })
   })

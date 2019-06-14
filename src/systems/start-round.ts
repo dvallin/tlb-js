@@ -33,7 +33,6 @@ export class StartRound implements TlbSystem {
           canMove = false
           break
         case 'stun':
-          console.log('stunned')
           canMove = false
           canAttack = false
           break

@@ -104,12 +104,23 @@ export function mockInput(world: TlbWorld): Input {
 export function mockUi(world: TlbWorld): UI {
   const ui = {
     kind: 'ui' as ResourceName,
+    isModal: false,
     update: jest.fn(),
     hasElement: jest.fn(),
     render: jest.fn(),
+
+    showInventoryTransferModal: jest.fn(),
+    inventoryTransferModalShowing: jest.fn(),
+    hideInventoryTransferModal: jest.fn(),
+
     showActionSelector: jest.fn(),
     hideActionSelector: jest.fn(),
     selectedAction: jest.fn(),
+
+    showBodyPartSelector: jest.fn(),
+    selectedBodyPart: jest.fn(),
+    hideBodyPartSelector: jest.fn(),
+
     setOverview: jest.fn(),
     setLog: jest.fn(),
   }
@@ -127,7 +138,7 @@ export function mockViewport(world: TlbWorld): Viewport {
     focus: jest.fn(),
     addLayer: jest.fn(),
     gridLocked: false,
-    boundaries: new Vector(0, 1, 2),
+    boundaries: new Vector([0, 1]),
   }
   world.registerResource(viewport)
   return viewport
@@ -164,7 +175,7 @@ export function mockQueries(): Queries {
 
 export function mockRenderer(): Renderer {
   return {
-    boundaries: new Vector(0, 1, 2),
+    boundaries: new Vector([0, 1]),
     render: jest.fn(),
     clear: jest.fn(),
     eventToPosition: jest.fn(),

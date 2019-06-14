@@ -7,6 +7,7 @@ import { WindowDecoration } from './window-decoration'
 import { Rectangle } from '../geometry/rectangle'
 import { LogResource, Log } from '../resources/log'
 import { primary } from '../renderer/palettes'
+import { Input, InputResource } from '../resources/input'
 
 export interface State {
   window: WindowDecoration
@@ -17,7 +18,7 @@ export class LogView implements UIElement {
   private readonly state: State
 
   public constructor(public readonly entity: Entity, rect: Rectangle) {
-    const window = new WindowDecoration(rect, 'log')
+    const window = new WindowDecoration(rect, 'log', true)
     const entries: string[] = []
     this.state = {
       window,
@@ -33,8 +34,10 @@ export class LogView implements UIElement {
   }
 
   public update(world: TlbWorld): void {
+    const input: Input = world.getResource<InputResource>('input')
     const log: Log = world.getResource<LogResource>('log')
     this.state.entries = log.getEntries(0, this.state.window.content.height)
+    this.state.window.update(input)
   }
 
   public contains(position: Vector): boolean {

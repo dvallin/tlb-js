@@ -21,7 +21,7 @@ describe('createAssetFromPosition', () => {
 
   it('throws error on missing ground', () => {
     // given
-    const position = new Vector(0, 0)
+    const position = new Vector([0, 0])
 
     // when / then
     expect(() => createAssetFromPosition(world, map, position, 'door')).toThrowErrorMatchingSnapshot()
@@ -29,7 +29,7 @@ describe('createAssetFromPosition', () => {
 
   it('throws error on blocking ground', () => {
     // given
-    const position = new Vector(0, 0)
+    const position = new Vector([0, 0])
     const ground = world.createEntity().withComponent<FeatureComponent>('feature', { type: 'wall' }).entity
     map.setTile(position, ground)
 
@@ -65,7 +65,7 @@ describe('createAssetFromPosition', () => {
 
   it('creates lockers', () => {
     // given
-    const position = new Vector(0, 0)
+    const position = new Vector([0, 0])
     const ground = world.createEntity().withComponent<FeatureComponent>('feature', { type: 'corridor' }).entity
     map.setTile(position, ground)
 
@@ -85,7 +85,7 @@ describe('createAssetFromPosition', () => {
 
   it('creates trash', () => {
     // given
-    const position = new Vector(0, 0)
+    const position = new Vector([0, 0])
     const ground = world.createEntity().withComponent<FeatureComponent>('feature', { type: 'corridor' }).entity
     map.setTile(position, ground)
 

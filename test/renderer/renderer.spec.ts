@@ -77,7 +77,7 @@ describe('RotRenderer', () => {
       let viewport: Viewport
       beforeEach(() => {
         viewport = mockViewport(world)
-        mockImplementation(viewport.fromDisplay, (p: Position) => new Vector(p.x, p.y))
+        mockImplementation(viewport.fromDisplay, (p: Position) => new Vector([p.x, p.y]))
       })
 
       it('clears the screen', () => {
@@ -119,7 +119,7 @@ describe('RotRenderer', () => {
 
       it('renders only features', () => {
         renderer.renderFeature = jest.fn()
-        const position = { position: new Vector(3, 0) }
+        const position = { position: new Vector([3, 0]) }
         mockReturnValue(featureStorage.get, { type: 'player' })
         mockReturnValue(positions.get, position)
 
@@ -140,11 +140,11 @@ describe('RotRenderer', () => {
       })
 
       it('renders features', () => {
-        const position = { position: new Vector(0, 1) }
+        const position = { position: new Vector([0, 1]) }
 
         renderer.renderFeature(world, viewport, 42, true, features['player'], position)
 
-        expect(map.isDiscovered).toHaveBeenCalledWith(new Vector(0, 1))
+        expect(map.isDiscovered).toHaveBeenCalledWith(new Vector([0, 1]))
       })
     })
   })

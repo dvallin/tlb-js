@@ -80,7 +80,6 @@ export class PlayerRoundControl implements TlbSystem {
             takeTurn.actions -= action.cost.actions
           }
         }
-        console.log('payed ', JSON.stringify(takeTurn), noActionsOrAtLeastOneActionTaken)
         this.clearAction(world, entity)
       }
     }

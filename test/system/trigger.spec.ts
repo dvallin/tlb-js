@@ -17,6 +17,7 @@ describe('Trigger', () => {
   let triggers: Storage<TriggersComponent>
   let features: Storage<FeatureComponent>
   let grounds: Storage<GroundComponent>
+  let triggeredBy: Storage<{}>
   beforeEach(() => {
     world = new World()
 
@@ -25,11 +26,17 @@ describe('Trigger', () => {
     triggers = mockComponent<TriggersComponent>(world, 'triggers')
     features = mockComponent<FeatureComponent>(world, 'feature')
     grounds = mockComponent<GroundComponent>(world, 'ground')
+    triggeredBy = mockComponent<{}>(world, 'triggered-by')
   })
 
   it('deactives current entity', () => {
-    new Trigger().update(world, 42)
+    new Trigger(jest.fn()).update(world, 42)
     expect(actives.remove).toHaveBeenCalledWith(42)
+  })
+
+  it('removes triggered by flag', () => {
+    new Trigger(jest.fn()).update(world, 42)
+    expect(triggeredBy.remove).toHaveBeenCalledWith(42)
   })
 
   describe('door trigger', () => {
@@ -45,7 +52,7 @@ describe('Trigger', () => {
       mockImplementation(features.get, (e: Entity) => featureComponents[e - 1])
       mockImplementation(grounds.get, (e: Entity) => groundComponents[e - 1])
 
-      new Trigger().update(world, 0)
+      new Trigger(jest.fn()).update(world, 0)
 
       expect(featureComponents).toEqual([{ type: 'corridor' }, { type: 'door' }])
       expect(groundComponents).toEqual([{ feature: 'door' }, { feature: 'corridor' }])

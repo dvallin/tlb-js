@@ -30,7 +30,7 @@ describe('attackTarget', () => {
     lighting = mockComponent(world, 'lighting')
     effect = mockComponent(world, 'effect')
     mockReturnValue(stats.get, createCharacterStatsComponent('player'))
-    mockReturnValues(position.get, { position: new Vector(0, 0) }, { position: new Vector(1, 1) })
+    mockReturnValues(position.get, { position: new Vector([0, 0]) }, { position: new Vector([1, 1]) })
     mockReturnValue(lighting.get, { incomingLight: new Map<Entity, Color>([[3, gray[0]], [4, gray[1]]]) })
     log = mockLog(world)
     random = mockRandom()
@@ -42,7 +42,8 @@ describe('attackTarget', () => {
 
     attackTarget(world, random, 0, 1, 'torso', attack)
 
-    expect(random.decision).toHaveBeenCalledWith(0.9)
+    expect(random.decision).toHaveBeenCalledWith(1.1)
+    expect(random.decision).toHaveBeenCalledWith(0.35)
     expect(log.attack).toHaveBeenCalled()
     expect(effect.insert).toHaveBeenCalledWith(0, {
       bodyPart: 'torso',
@@ -58,7 +59,8 @@ describe('attackTarget', () => {
 
     attackTarget(world, random, 0, 1, 'head', attack)
 
-    expect(random.decision).toHaveBeenCalledWith(0.7)
+    expect(random.decision).toHaveBeenCalledWith(0.8)
+    expect(random.decision).toHaveBeenCalledWith(0.2)
     expect(log.attack).toHaveBeenCalled()
     expect(effect.insert).toHaveBeenCalledWith(0, {
       bodyPart: 'head',
@@ -70,11 +72,12 @@ describe('attackTarget', () => {
 
   it('creates effects for all effects', () => {
     mockReturnValues(random.decision, true, true)
-    const attack: Attack = { kind: 'attack', effects: [kill(), confuse()], range: 2, accuracy: 4 }
+    const attack: Attack = { kind: 'attack', effects: [kill(), confuse(1)], range: 2, accuracy: 4 }
 
     attackTarget(world, random, 0, 1, 'leftArm', attack)
 
-    expect(random.decision).toHaveBeenCalledWith(0.8)
+    expect(random.decision).toHaveBeenCalledWith(1.0)
+    expect(random.decision).toHaveBeenCalledWith(0.3)
     expect(log.attack).toHaveBeenCalled()
     expect(effect.insert).toHaveBeenCalledWith(0, {
       bodyPart: 'leftArm',

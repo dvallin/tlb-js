@@ -26,16 +26,16 @@ describe('Union', () => {
     it('iterates', () => {
       const elements: Vector[] = []
       union.foreach(f => elements.push(f))
-      expect(elements).toEqual([new Vector(0, 0), new Vector(2, 2)])
+      expect(elements).toEqual([new Vector([0, 0]), new Vector([2, 2])])
     })
 
     describe('translate', () => {
       it('equals identity for zero vector', () => {
-        expect(union.translate(new Vector(0, 0))).toEqual(union)
+        expect(union.translate(new Vector([0, 0]))).toEqual(union)
       })
 
       it('translates', () => {
-        expect(union.translate(new Vector(1, 2))).toEqual(new Union(new Rectangle(1, 2, 1, 1), new Rectangle(3, 4, 1, 1)))
+        expect(union.translate(new Vector([1, 2]))).toEqual(new Union(new Rectangle(1, 2, 1, 1), new Rectangle(3, 4, 1, 1)))
       })
     })
   })

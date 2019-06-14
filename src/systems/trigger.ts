@@ -58,10 +58,8 @@ export class Trigger implements TlbSystem {
       const sourceText = features[sourceFeature.type].name
       ui.showInventoryTransferModal(world, entity, sourceText, triggeredBy.entity, targetText)
       this.pushState(new Modal(world.activeSystemsList()))
-      console.log('entered modal')
     } else if (!ui.inventoryTransferModalShowing()) {
       ui.isModal = false
-      console.log('left modal')
       const inventory = world.getComponent<InventoryComponent>(entity, 'inventory')!
       if (remove && inventory.content.length === 0) {
         removeAsset(world, map, entity)

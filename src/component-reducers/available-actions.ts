@@ -14,7 +14,7 @@ export function calculateAvailableActions(world: TlbWorld, entity: Entity, takeT
 function buildPlayerActionGroup(world: TlbWorld, entity: Entity, takeTurn: TakeTurnComponent): ActionGroup {
   const hasActions = world.getComponent<HasActionComponent>(entity, 'has-action')!
   const playerActions = buildSelectableActions(hasActions.actions, takeTurn)
-  return { actions: playerActions, name: 'player', description: 'actions you can do without any equipment', entity, collapsed: false }
+  return { items: playerActions, name: 'player', description: 'actions you can do without any equipment', entity }
 }
 
 function buildEquipmentActionGroups(world: TlbWorld, entity: Entity, takeTurn: TakeTurnComponent): ActionGroup[] {
@@ -22,7 +22,7 @@ function buildEquipmentActionGroups(world: TlbWorld, entity: Entity, takeTurn: T
   return equipment.equipment.map(equiped => {
     const item = items[world.getComponent<ItemComponent>(equiped.entity, 'item')!.type]
     const actions: SelectableAction[] = buildSelectableActions(item.actions, takeTurn)
-    return { actions, description: item.description, name: item.name, entity: equiped.entity, collapsed: true }
+    return { items: actions, description: item.description, name: item.name, entity: equiped.entity }
   })
 }
 

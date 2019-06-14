@@ -8,11 +8,11 @@ import { TlbWorld } from '../tlb'
 
 import { WindowDecoration } from './window-decoration'
 import { HitChance } from '../component-reducers/calculate-hit-chance'
-import { InputResource, Input } from '../resources/input'
-import { KEYS } from 'rot-js'
 import { renderBodyPartInfo, renderPercentage } from './render-helpers'
 import { CharacterStatsComponent } from '../components/character-stats'
 import { ActiveEffectsComponent } from '../components/effects'
+import { Selector, ItemSelector, SelectorState, updateSelectorState } from './selector'
+import { Rectangle } from '../geometry/rectangle'
 
 export interface BodyPartInfo {
   name: string
@@ -28,13 +28,32 @@ export interface State {
 
   stats?: CharacterStatsComponent
   activeEffects?: ActiveEffectsComponent
-
-  selected: number | undefined
-  hovered: number
 }
 
-export class BodyPartSelector implements UIElement {
-  public constructor(public readonly entity: Entity, private readonly state: State) {}
+export class BodyPartSelector implements UIElement, Selector<string> {
+  private readonly selectorState: SelectorState
+  public readonly bodyPartSelector: ItemSelector<BodyPartInfo>
+
+  public constructor(public readonly entity: Entity, private readonly state: State) {
+    this.selectorState = { firstRow: 0, hovered: 0, selected: undefined }
+    this.bodyPartSelector = new ItemSelector(this.selectorState, this.state.bodyParts)
+  }
+
+  public static build(entity: Entity, bounds: Rectangle, target: Entity, bodyParts: BodyPartInfo[]): BodyPartSelector {
+    const width = Math.floor(bounds.width / 2)
+    const bodyPartWindow = new WindowDecoration(new Rectangle(bounds.left, bounds.top, width, bounds.height), 'body parts')
+    const descriptionWindow = new WindowDecoration(
+      new Rectangle(bodyPartWindow.right, bounds.top, bounds.width - width, bounds.height),
+      'description'
+    )
+
+    return new BodyPartSelector(entity, {
+      bodyParts,
+      bodyPartWindow,
+      descriptionWindow,
+      target,
+    })
+  }
 
   public render(renderer: Renderer) {
     this.renderBodyParts(renderer)
@@ -42,46 +61,29 @@ export class BodyPartSelector implements UIElement {
   }
 
   public update(world: TlbWorld) {
-    const input: Input = world.getResource<InputResource>('input')
-    let position
-    if (input.position) {
-      position = new Vector([input.position.x, input.position.y])
-    }
-    const up = input.keyPressed.has(KEYS.VK_K)
-    const down = input.keyPressed.has(KEYS.VK_J)
-    if (up) {
-      this.state.hovered--
-    }
-    if (down) {
-      this.state.hovered++
-    }
-    this.state.hovered += this.state.bodyParts.length
-    this.state.hovered %= this.state.bodyParts.length
-
-    this.state.selected = undefined
-    const content = this.state.bodyPartWindow.content
-    if (position && content.containsVector(position)) {
-      const delta = position.minus(content.topLeft)
-      const line = Math.min(delta.y, this.state.bodyParts.length - 1)
-      this.state.hovered = line
-      if (input.mousePressed) {
-        this.state.selected = line
-      }
-    }
-
-    if (input.keyPressed.has(KEYS.VK_RETURN)) {
-      this.state.selected = this.state.hovered
-    }
-
+    updateSelectorState(world, this.selectorState, this.state.bodyPartWindow.content, this.length)
     this.state.activeEffects = world.getComponent<ActiveEffectsComponent>(this.state.target, 'active-effects')
     this.state.stats = world.getComponent<CharacterStatsComponent>(this.state.target, 'character-stats')
   }
 
-  public get selectedBodyPart(): string | undefined {
-    if (this.state.selected !== undefined) {
-      return this.state.bodyParts[this.state.selected].name
+  public get selected(): string | undefined {
+    const selection = this.bodyPartSelector.selected
+    if (selection !== undefined) {
+      return selection.name
     }
     return undefined
+  }
+
+  public get hovered(): string | undefined {
+    const selection = this.bodyPartSelector.hovered
+    if (selection !== undefined) {
+      return selection.name
+    }
+    return undefined
+  }
+
+  public get length(): number {
+    return this.state.bodyParts.length
   }
 
   private renderBodyParts(renderer: Renderer) {
@@ -92,7 +94,7 @@ export class BodyPartSelector implements UIElement {
         line.name,
         this.state.bodyPartWindow.topLeft.add(new Vector([1, row + 1])),
         primary[1],
-        this.state.hovered === row ? gray[1] : undefined
+        this.selectorState.hovered === row ? gray[1] : undefined
       )
       row++
     })
@@ -100,17 +102,19 @@ export class BodyPartSelector implements UIElement {
 
   private renderDescription(renderer: Renderer) {
     this.state.descriptionWindow.render(renderer)
-    const line = this.state.bodyParts[this.state.hovered]
-    const topLeft = this.state.descriptionWindow.content.topLeft
-    let row = 0
+    const hovered = this.bodyPartSelector.hovered
+    if (hovered !== undefined) {
+      const topLeft = this.state.descriptionWindow.content.topLeft
+      let row = 0
 
-    renderBodyPartInfo(renderer, topLeft, line.name, this.state.stats!, this.state.activeEffects!)
-    row++
+      renderBodyPartInfo(renderer, topLeft, hovered.name, this.state.stats!, this.state.activeEffects!)
+      row++
 
-    renderPercentage(renderer, topLeft.add(new Vector([0, row])), 'Hit', line.hitChance.hitChance)
-    row++
+      renderPercentage(renderer, topLeft.add(new Vector([0, row])), 'Hit', hovered.hitChance.hitChance)
+      row++
 
-    renderPercentage(renderer, topLeft.add(new Vector([0, row])), 'Crit', line.hitChance.critChance)
+      renderPercentage(renderer, topLeft.add(new Vector([0, row])), 'Crit', hovered.hitChance.critChance)
+    }
   }
 
   public contains(position: Vector): boolean {

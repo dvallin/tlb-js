@@ -7,10 +7,18 @@ import { subactionStringify } from '../component-reducers/subaction-stringify'
 
 import { UIElement } from './ui-element'
 import { TlbWorld } from '../tlb'
-import { Input, InputResource } from '../resources/input'
-import { KEYS } from 'rot-js'
 
 import { WindowDecoration } from './window-decoration'
+import { Rectangle } from '../geometry/rectangle'
+import {
+  CollapsibleGroupItemSelector,
+  CollapsibleGroupSelector,
+  CollapsibleGroupValue,
+  SelectorState,
+  updateSelectorState,
+  isLineVisible,
+  Selector,
+} from './selector'
 
 export interface SelectableAction {
   action: Action
@@ -18,87 +26,85 @@ export interface SelectableAction {
 }
 
 export interface ActionGroup {
-  collapsed: boolean
   entity: number
   description: string
   name: string
-  actions: SelectableAction[]
+  items: SelectableAction[]
 }
 
 export interface State {
   actionsWindow: WindowDecoration
   descriptionWindow: WindowDecoration
 
-  groups: ActionGroup[]
-
-  rows: number
-  selected: number | undefined
-  hovered: number
-  firstRow: number
+  groups: CollapsibleGroupValue<ActionGroup, SelectableAction>[]
 }
 
-export class ActionSelector implements UIElement {
-  public constructor(public readonly entity: Entity, private readonly state: State) {}
+export class ActionSelector implements UIElement, Selector<SelectedAction> {
+  private readonly selectorState: SelectorState
+  public readonly actionSelector: CollapsibleGroupItemSelector<ActionGroup, SelectableAction>
+  public readonly groupSelector: CollapsibleGroupSelector<ActionGroup, SelectableAction>
+
+  public constructor(public readonly entity: Entity, private readonly state: State) {
+    this.selectorState = { firstRow: 0, hovered: 0, selected: undefined }
+    this.actionSelector = new CollapsibleGroupItemSelector(this.selectorState, this.state.groups)
+    this.groupSelector = new CollapsibleGroupSelector(this.selectorState, this.state.groups)
+  }
+
+  public static build(entity: Entity, bounds: Rectangle, groups: ActionGroup[]): ActionSelector {
+    const width = Math.floor(bounds.width / 2)
+    const actionsWindow = new WindowDecoration(new Rectangle(bounds.left, bounds.top, width, bounds.height), 'actions')
+    const descriptionWindow = new WindowDecoration(
+      new Rectangle(actionsWindow.right, bounds.top, bounds.width - width, bounds.height),
+      'description'
+    )
+
+    const collapsibleGroups = groups.map(g => ({ ...g, collapsed: false }))
+
+    return new ActionSelector(entity, {
+      groups: collapsibleGroups,
+      actionsWindow,
+      descriptionWindow,
+    })
+  }
 
   public render(renderer: Renderer) {
     this.renderActions(renderer)
     this.renderDescription(renderer)
   }
 
-  public update(world: TlbWorld) {
-    const input: Input = world.getResource<InputResource>('input')
-    let position
-    if (input.position) {
-      position = new Vector([input.position.x, input.position.y])
-    }
-    const up = input.keyPressed.has(KEYS.VK_K)
-    const down = input.keyPressed.has(KEYS.VK_J)
-    if (up) {
-      this.state.hovered--
-    }
-    if (down) {
-      this.state.hovered++
-    }
-    this.state.hovered += this.state.rows
-    this.state.hovered %= this.state.rows
-
-    if (this.state.firstRow > this.state.hovered) {
-      this.state.firstRow = this.state.hovered
-    } else if (this.state.firstRow <= this.state.hovered - this.state.actionsWindow.content.height) {
-      this.state.firstRow = this.state.hovered - this.state.actionsWindow.content.height + 1
-    }
-
-    this.state.selected = undefined
-    const content = this.state.actionsWindow.content
-    if (position && content.containsVector(position)) {
-      const delta = position.minus(content.topLeft)
-      this.state.hovered = delta.y + this.state.firstRow
-      if (input.mousePressed) {
-        this.state.selected = delta.y + this.state.firstRow
-        this.collapseSelected()
+  public get selected(): SelectedAction | undefined {
+    const selection = this.actionSelector.selected
+    if (selection !== undefined) {
+      return {
+        entity: selection.group.entity,
+        action: selection.item.action,
       }
     }
-
-    if (input.keyPressed.has(KEYS.VK_RETURN)) {
-      this.state.selected = this.state.hovered
-      this.collapseSelected()
-    }
+    return undefined
   }
 
-  public collapseSelected(): void {
-    const group = this.groupAtLine(this.state.selected!)
-    if (group !== undefined) {
-      this.state.selected = undefined
-      group.collapsed = !group.collapsed
-    }
-  }
-
-  public get selectedAction(): SelectedAction | undefined {
-    if (this.state.selected !== undefined) {
-      const { selected } = this.state
-      return this.actionAtLine(selected)
+  public get hovered(): SelectedAction | undefined {
+    const selection = this.actionSelector.hovered
+    if (selection !== undefined) {
+      return {
+        entity: selection.group.entity,
+        action: selection.item.action,
+      }
     }
     return undefined
+  }
+
+  public get length(): number {
+    return this.actionSelector.length + this.groupSelector.length
+  }
+
+  public update(world: TlbWorld) {
+    updateSelectorState(world, this.selectorState, this.state.actionsWindow.content, this.length)
+    const group = this.groupSelector.selected
+    if (group !== undefined) {
+      this.selectorState.selected = undefined
+      group.collapsed = !group.collapsed
+    }
   }
 
   private renderActions(renderer: Renderer) {
@@ -107,25 +113,25 @@ export class ActionSelector implements UIElement {
     let index = 0
     let row = 0
     this.state.groups.forEach(group => {
-      const hasActions = group.actions.find(a => a.available)
-      if (this.isLineVisible(index)) {
+      const hasActions = group.items.find(a => a.available)
+      if (isLineVisible(this.selectorState, this.state.actionsWindow.content, index)) {
         renderer.text(
           `${group.collapsed ? '+' : '-'} ${group.name}`,
           this.state.actionsWindow.topLeft.add(new Vector([1, row + 1])),
           hasActions ? primary[1] : gray[3],
-          this.state.hovered === index ? gray[1] : undefined
+          this.selectorState.hovered === index ? gray[1] : undefined
         )
         row++
       }
       index++
       if (!group.collapsed) {
-        group.actions.forEach(action => {
-          if (this.isLineVisible(index)) {
+        group.items.forEach(action => {
+          if (isLineVisible(this.selectorState, this.state.actionsWindow.content, index)) {
             renderer.text(
               ` | ${action.action.name}`,
               this.state.actionsWindow.topLeft.add(new Vector([1, row + 1])),
               action.available ? primary[1] : gray[3],
-              this.state.hovered === index && action.available ? gray[1] : undefined
+              this.selectorState.hovered === index && action.available ? gray[1] : undefined
             )
             row++
           }
@@ -135,17 +141,13 @@ export class ActionSelector implements UIElement {
     })
   }
 
-  private isLineVisible(index: number): boolean {
-    return index >= this.state.firstRow && index < this.state.firstRow + this.state.actionsWindow.content.height
-  }
-
   private renderDescription(renderer: Renderer) {
     this.state.descriptionWindow.render(renderer)
 
-    const action = this.actionAtLine(this.state.hovered)
-    if (action !== undefined) {
-      renderer.text(action.action.name, this.state.descriptionWindow.topLeft.add(new Vector([1, 1])), primary[1])
-      const cost = action.action.cost
+    const hoveredAction = this.actionSelector.hovered
+    if (hoveredAction !== undefined) {
+      const { name, cost, subActions } = hoveredAction.item.action
+      renderer.text(name, this.state.descriptionWindow.topLeft.add(new Vector([1, 1])), primary[1])
       if (cost.costsAll) {
         renderer.text('cost: all AP, MP', this.state.descriptionWindow.topLeft.add(new Vector([1, 2])), primary[1])
       } else {
@@ -157,16 +159,17 @@ export class ActionSelector implements UIElement {
       }
 
       let y = 3
-      action.action.subActions.forEach(subAction => {
+      subActions.forEach(subAction => {
         renderer.text(subactionStringify(subAction), this.state.descriptionWindow.topLeft.add(new Vector([1, y])), primary[1])
         y++
       })
     } else {
-      const group = this.groupAtLine(this.state.hovered)
-      if (group !== undefined) {
-        renderer.text(group.name, this.state.descriptionWindow.topLeft.add(new Vector([1, 1])), primary[1])
+      const hoveredGroup = this.groupSelector.hovered
+      if (hoveredGroup !== undefined) {
+        const { name, description } = hoveredGroup
+        renderer.text(name, this.state.descriptionWindow.topLeft.add(new Vector([1, 1])), primary[1])
         renderer.flowText(
-          group.description,
+          description,
           this.state.descriptionWindow.topLeft.add(new Vector([1, 2])),
           this.state.descriptionWindow.width - 2,
           primary[1]
@@ -175,43 +178,6 @@ export class ActionSelector implements UIElement {
         renderer.text('choose an action to perform', this.state.descriptionWindow.topLeft.add(new Vector([1, 1])), primary[1])
       }
     }
-  }
-
-  private groupAtLine(line: number): ActionGroup | undefined {
-    for (const group of this.state.groups) {
-      if (line === 0) {
-        return group
-      }
-      line -= 1
-      if (group.collapsed) {
-        continue
-      }
-      line -= group.actions.length
-    }
-    return undefined
-  }
-
-  private actionAtLine(line: number): SelectedAction | undefined {
-    for (const group of this.state.groups) {
-      line -= 1
-      if (group.collapsed) {
-        continue
-      }
-      if (line < 0) {
-        return undefined
-      } else if (line >= group.actions.length) {
-        line -= group.actions.length
-      } else {
-        const action = group.actions[line]
-        if (action.available) {
-          return {
-            entity: group.entity,
-            action: action.action,
-          }
-        }
-      }
-    }
-    return undefined
   }
 
   public contains(position: Vector): boolean {

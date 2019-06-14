@@ -26,16 +26,16 @@ describe('Difference', () => {
     it('iterates', () => {
       const elements: Vector[] = []
       difference.foreach(f => elements.push(f))
-      expect(elements).toEqual([new Vector(0, 0), new Vector(1, 0), new Vector(0, 1)])
+      expect(elements).toEqual([new Vector([0, 0]), new Vector([1, 0]), new Vector([0, 1])])
     })
 
     describe('translate', () => {
       it('equals identity for zero vector', () => {
-        expect(difference.translate(new Vector(0, 0))).toEqual(difference)
+        expect(difference.translate(new Vector([0, 0]))).toEqual(difference)
       })
 
       it('translates', () => {
-        expect(difference.translate(new Vector(1, 2))).toEqual(new Difference(new Rectangle(1, 2, 2, 2), new Rectangle(2, 3, 2, 2)))
+        expect(difference.translate(new Vector([1, 2]))).toEqual(new Difference(new Rectangle(1, 2, 2, 2), new Rectangle(2, 3, 2, 2)))
       })
     })
   })

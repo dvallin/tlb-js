@@ -11,7 +11,6 @@ export class ApplyEffects implements TlbSystem {
 
   public update(world: TlbWorld, entity: Entity): void {
     const effectComponent = world.getComponent<EffectComponent>(entity, 'effect')!
-    console.log(effectComponent)
     switch (effectComponent.effect.type) {
       case 'damage':
         if (effectComponent.effect.negated) {

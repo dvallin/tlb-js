@@ -27,7 +27,7 @@ describe('PlayerInteraction', () => {
     input = mockInput(world)
 
     const positions = mockComponent<PositionComponent>(world, 'position')
-    mockReturnValue(positions.get, { position: new Vector(1.2, 1.3) })
+    mockReturnValue(positions.get, { position: new Vector([1.2, 1.3]) })
 
     actives = mockComponent<PositionComponent>(world, 'active')
     triggers = mockComponent<PositionComponent>(world, 'triggers')
@@ -46,7 +46,7 @@ describe('PlayerInteraction', () => {
       playerInteraction.update(world, 0)
 
       const searchShape = callArgument<Shape>(playerInteraction.findTrigger, 0, 2)
-      const expectedShape = FunctionalShape.lN(new Vector(1, 1), 1, true)
+      const expectedShape = FunctionalShape.lN(new Vector([1, 1]), 1, true)
       expect(searchShape.equals(expectedShape)).toBeTruthy()
     })
 
