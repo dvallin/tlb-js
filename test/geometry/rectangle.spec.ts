@@ -19,10 +19,10 @@ describe('Rectangle', () => {
     })
 
     it('has correct containment', () => {
-      expect(empty.containsVector(new Vector(0, 0))).toBeFalsy()
-      expect(empty.containsVector(new Vector(1, 0))).toBeFalsy()
-      expect(empty.containsVector(new Vector(0, 1))).toBeFalsy()
-      expect(empty.containsVector(new Vector(1, 1))).toBeFalsy()
+      expect(empty.containsVector(new Vector([0, 0]))).toBeFalsy()
+      expect(empty.containsVector(new Vector([1, 0]))).toBeFalsy()
+      expect(empty.containsVector(new Vector([0, 1]))).toBeFalsy()
+      expect(empty.containsVector(new Vector([1, 1]))).toBeFalsy()
     })
 
     it('iterates', () => {
@@ -45,16 +45,16 @@ describe('Rectangle', () => {
     })
 
     it('has correct containment', () => {
-      expect(single.containsVector(new Vector(0, 0))).toBeTruthy()
-      expect(single.containsVector(new Vector(1, 0))).toBeFalsy()
-      expect(single.containsVector(new Vector(0, 1))).toBeFalsy()
-      expect(single.containsVector(new Vector(1, 1))).toBeFalsy()
+      expect(single.containsVector(new Vector([0, 0]))).toBeTruthy()
+      expect(single.containsVector(new Vector([1, 0]))).toBeFalsy()
+      expect(single.containsVector(new Vector([0, 1]))).toBeFalsy()
+      expect(single.containsVector(new Vector([1, 1]))).toBeFalsy()
     })
 
     it('iterates', () => {
       const elements: Vector[] = []
       single.foreach(f => elements.push(f))
-      expect(elements).toEqual([new Vector(0, 0)])
+      expect(elements).toEqual([new Vector([0, 0])])
     })
   })
 
@@ -67,59 +67,59 @@ describe('Rectangle', () => {
 
   describe('corners', () => {
     it('returns topLeft', () => {
-      expect(empty.topLeft).toEqual(new Vector(0, 0))
-      expect(single.topLeft).toEqual(new Vector(0, 0))
-      expect(twoByThree.topLeft).toEqual(new Vector(0, 0))
+      expect(empty.topLeft).toEqual(new Vector([0, 0]))
+      expect(single.topLeft).toEqual(new Vector([0, 0]))
+      expect(twoByThree.topLeft).toEqual(new Vector([0, 0]))
     })
 
     it('returns topRight', () => {
-      expect(empty.topRight).toEqual(new Vector(-1, 0))
-      expect(single.topRight).toEqual(new Vector(0, 0))
-      expect(twoByThree.topRight).toEqual(new Vector(1, 0))
+      expect(empty.topRight).toEqual(new Vector([-1, 0]))
+      expect(single.topRight).toEqual(new Vector([0, 0]))
+      expect(twoByThree.topRight).toEqual(new Vector([1, 0]))
     })
 
     it('returns bottomLeft', () => {
-      expect(empty.bottomLeft).toEqual(new Vector(0, -1))
-      expect(single.bottomLeft).toEqual(new Vector(0, 0))
-      expect(twoByThree.bottomLeft).toEqual(new Vector(0, 2))
+      expect(empty.bottomLeft).toEqual(new Vector([0, -1]))
+      expect(single.bottomLeft).toEqual(new Vector([0, 0]))
+      expect(twoByThree.bottomLeft).toEqual(new Vector([0, 2]))
     })
 
     it('returns bottomRight', () => {
-      expect(empty.bottomRight).toEqual(new Vector(-1, -1))
-      expect(single.bottomRight).toEqual(new Vector(0, 0))
-      expect(twoByThree.bottomRight).toEqual(new Vector(1, 2))
+      expect(empty.bottomRight).toEqual(new Vector([-1, -1]))
+      expect(single.bottomRight).toEqual(new Vector([0, 0]))
+      expect(twoByThree.bottomRight).toEqual(new Vector([1, 2]))
     })
   })
 
   describe('centers', () => {
     it('returns center', () => {
-      expect(empty.center).toEqual(new Vector(-1, -1))
-      expect(single.center).toEqual(new Vector(0, 0))
-      expect(twoByThree.center).toEqual(new Vector(0, 1))
+      expect(empty.center).toEqual(new Vector([-1, -1]))
+      expect(single.center).toEqual(new Vector([0, 0]))
+      expect(twoByThree.center).toEqual(new Vector([0, 1]))
     })
 
     it('returns centerLeft', () => {
-      expect(empty.centerLeft).toEqual(new Vector(0, -1))
-      expect(single.centerLeft).toEqual(new Vector(0, 0))
-      expect(twoByThree.centerLeft).toEqual(new Vector(0, 1))
+      expect(empty.centerLeft).toEqual(new Vector([0, -1]))
+      expect(single.centerLeft).toEqual(new Vector([0, 0]))
+      expect(twoByThree.centerLeft).toEqual(new Vector([0, 1]))
     })
 
     it('returns centerRight', () => {
-      expect(empty.centerRight).toEqual(new Vector(-1, -1))
-      expect(single.centerRight).toEqual(new Vector(0, 0))
-      expect(twoByThree.centerRight).toEqual(new Vector(1, 1))
+      expect(empty.centerRight).toEqual(new Vector([-1, -1]))
+      expect(single.centerRight).toEqual(new Vector([0, 0]))
+      expect(twoByThree.centerRight).toEqual(new Vector([1, 1]))
     })
 
     it('returns centerBottom', () => {
-      expect(empty.centerBottom).toEqual(new Vector(-1, -1))
-      expect(single.centerBottom).toEqual(new Vector(0, 0))
-      expect(twoByThree.centerBottom).toEqual(new Vector(0, 2))
+      expect(empty.centerBottom).toEqual(new Vector([-1, -1]))
+      expect(single.centerBottom).toEqual(new Vector([0, 0]))
+      expect(twoByThree.centerBottom).toEqual(new Vector([0, 2]))
     })
 
     it('returns centerTop', () => {
-      expect(empty.centerTop).toEqual(new Vector(-1, 0))
-      expect(single.centerTop).toEqual(new Vector(0, 0))
-      expect(twoByThree.centerTop).toEqual(new Vector(0, 0))
+      expect(empty.centerTop).toEqual(new Vector([-1, 0]))
+      expect(single.centerTop).toEqual(new Vector([0, 0]))
+      expect(twoByThree.centerTop).toEqual(new Vector([0, 0]))
     })
   })
 
@@ -131,7 +131,7 @@ describe('Rectangle', () => {
         elements.push(f)
         return false
       })
-      expect(elements).toEqual([new Vector(0, 0)])
+      expect(elements).toEqual([new Vector([0, 0])])
     })
   })
 
@@ -143,7 +143,7 @@ describe('Rectangle', () => {
         elements.push(f)
         return true
       })
-      expect(elements).toEqual([new Vector(0, 0)])
+      expect(elements).toEqual([new Vector([0, 0])])
     })
   })
 
@@ -164,11 +164,11 @@ describe('Rectangle', () => {
 
   describe('translate', () => {
     it('equals identity for zero vector', () => {
-      expect(single.translate(new Vector(0, 0))).toEqual(single)
+      expect(single.translate(new Vector([0, 0]))).toEqual(single)
     })
 
     it('translates', () => {
-      expect(single.translate(new Vector(1, 2))).toEqual(new Rectangle(1, 2, 1, 1))
+      expect(single.translate(new Vector([1, 2]))).toEqual(new Rectangle(1, 2, 1, 1))
     })
   })
 

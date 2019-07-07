@@ -1,5 +1,5 @@
 import { Direction } from '../spatial/direction'
-import { Entity } from 'src/ecs/entity'
+import { Entity } from '../ecs/entity'
 
 export type Action = 'render' | 'changeDirection' | 'close' | 'createRoom' | 'move'
 

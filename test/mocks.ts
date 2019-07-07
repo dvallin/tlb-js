@@ -3,12 +3,15 @@ import { WorldMapResource } from '../src/resources/world-map'
 import { Renderer } from '../src/renderer/renderer'
 import { ComponentName, TlbWorld, ResourceName } from '../src/tlb'
 import { Random } from '../src/random'
-import { RayCaster } from '../src/renderer/ray-caster'
-import { Space, StackedSpace } from '../src/spatial'
+import { Queries } from '../src/renderer/queries'
+import { Space, StackedSpace, Vector } from '../src/spatial'
 import { Entity } from '../src/ecs/entity'
 import { SetSpace } from '../src/spatial/set-space'
 import { Rectangle } from '../src/geometry/rectangle'
 import { Input } from '../src/resources/input'
+import { UI } from '../src/resources/ui'
+import { Viewport } from '../src/resources/viewport'
+import { Log, LogResource } from '../src/resources/log'
 
 export function mockComponent<T>(world: TlbWorld, component: ComponentName): Storage<T> {
   const storage = {
@@ -17,6 +20,7 @@ export function mockComponent<T>(world: TlbWorld, component: ComponentName): Sto
     remove: jest.fn(),
     has: jest.fn(),
     foreach: jest.fn(),
+    first: jest.fn(),
     clear: jest.fn(),
     size: jest.fn(),
   }
@@ -97,20 +101,88 @@ export function mockInput(world: TlbWorld): Input {
   return input
 }
 
-export function mockRayCaster(): RayCaster {
+export function mockUi(world: TlbWorld): UI {
+  const ui = {
+    kind: 'ui' as ResourceName,
+    isModal: false,
+    update: jest.fn(),
+    hasElement: jest.fn(),
+    render: jest.fn(),
+
+    showInventoryTransferModal: jest.fn(),
+    inventoryTransferModalShowing: jest.fn(),
+    hideInventoryTransferModal: jest.fn(),
+
+    showActionSelector: jest.fn(),
+    hideActionSelector: jest.fn(),
+    selectedAction: jest.fn(),
+
+    showBodyPartSelector: jest.fn(),
+    selectedBodyPart: jest.fn(),
+    hideBodyPartSelector: jest.fn(),
+
+    setInventory: jest.fn(),
+    setOverview: jest.fn(),
+    setLog: jest.fn(),
+  }
+  world.registerResource(ui)
+  return ui
+}
+
+export function mockViewport(world: TlbWorld): Viewport {
+  const viewport = {
+    kind: 'viewport' as ResourceName,
+    update: jest.fn(),
+    fromDisplay: jest.fn(),
+    collectRenderables: jest.fn(),
+    toDisplay: jest.fn(),
+    focus: jest.fn(),
+    addLayer: jest.fn(),
+    gridLocked: false,
+    boundaries: new Vector([0, 1]),
+  }
+  world.registerResource(viewport)
+  return viewport
+}
+
+export function mockLog(world: TlbWorld): Log {
+  const log: LogResource = {
+    kind: 'log' as ResourceName,
+    update: jest.fn(),
+    getEntries: jest.fn(),
+    effectApplied: jest.fn(),
+    died: jest.fn(),
+    missed: jest.fn(),
+    attack: jest.fn(),
+    render: jest.fn(),
+    objectify: jest.fn(),
+    verbify: jest.fn(),
+    entries: [],
+    getName: jest.fn(),
+  }
+  world.registerResource(log)
+  return log
+}
+
+export function mockQueries(): Queries {
   return {
     fov: jest.fn(),
     lighting: jest.fn(),
+    explore: jest.fn(),
+    shortestPath: jest.fn(),
+    ray: jest.fn(),
   }
 }
 
 export function mockRenderer(): Renderer {
   return {
+    boundaries: new Vector([0, 1]),
     render: jest.fn(),
     clear: jest.fn(),
     eventToPosition: jest.fn(),
     character: jest.fn(),
     text: jest.fn(),
+    flowText: jest.fn(),
   }
 }
 
@@ -164,11 +236,6 @@ export function mockImplementation5<T, T2, T3, T4, T5, O>(
 ): void {
   const mock = o as jest.Mock
   mock.mockImplementation(f)
-}
-
-export function getInstances<T>(o: object): T[] {
-  const mock = o as jest.Mock<T>
-  return mock.mock.instances
 }
 
 export function callArgument<T>(o: object, call: number, argument: number): T {

@@ -1,10 +1,13 @@
-export interface Storage<T> {
-  insert(entity: number, value: T): void
-  get(entity: number): T | undefined
-  remove(entity: number): T | undefined
-  has(entity: number): boolean
+import { Entity } from './entity'
 
-  foreach(f: (entity: number, value: T) => void): void
+export interface Storage<T> {
+  insert(entity: Entity, value: T): void
+  get(entity: Entity): T | undefined
+  remove(entity: Entity): T | undefined
+  has(entity: Entity): boolean
+
+  foreach(f: (entity: Entity, value: T) => void): void
+  first(): Entity | undefined
   clear(): void
   size(): number
 }
@@ -16,7 +19,7 @@ export class SetStorage implements Storage<{}> {
     return this.data.size
   }
 
-  public insert(entity: number, {  }: {}): void {
+  public insert(entity: Entity, {  }: {}): void {
     this.data.add(entity)
   }
 
@@ -24,58 +27,68 @@ export class SetStorage implements Storage<{}> {
     this.data.clear()
   }
 
-  public get(entity: number): {} | undefined {
+  public get(entity: Entity): {} | undefined {
     return this.data.has(entity) ? {} : undefined
   }
 
-  public remove(entity: number): {} | undefined {
+  public remove(entity: Entity): {} | undefined {
     return this.data.delete(entity) ? {} : undefined
   }
 
-  public has(entity: number): boolean {
+  public has(entity: Entity): boolean {
     return this.data.has(entity)
   }
 
-  public foreach(f: (entity: number, value: {}) => void): void {
+  public foreach(f: (entity: Entity, value: {}) => void): void {
     this.data.forEach(v => f(v, {}))
+  }
+
+  public first(): Entity | undefined {
+    return this.data.keys().next().value
   }
 }
 
-export class SingletonStorage implements Storage<{}> {
-  private datum: number | undefined = undefined
+export class SingletonStorage<T> implements Storage<T> {
+  private datum: Entity | undefined = undefined
+  private value: T | undefined = undefined
 
   public size(): number {
     return this.datum !== undefined ? 1 : 0
   }
 
-  public insert(entity: number, {  }: {}): void {
+  public insert(entity: Entity, value: T): void {
     this.datum = entity
+    this.value = value
   }
 
   public clear(): void {
     this.datum = undefined
   }
 
-  public get(entity: number): {} | undefined {
-    return this.datum === entity ? {} : undefined
+  public get(entity: Entity): T | undefined {
+    return this.datum === entity ? this.value : undefined
   }
 
-  public remove(entity: number): {} | undefined {
+  public remove(entity: Entity): T | undefined {
     if (this.datum === entity) {
       this.datum = undefined
-      return {}
+      return this.value
     }
     return undefined
   }
 
-  public has(entity: number): boolean {
+  public has(entity: Entity): boolean {
     return this.datum === entity
   }
 
-  public foreach(f: (entity: number, value: {}) => void): void {
+  public foreach(f: (entity: Entity, value: T) => void): void {
     if (this.datum !== undefined) {
-      f(this.datum, {})
+      f(this.datum, this.value!)
     }
+  }
+
+  public first(): Entity | undefined {
+    return this.datum
   }
 }
 
@@ -86,7 +99,7 @@ export class MapStorage<T> implements Storage<T> {
     return this.data.size
   }
 
-  public insert(entity: number, value: T): void {
+  public insert(entity: Entity, value: T): void {
     this.data.set(entity, value)
   }
 
@@ -94,22 +107,26 @@ export class MapStorage<T> implements Storage<T> {
     this.data.clear()
   }
 
-  public get(entity: number): T | undefined {
+  public get(entity: Entity): T | undefined {
     return this.data.get(entity)
   }
 
-  public remove(entity: number): T | undefined {
+  public remove(entity: Entity): T | undefined {
     const value = this.get(entity)
     this.data.delete(entity)
     return value
   }
 
-  public has(entity: number): boolean {
+  public has(entity: Entity): boolean {
     return this.data.has(entity)
   }
 
-  public foreach(f: (entity: number, value: T) => void): void {
+  public foreach(f: (entity: Entity, value: T) => void): void {
     this.data.forEach((value, entity) => f(entity, value))
+  }
+
+  public first(): Entity | undefined {
+    return this.data.keys().next().value
   }
 }
 
@@ -121,7 +138,7 @@ export class VectorStorage<T> implements Storage<T> {
     return this.count
   }
 
-  public insert(entity: number, value: T): void {
+  public insert(entity: Entity, value: T): void {
     if (this.data[entity] === undefined) {
       this.count++
     }
@@ -132,11 +149,11 @@ export class VectorStorage<T> implements Storage<T> {
     this.data = []
   }
 
-  public get(entity: number): T | undefined {
+  public get(entity: Entity): T | undefined {
     return this.data[entity]
   }
 
-  public remove(entity: number): T | undefined {
+  public remove(entity: Entity): T | undefined {
     if (this.data[entity] !== undefined) {
       this.count--
     }
@@ -145,16 +162,26 @@ export class VectorStorage<T> implements Storage<T> {
     return value
   }
 
-  public has(entity: number): boolean {
+  public has(entity: Entity): boolean {
     return this.data[entity] !== undefined
   }
 
-  public foreach(f: (entity: number, value: T) => void): void {
+  public foreach(f: (entity: Entity, value: T) => void): void {
     for (let entity = 0; entity < this.data.length; entity++) {
       const value = this.data[entity]
       if (value !== undefined) {
         f(entity, value)
       }
     }
+  }
+
+  public first(): Entity | undefined {
+    for (let entity = 0; entity < this.data.length; entity++) {
+      const value = this.data[entity]
+      if (value !== undefined) {
+        return entity
+      }
+    }
+    return undefined
   }
 }

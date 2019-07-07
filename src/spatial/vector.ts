@@ -4,13 +4,13 @@ export class Vector {
   public static fromDirection(direction: Direction): Vector {
     switch (direction) {
       case 'up':
-        return new Vector(0, -1)
+        return new Vector([0, -1])
       case 'right':
-        return new Vector(1, 0)
+        return new Vector([1, 0])
       case 'down':
-        return new Vector(0, 1)
+        return new Vector([0, 1])
       case 'left':
-        return new Vector(-1, 0)
+        return new Vector([-1, 0])
     }
   }
 
@@ -25,9 +25,9 @@ export class Vector {
     }
   }
 
-  private readonly coordinates: number[]
+  public readonly coordinates: number[]
 
-  public constructor(...coords: number[]) {
+  public constructor(coords: number[]) {
     this.coordinates = coords
   }
 
@@ -37,6 +37,10 @@ export class Vector {
 
   public get dimensions(): number {
     return this.coordinates.length
+  }
+
+  public get center(): Vector {
+    return this.add(new Vector([0.5, 0.25]))
   }
 
   public get x(): number {
@@ -55,46 +59,58 @@ export class Vector {
     return this.coordinates[index]
   }
 
+  public equals(other: Vector): boolean {
+    if (other.dimensions !== this.dimensions) {
+      return false
+    }
+    for (let i = 0; i < this.dimensions; i++) {
+      if (this.at(i) !== other.at(i)) {
+        return false
+      }
+    }
+    return true
+  }
+
   public add(other: Vector): Vector {
     Vector.assertHasSameDimensions(this, other)
-    const result = []
+    const result = new Array(this.dimensions)
     for (let i = 0; i < this.dimensions; i++) {
-      result.push(this.at(i) + other.at(i))
+      result[i] = this.at(i) + other.at(i)
     }
-    return new Vector(...result)
+    return new Vector(result)
   }
 
   public minus(other: Vector): Vector {
     Vector.assertHasSameDimensions(this, other)
-    const result = []
+    const result = new Array(this.dimensions)
     for (let i = 0; i < this.dimensions; i++) {
-      result.push(this.at(i) - other.at(i))
+      result[i] = this.at(i) - other.at(i)
     }
-    return new Vector(...result)
+    return new Vector(result)
   }
 
   public floor(): Vector {
-    const result = []
+    const result = new Array(this.dimensions)
     for (let i = 0; i < this.dimensions; i++) {
-      result.push(Math.floor(this.at(i)))
+      result[i] = Math.floor(this.coordinates[i])
     }
-    return new Vector(...result)
+    return new Vector(result)
   }
 
   public mult(scale: number): Vector {
-    const result = []
+    const result = new Array(this.dimensions)
     for (let i = 0; i < this.dimensions; i++) {
-      result.push(this.at(i) * scale)
+      result[i] = this.at(i) * scale
     }
-    return new Vector(...result)
+    return new Vector(result)
   }
 
   public abs(): Vector {
-    const result = []
+    const result = new Array(this.dimensions)
     for (let i = 0; i < this.dimensions; i++) {
-      result.push(Math.abs(this.at(i)))
+      result[i] = Math.abs(this.at(i))
     }
-    return new Vector(...result)
+    return new Vector(result)
   }
 
   public bounds(other: Vector): boolean {
@@ -111,7 +127,7 @@ export class Vector {
     if (this.dimensions !== 2) {
       throw new Error('wrong dimension')
     }
-    return new Vector(-this.y, this.x)
+    return new Vector([-this.y, this.x])
   }
 
   public squaredLength(): number {
@@ -126,7 +142,32 @@ export class Vector {
     return Math.sqrt(this.squaredLength())
   }
 
+  public l1(): number {
+    let l = 0
+    for (let i = 0; i < this.dimensions; i++) {
+      l += Math.abs(this.at(i))
+    }
+    return l
+  }
+
+  public lN(): number {
+    let l = 0
+    for (let i = 0; i < this.dimensions; i++) {
+      l = Math.max(l, Math.abs(this.at(i)))
+    }
+    return l
+  }
+
   public normalize(): Vector {
     return this.mult(1.0 / this.length())
+  }
+
+  public isNan(): boolean {
+    for (let i = 0; i < this.dimensions; i++) {
+      if (Number.isNaN(this.at(i))) {
+        return true
+      }
+    }
+    return false
   }
 }

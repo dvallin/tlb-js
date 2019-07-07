@@ -20,7 +20,7 @@ export interface Feature {
 
   blocking: boolean
   lightBlocking: boolean
-  description: string
+  name: string
 }
 
 export const features = {
@@ -29,82 +29,90 @@ export const features = {
     diffuse: gray[3],
     blocking: true,
     lightBlocking: true,
-    description: 'a wall',
+    name: 'wall',
   },
   corridor: {
     character: '.',
     diffuse: gray[0],
     blocking: false,
     lightBlocking: false,
-    description: 'a corridor',
+    name: 'corridor',
   },
   room: {
     character: '.',
     diffuse: primary[1],
     blocking: false,
     lightBlocking: false,
-    description: 'floor of a room',
+    name: 'floor',
   },
   locker: {
     character: strangeSymbols[16],
     diffuse: primary[1],
     blocking: true,
     lightBlocking: true,
-    description: 'a locker',
+    name: 'locker',
   },
   trash: {
     character: strangeSymbols[21],
     diffuse: gray[2],
     blocking: false,
     lightBlocking: false,
-    description: 'some trash',
+    name: 'trash',
   },
   door: {
     character: strangeSymbols[27],
     diffuse: primary[1],
     blocking: true,
     lightBlocking: true,
-    description: 'a door',
+    name: 'door',
   },
   hub: {
     character: '.',
     diffuse: primary[0],
     blocking: false,
     lightBlocking: false,
-    description: 'floor of a hub',
+    name: 'floor',
   },
   player: {
     character: '@',
     diffuse: primary[0],
     blocking: true,
     lightBlocking: true,
-    description: 'you',
+    name: 'you',
   },
-  guard: enemy('g', 'a guard'),
-  eliteGuard: eliteEnemy('g', 'a very strong guard'),
+  loot: {
+    character: 'l',
+    diffuse: primary[1],
+    blocking: false,
+    lightBlocking: false,
+    name: 'some loot',
+  },
+  guard: enemy('g', 'guard'),
+  eliteGuard: eliteEnemy('g', 'elite guard'),
 }
+export const featureTypeguard: { [key: string]: Feature } = features
 
-function enemy(character: string, description: string): Feature {
+function enemy(character: string, name: string): Feature {
   return {
     character,
     diffuse: primary[1],
     blocking: true,
     lightBlocking: true,
-    description,
+    name,
   }
 }
 
-function eliteEnemy(character: string, description: string): Feature {
+function eliteEnemy(character: string, name: string): Feature {
   return {
     character,
     diffuse: primary[3],
     blocking: true,
     lightBlocking: true,
-    description,
+    name,
   }
 }
 
-export function getFeature(world: TlbWorld, entity: number): Feature | undefined {
+export function getFeature(world: TlbWorld, entity: Entity): Feature | undefined {
   const feature = world.getComponent<FeatureComponent>(entity, 'feature')
   if (feature) {
     return features[feature.type]

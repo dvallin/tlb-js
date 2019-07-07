@@ -1,7 +1,7 @@
 import { MapCreation } from '../../src/game-states/map-creation'
 import { World } from '../../src/ecs/world'
 import { TlbWorld, registerSystems, registerComponents, registerResources } from '../../src/tlb'
-import { mockRenderer, mockRayCaster } from '../mocks'
+import { mockRenderer, mockQueries } from '../mocks'
 import { RegionComponent } from '../../src/components/region'
 import { Rectangle } from '../../src/geometry/rectangle'
 
@@ -10,7 +10,7 @@ describe('MapCreation', () => {
   beforeEach(() => {
     world = new World()
     registerResources(world, mockRenderer())
-    registerSystems(world, mockRayCaster(), jest.fn())
+    registerSystems(world, mockQueries(), jest.fn())
     registerComponents(world)
   })
 
@@ -56,11 +56,6 @@ describe('MapCreation', () => {
         assets: [],
       })
       state.stop(world)
-    })
-
-    it('stops systems', () => {
-      expect(world.activeSystems).not.toContain('region-creator')
-      expect(world.activeSystems).not.toContain('agent')
     })
 
     it('creates a spawn point at first landmark', () => {

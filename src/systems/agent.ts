@@ -4,7 +4,7 @@ import { WorldMap, WorldMapResource } from '../resources/world-map'
 import { AgentComponent, Action } from '../components/agent'
 import { PositionComponent } from '../components/position'
 import { Entity } from '../ecs/entity'
-import { createFeature, FeatureComponent, FeatureType } from '../components/feature'
+import { createFeature, FeatureComponent } from '../components/feature'
 import { leftOf, rightOf, Direction, oppositeOf } from '../spatial/direction'
 import { Random } from '../random'
 import { Rectangle } from '../geometry/rectangle'
@@ -18,6 +18,11 @@ import { Shape } from '../geometry/shape'
 import { LightComponent } from '../components/light'
 import { Color } from '../renderer/color'
 import { FovComponent } from '../components/fov'
+import { createCharacterStatsComponent, CharacterStatsComponent } from '../components/character-stats'
+import { AiComponent } from '../components/ai'
+import { ItemComponent, InventoryComponent, EquipedItemsComponent } from '../components/items'
+import { HasActionComponent } from '../components/action'
+import { ActiveEffectsComponent } from '../components/effects'
 
 export interface PositionedAgent {
   position: PositionComponent
@@ -34,7 +39,7 @@ export class Agent implements TlbSystem {
     this.roomGenerator = new RoomGenerator(random)
   }
 
-  public update(world: TlbWorld, entity: number): void {
+  public update(world: TlbWorld, entity: Entity): void {
     const agent = world.getComponent<AgentComponent>(entity, 'agent')!
     const position = world.getComponent<PositionComponent>(entity, 'position')!
     const region = agent.allowedRegion !== undefined ? world.getComponent<RegionComponent>(agent.allowedRegion, 'region') : undefined
@@ -188,7 +193,7 @@ export class Agent implements TlbSystem {
     while (remainingAssets-- > 0 && room.availableAssets.length > 0) {
       const assetIndex = this.random.integerBetween(0, room.availableAssets.length - 1)
       const assetSlot = room.availableAssets[assetIndex]
-      const hasWall = map.shapeHasSome(world, FunctionalShape.LN(assetSlot.position), f => f === undefined || f.type === 'wall')
+      const hasWall = map.shapeHasSome(world, FunctionalShape.lN(assetSlot.position, 2), f => f === undefined || f.type === 'wall')
 
       const possibleAssets: AssetType[] = []
       if (hasWall) {
@@ -197,7 +202,13 @@ export class Agent implements TlbSystem {
       possibleAssets.push('trash')
       const assetType = this.random.pick<AssetType>(possibleAssets)
       dropAt(room.availableAssets, assetIndex)
-      createAssetFromPosition(world, map, assetSlot.position, assetType)
+
+      const entity = createAssetFromPosition(world, map, assetSlot.position, assetType)
+      switch (assetType) {
+        case 'trash':
+        case 'locker':
+          world.editEntity(entity).withComponent<InventoryComponent>('inventory', { content: [] })
+      }
     }
   }
 
@@ -325,14 +336,26 @@ export class Agent implements TlbSystem {
   }
 
   public spawnEnemy(world: TlbWorld, map: WorldMap, position: Vector): void {
-    const type = this.random.pick<FeatureType>(['guard', 'eliteGuard'])
-    const centeredPosition = new Vector(position.x + 0.5, position.y + 0.25)
+    const elite = this.random.decision(0.2)
+
+    const characterType = elite ? 'eliteGuard' : 'guard'
+    const weaponType = elite ? 'nailGun' : 'rifle'
+
+    const weapon = world.createEntity().withComponent<ItemComponent>('item', { type: weaponType }).entity
+
+    const centeredPosition = new Vector([position.x, position.y]).center
     const entity = world
       .createEntity()
       .withComponent('npc', {})
-      .withComponent<FeatureComponent>('feature', { type })
+      .withComponent<FeatureComponent>('feature', { type: characterType })
       .withComponent<PositionComponent>('position', { position: centeredPosition })
-      .withComponent<FovComponent>('fov', { fov: [] }).entity
+      .withComponent<FovComponent>('fov', { fov: [] })
+      .withComponent<AiComponent>('ai', { type: 'rushing', state: 'idle' })
+      .withComponent<HasActionComponent>('has-action', { actions: ['longMove', 'hit', 'rush', 'endTurn'] })
+      .withComponent<CharacterStatsComponent>('character-stats', createCharacterStatsComponent(characterType))
+      .withComponent<InventoryComponent>('inventory', { content: [weapon] })
+      .withComponent<EquipedItemsComponent>('equiped-items', { equipment: [{ entity: weapon, bodyParts: ['leftArm'] }] })
+      .withComponent<ActiveEffectsComponent>('active-effects', { effects: [] }).entity
     map.setCharacter(position, entity)
   }
 

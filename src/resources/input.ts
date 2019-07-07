@@ -4,6 +4,7 @@ import { Position } from '../renderer/position'
 import { KEYS } from 'rot-js'
 
 export interface Input {
+  position: Position | undefined
   mouseDown: boolean
   mousePressed: boolean
   mouseReleased: boolean
@@ -44,7 +45,7 @@ export class InputResource implements TlbResource, Input {
   }
 
   public createMovementDelta(): Vector {
-    let delta = new Vector(0, 0)
+    let delta = new Vector([0, 0])
     if (this.keyDown.has(KEYS.VK_H)) {
       delta = delta.add(Vector.fromDirection('left'))
     }

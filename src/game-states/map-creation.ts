@@ -9,6 +9,7 @@ import { PositionComponent } from '../components/position'
 import { WorldMap, WorldMapResource } from '../resources/world-map'
 import { FunctionalShape } from '../geometry/functional-shape'
 import { createFeature } from '../components/feature'
+import { ViewportResource, Viewport } from '../resources/viewport'
 
 export class MapCreation extends AbstractState {
   private startRegion: Entity | undefined
@@ -19,6 +20,24 @@ export class MapCreation extends AbstractState {
 
   public start(world: TlbWorld): void {
     super.start(world)
+
+    const viewport: Viewport = world.getResource<ViewportResource>('viewport')
+    const map = world.getResource<WorldMapResource>('map')
+    viewport.addLayer({
+      getRenderable: (_world, position) => {
+        const entity = map.getTile(position.floor())
+        return { entity, opaque: true, centered: true }
+      },
+      transformed: true,
+    })
+    viewport.addLayer({
+      getRenderable: (_world, position) => {
+        const entity = map.getCharacter(position.floor())
+        return { entity, opaque: true, centered: false }
+      },
+      transformed: true,
+    })
+
     this.startRegion = world
       .createEntity()
       .withComponent<RegionComponent>('region', {
@@ -27,6 +46,8 @@ export class MapCreation extends AbstractState {
       })
       .withComponent('active', {}).entity
   }
+
+  public update({  }: TlbWorld): void {}
 
   public stop(world: TlbWorld): void {
     super.stop(world)
@@ -48,7 +69,7 @@ export class MapCreation extends AbstractState {
   private fillWalls(world: TlbWorld) {
     const map: WorldMap = world.getResource<WorldMapResource>('map')
     map.boundaries.grow().foreach(p => {
-      if (map.getTile(p) === undefined && map.isShapeBlocked(world, FunctionalShape.LN(p, 1))) {
+      if (map.getTile(p) === undefined && map.isShapeBlocked(world, FunctionalShape.lN(p, 1))) {
         createFeature(world, map, p, 'wall')
       }
     })

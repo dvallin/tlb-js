@@ -1,5 +1,6 @@
 import { Vector } from './vector'
 import { Shape } from '../geometry/shape'
+import { Tree, get, insert, remove } from './tree'
 
 export interface Space<A> {
   get(pos: Vector): A | undefined
@@ -9,14 +10,14 @@ export interface Space<A> {
 }
 
 export class DiscreteSpace<A> implements Space<A> {
-  private readonly objects: Map<string, A> = new Map()
+  private readonly objects: Tree<A> = { values: [] }
 
   public get(pos: Vector): A | undefined {
-    return this.objects.get(pos.key)
+    return get(this.objects, pos.coordinates)
   }
 
   public set(pos: Vector, object: A): void {
-    this.objects.set(pos.key, object)
+    insert(this.objects, pos.coordinates, object)
   }
 
   public setAll(shape: Shape, object: A): void {
@@ -24,10 +25,7 @@ export class DiscreteSpace<A> implements Space<A> {
   }
 
   public remove(pos: Vector): A | undefined {
-    const key = pos.key
-    const value = this.objects.get(key)
-    this.objects.delete(key)
-    return value
+    return remove(this.objects, pos.coordinates)
   }
 }
 

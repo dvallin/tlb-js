@@ -2,11 +2,11 @@ import { DiscreteSpace, Space, SubSpace } from '../../src/spatial/space'
 import { Vector } from '../../src/spatial/vector'
 
 describe('DiscreteSpace', () => {
-  testSpace(new Vector(0, 2), () => new DiscreteSpace())
+  testSpace(new Vector([0, 2]), () => new DiscreteSpace())
 })
 
 describe('SubSpace', () => {
-  testSpace(new Vector(0), () => new SubSpace(new DiscreteSpace(), (v: Vector) => new Vector(v.x, 2)))
+  testSpace(new Vector([0]), () => new SubSpace(new DiscreteSpace(), (v: Vector) => new Vector([v.x, 2])))
 })
 
 function testSpace(position: Vector, spaceBuilder: () => Space<string>): void {

@@ -11,7 +11,7 @@ import { FunctionalShape } from '../../src/geometry/functional-shape'
 import { Shape } from '../../src/geometry/shape'
 import { WorldMap } from '../../src/resources/world-map'
 import { Rectangle } from '../../src/geometry/rectangle'
-import { ParentComponent } from '../../src/components/relation'
+import { TriggeredByComponent } from '../../src/components/trigger'
 
 describe('PlayerInteraction', () => {
   let world: TlbWorld
@@ -20,18 +20,18 @@ describe('PlayerInteraction', () => {
   let map: WorldMap
   let actives: Storage<{}>
   let triggers: Storage<{}>
-  let parents: Storage<ParentComponent>
+  let triggeredBy: Storage<TriggeredByComponent>
   beforeEach(() => {
     world = new World()
     map = mockMap(world)
     input = mockInput(world)
 
     const positions = mockComponent<PositionComponent>(world, 'position')
-    mockReturnValue(positions.get, { position: new Vector(1.2, 1.3) })
+    mockReturnValue(positions.get, { position: new Vector([1.2, 1.3]) })
 
     actives = mockComponent<PositionComponent>(world, 'active')
-    triggers = mockComponent<PositionComponent>(world, 'trigger')
-    parents = mockComponent<ParentComponent>(world, 'parent')
+    triggers = mockComponent<PositionComponent>(world, 'triggers')
+    triggeredBy = mockComponent<TriggeredByComponent>(world, 'triggered-by')
   })
 
   describe('when E key is hit', () => {
@@ -46,7 +46,7 @@ describe('PlayerInteraction', () => {
       playerInteraction.update(world, 0)
 
       const searchShape = callArgument<Shape>(playerInteraction.findTrigger, 0, 2)
-      const expectedShape = FunctionalShape.LN(new Vector(1, 1), 1, true)
+      const expectedShape = FunctionalShape.lN(new Vector([1, 1]), 1, true)
       expect(searchShape.equals(expectedShape)).toBeTruthy()
     })
 
@@ -68,17 +68,17 @@ describe('PlayerInteraction', () => {
     it('finds triggers', () => {
       const playerInteraction = new PlayerInteraction()
       mockImplementation(triggers.get, entity => (entity === 42 ? {} : undefined))
-      mockReturnValue(parents.get, undefined)
+      mockReturnValue(triggeredBy.get, undefined)
 
       const trigger = playerInteraction.findTrigger(world, map, new Rectangle(0, 0, 2, 2))
 
       expect(trigger).toEqual(42)
     })
 
-    it('finds triggers behind child-parent relationships', () => {
+    it('finds triggers behind triggeredBy relationships', () => {
       const playerInteraction = new PlayerInteraction()
       mockImplementation(triggers.get, entity => (entity === 43 ? {} : undefined))
-      mockReturnValue(parents.get, { entity: 43 })
+      mockReturnValue(triggeredBy.get, { entity: 43 })
 
       const trigger = playerInteraction.findTrigger(world, map, new Rectangle(0, 0, 2, 2))
 

@@ -18,35 +18,35 @@ describe('WorldMap', () => {
 
       world.registerComponentStorage('position', new MapStorage<PositionComponent>())
       world.registerComponentStorage('feature', new MapStorage<FeatureComponent>())
-      createFeature(world, map, new Vector(1, 0), 'locker')
-      createFeature(world, map, new Vector(1, 1), 'corridor')
+      createFeature(world, map, new Vector([1, 0]), 'locker')
+      createFeature(world, map, new Vector([1, 1]), 'corridor')
     })
 
     describe('tileMatches', () => {
       it('calls predicate with missing feature', () => {
         const predicate = jest.fn()
-        map.tileMatches(world, new Vector(0, 0), predicate)
+        map.tileMatches(world, new Vector([0, 0]), predicate)
         expect(predicate).toHaveBeenCalledWith(undefined)
       })
 
       it('calls predicate with feature', () => {
         const predicate = jest.fn()
-        map.tileMatches(world, new Vector(1, 0), predicate)
+        map.tileMatches(world, new Vector([1, 0]), predicate)
         expect(predicate).toHaveBeenCalledWith({ type: 'locker' })
       })
     })
 
     describe('isBlocking', () => {
       it('missing tile is blocking', () => {
-        expect(map.isBlocking(world, new Vector(0, 0))).toBeTruthy()
+        expect(map.isBlocking(world, new Vector([0, 0]))).toBeTruthy()
       })
 
       it('blocking tile blocks', () => {
-        expect(map.isBlocking(world, new Vector(1, 0))).toBeTruthy()
+        expect(map.isBlocking(world, new Vector([1, 0]))).toBeTruthy()
       })
 
       it('non-blocking tile does not block', () => {
-        expect(map.isBlocking(world, new Vector(1, 1))).toBeFalsy()
+        expect(map.isBlocking(world, new Vector([1, 1]))).toBeFalsy()
       })
     })
 

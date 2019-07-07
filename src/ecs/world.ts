@@ -29,7 +29,7 @@ export class World<C, S, R> {
     return this.resources.get(resource)! as T
   }
 
-  public getComponent<T extends object>(entity: number, component: C): T | undefined {
+  public getComponent<T extends object>(entity: Entity, component: C): T | undefined {
     const storage = this.getStorage<T>(component)
     if (storage !== undefined) {
       return storage.get(entity)
@@ -37,7 +37,11 @@ export class World<C, S, R> {
     return undefined
   }
 
-  public hasComponent(entity: number, component: C): boolean {
+  public hasEntity(entity: Entity): boolean {
+    return entity <= this.lastEntity && !this.openEntities.has(entity)
+  }
+
+  public hasComponent(entity: Entity, component: C): boolean {
     const storage = this.getStorage(component)
     if (storage !== undefined) {
       return storage.has(entity)
@@ -56,7 +60,7 @@ export class World<C, S, R> {
     return new EntityModifier(this, entity)
   }
 
-  public editEntity(entity: number): EntityModifier<C, S, R> {
+  public editEntity(entity: Entity): EntityModifier<C, S, R> {
     return new EntityModifier(this, entity)
   }
 
@@ -75,6 +79,12 @@ export class World<C, S, R> {
 
   public disableSystem(name: S): void {
     this.activeSystems.delete(name)
+  }
+
+  public activeSystemsList(): S[] {
+    const l: S[] = []
+    this.activeSystems.forEach(s => l.push(s))
+    return l
   }
 
   public registerResource(resource: Resource<C, S, R>): void {

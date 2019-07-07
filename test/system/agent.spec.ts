@@ -124,11 +124,11 @@ describe('Agent', () => {
       const state = emptyState()
       const agent = new Agent(mockRandom())
       const positions = mockComponent(world, 'position')
-      agent.move = jest.fn().mockReturnValue(new Vector(2, 3))
+      agent.move = jest.fn().mockReturnValue(new Vector([2, 3]))
 
       agent.takeAction(world, 42, state, 'move')
 
-      expect(positions.insert).toHaveBeenCalledWith(42, { position: new Vector(2, 3) })
+      expect(positions.insert).toHaveBeenCalledWith(42, { position: new Vector([2, 3]) })
       expect(state.agent.actions).toEqual(['move'])
     })
 
@@ -137,12 +137,12 @@ describe('Agent', () => {
       const agent = new Agent(mockRandom())
       const agents = mockComponent(world, 'agent')
       const positions = mockComponent(world, 'position')
-      agent.changeDirection = jest.fn().mockReturnValue({ direction: 'left', position: new Vector(2, 3) })
+      agent.changeDirection = jest.fn().mockReturnValue({ direction: 'left', position: new Vector([2, 3]) })
 
       agent.takeAction(world, 42, state, 'changeDirection')
 
       expect(agents.insert).toHaveBeenCalledWith(42, { actions: ['changeDirection'], direction: 'left', generation: 1, width: 2 })
-      expect(positions.insert).toHaveBeenCalledWith(42, { position: new Vector(2, 3) })
+      expect(positions.insert).toHaveBeenCalledWith(42, { position: new Vector([2, 3]) })
       expect(state.agent.actions).toEqual(['changeDirection'])
     })
 
@@ -318,12 +318,20 @@ describe('Agent', () => {
       mockComponent(world, 'feature')
       mockComponent(world, 'npc')
       mockComponent(world, 'fov')
+      mockComponent(world, 'ai')
+
+      mockComponent(world, 'item')
+      mockComponent(world, 'character-stats')
+      mockComponent(world, 'has-action')
+      mockComponent(world, 'inventory')
+      mockComponent(world, 'equiped-items')
+      mockComponent(world, 'active-effects')
     })
 
     it('creates tiles for each cell in the shape', () => {
       const map = mockMap(world)
       const state: PositionedAgent = {
-        position: { position: new Vector(1, 2) },
+        position: { position: new Vector([1, 2]) },
         agent: { actions: [], direction: 'up', width: 2, generation: 1 },
         region: undefined,
       }
@@ -334,18 +342,18 @@ describe('Agent', () => {
         availableEntries: [],
         availableAssets: [],
       }
-      mockReturnValue(random.insideRectangle, new Vector(4, 5))
+      mockReturnValue(random.insideRectangle, new Vector([4, 5]))
 
       agent.buildRoom(world, state, map, room)
 
       expect(mockCreateFeature).toHaveBeenCalledTimes(1)
-      expect(mockCreateFeature).toHaveBeenCalledWith(world, map, new Vector(3, 4), 'room')
+      expect(mockCreateFeature).toHaveBeenCalledWith(world, map, new Vector([3, 4]), 'room')
     })
 
     it('spawns new agents at available entries', () => {
       const map = mockMap(world)
       const state: PositionedAgent = {
-        position: { position: new Vector(1, 2) },
+        position: { position: new Vector([1, 2]) },
         agent: { actions: [], direction: 'up', width: 2, generation: 1 },
         region: undefined,
       }
@@ -353,24 +361,24 @@ describe('Agent', () => {
         shape: new Rectangle(3, 4, 1, 1),
         entries: [],
         assets: [],
-        availableEntries: [{ position: new Vector(6, 7), direction: 'left', width: 3 }],
+        availableEntries: [{ position: new Vector([6, 7]), direction: 'left', width: 3 }],
         availableAssets: [],
       }
 
       mockReturnValues(random.integerBetween, 255, 255, 255, 1, 0, 3)
-      mockReturnValue(random.insideRectangle, new Vector(4, 5))
+      mockReturnValue(random.insideRectangle, new Vector([4, 5]))
       mockReturnValue(map.isShapeFree, true)
 
       agent.buildRoom(world, state, map, room)
 
       expect(agent.spawnAgent).toHaveBeenCalledTimes(1)
-      expect(agent.spawnAgent).toHaveBeenCalledWith(world, new Vector(6, 7), 3, 'right', 2, undefined)
+      expect(agent.spawnAgent).toHaveBeenCalledWith(world, new Vector([6, 7]), 3, 'right', 2, undefined)
     })
 
     it('does not spawn new agents if generation is too high', () => {
       const map = mockMap(world)
       const state: PositionedAgent = {
-        position: { position: new Vector(1, 2) },
+        position: { position: new Vector([1, 2]) },
         agent: { actions: [], direction: 'up', width: 2, generation: 10 },
         region: undefined,
       }
@@ -378,12 +386,12 @@ describe('Agent', () => {
         shape: new Rectangle(3, 4, 1, 1),
         entries: [],
         assets: [],
-        availableEntries: [{ position: new Vector(6, 7), direction: 'left', width: 3 }],
+        availableEntries: [{ position: new Vector([6, 7]), direction: 'left', width: 3 }],
         availableAssets: [],
       }
 
       mockReturnValues(random.integerBetween, 255, 255, 255, 1, 0, 3)
-      mockReturnValue(random.insideRectangle, new Vector(4, 5))
+      mockReturnValue(random.insideRectangle, new Vector([4, 5]))
       mockReturnValue(map.isShapeFree, true)
 
       agent.buildRoom(world, state, map, room)
@@ -394,7 +402,7 @@ describe('Agent', () => {
     it('does not spawn new agents at entries that are not free', () => {
       const map = mockMap(world)
       const state: PositionedAgent = {
-        position: { position: new Vector(1, 2) },
+        position: { position: new Vector([1, 2]) },
         agent: { actions: [], direction: 'up', width: 2, generation: 1 },
         region: undefined,
       }
@@ -402,12 +410,12 @@ describe('Agent', () => {
         shape: new Rectangle(3, 4, 1, 1),
         entries: [],
         assets: [],
-        availableEntries: [{ position: new Vector(6, 7), direction: 'left', width: 3 }],
+        availableEntries: [{ position: new Vector([6, 7]), direction: 'left', width: 3 }],
         availableAssets: [],
       }
 
       mockReturnValues(random.integerBetween, 255, 255, 255, 1, 0, 3)
-      mockReturnValue(random.insideRectangle, new Vector(4, 5))
+      mockReturnValue(random.insideRectangle, new Vector([4, 5]))
       mockReturnValue(map.isShapeFree, false)
 
       agent.buildRoom(world, state, map, room)
@@ -418,7 +426,7 @@ describe('Agent', () => {
     it('creates tiles for each entry', () => {
       const map = mockMap(world)
       const state: PositionedAgent = {
-        position: { position: new Vector(1, 2) },
+        position: { position: new Vector([1, 2]) },
         agent: { actions: [], direction: 'up', width: 2, generation: 1, allowedRegion: undefined },
         region: undefined,
       }
@@ -429,11 +437,11 @@ describe('Agent', () => {
         availableEntries: [],
         availableAssets: [],
       }
-      mockReturnValue(random.insideRectangle, new Vector(4, 5))
+      mockReturnValue(random.insideRectangle, new Vector([4, 5]))
 
       agent.buildRoom(world, state, map, room)
       expect(mockCreateFeature).toHaveBeenCalledTimes(2)
-      expect(mockCreateFeature).toHaveBeenCalledWith(world, map, new Vector(5, 6), 'corridor')
+      expect(mockCreateFeature).toHaveBeenCalledWith(world, map, new Vector([5, 6]), 'corridor')
     })
   })
 
@@ -441,30 +449,30 @@ describe('Agent', () => {
     const agent = new Agent(mockRandom())
 
     it('is just position if width is 1', () => {
-      expect(agent.footprint(new Vector(0, 0), 'up', 1)).toEqual(new Rectangle(0, 0, 1, 1))
+      expect(agent.footprint(new Vector([0, 0]), 'up', 1)).toEqual(new Rectangle(0, 0, 1, 1))
     })
 
     describe('width is two', () => {
       it('starts in negative x for up and down', () => {
-        expect(agent.footprint(new Vector(0, 0), 'up', 2)).toEqual(new Rectangle(-1, 0, 2, 1))
-        expect(agent.footprint(new Vector(0, 0), 'down', 2)).toEqual(new Rectangle(-1, 0, 2, 1))
+        expect(agent.footprint(new Vector([0, 0]), 'up', 2)).toEqual(new Rectangle(-1, 0, 2, 1))
+        expect(agent.footprint(new Vector([0, 0]), 'down', 2)).toEqual(new Rectangle(-1, 0, 2, 1))
       })
 
       it('starts in negative y for left and right', () => {
-        expect(agent.footprint(new Vector(0, 0), 'left', 2)).toEqual(new Rectangle(0, -1, 1, 2))
-        expect(agent.footprint(new Vector(0, 0), 'right', 2)).toEqual(new Rectangle(0, -1, 1, 2))
+        expect(agent.footprint(new Vector([0, 0]), 'left', 2)).toEqual(new Rectangle(0, -1, 1, 2))
+        expect(agent.footprint(new Vector([0, 0]), 'right', 2)).toEqual(new Rectangle(0, -1, 1, 2))
       })
     })
 
     describe('width is three', () => {
       it('starts in negative x for up and down', () => {
-        expect(agent.footprint(new Vector(0, 0), 'up', 3)).toEqual(new Rectangle(-1, 0, 3, 1))
-        expect(agent.footprint(new Vector(0, 0), 'down', 3)).toEqual(new Rectangle(-1, 0, 3, 1))
+        expect(agent.footprint(new Vector([0, 0]), 'up', 3)).toEqual(new Rectangle(-1, 0, 3, 1))
+        expect(agent.footprint(new Vector([0, 0]), 'down', 3)).toEqual(new Rectangle(-1, 0, 3, 1))
       })
 
       it('starts in negative y for left and right', () => {
-        expect(agent.footprint(new Vector(0, 0), 'left', 3)).toEqual(new Rectangle(0, -1, 1, 3))
-        expect(agent.footprint(new Vector(0, 0), 'right', 3)).toEqual(new Rectangle(0, -1, 1, 3))
+        expect(agent.footprint(new Vector([0, 0]), 'left', 3)).toEqual(new Rectangle(0, -1, 1, 3))
+        expect(agent.footprint(new Vector([0, 0]), 'right', 3)).toEqual(new Rectangle(0, -1, 1, 3))
       })
     })
   })
@@ -479,17 +487,17 @@ describe('Agent', () => {
 
     it('spawns', () => {
       const agent = new Agent(mockRandom())
-      agent.spawnAgent(world, new Vector(1, 2), 3, 'left', 4)
+      agent.spawnAgent(world, new Vector([1, 2]), 3, 'left', 4)
 
       expect(agentComponent.insert).toHaveBeenCalledWith(0, { actions: [], direction: 'left', width: 3, generation: 4 })
-      expect(positionComponent.insert).toHaveBeenCalledWith(0, { position: new Vector(1, 2) })
+      expect(positionComponent.insert).toHaveBeenCalledWith(0, { position: new Vector([1, 2]) })
     })
   })
 })
 
 function emptyState(): PositionedAgent {
   return {
-    position: { position: new Vector(32, 43) },
+    position: { position: new Vector([32, 43]) },
     agent: {
       actions: [],
       direction: 'up',

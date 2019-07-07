@@ -1,0 +1,49 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ActionSelector collapses inventory 1`] = `
+"------------------/inventory/-
+"
+`;
+
+exports[`ActionSelector displays body parts 1`] = `
+"-----------------/body parts/-
+|head    |||||               |
+|leftArm |||||               |
+|rightArm|||||               |
+|torso   ||||| b             |
+|leftLeg |||||               |
+|rightLeg|||||               |
+|effects       c             |
+------------------------------
+------------------/inventory/-
+------------------------------
+"
+`;
+
+exports[`ActionSelector displays inventory 1`] = `
+"------------------/inventory/-
+|bandages @ head&torso       |
+|death pill                  |
+------------------------------
+"
+`;
+
+exports[`ActionSelector displays turn info 1`] = `
+"-----------------/body parts/-
+|head    |||||               |
+|leftArm |||||               |
+|rightArm|||||               |
+|torso   |||||               |
+|leftLeg |||||               |
+|rightLeg|||||               |
+|effects                     |
+------------------------------
+------------------/inventory/-
+------------------------------
+-----------------------/turn/-
+|2/3 AP 1/3 MP               |
+|g guard                     |
+|g elite guard               |
+------------------------------
+"
+`;

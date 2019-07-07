@@ -1,5 +1,6 @@
 import { Shape } from '../geometry/shape'
 import { Vector } from './vector'
+import { Tree, get, insert, getLeaf } from './tree'
 
 export interface StackedSpace<A> {
   get(pos: Vector): A[]
@@ -11,21 +12,23 @@ export interface StackedSpace<A> {
 }
 
 export class DiscreteStackedSpace<A> implements StackedSpace<A> {
-  private readonly objects: Map<string, A[]> = new Map()
+  private readonly objects: Tree<A[]> = { values: [] }
 
   public get(pos: Vector): A[] {
-    return this.objects.get(pos.key) || []
+    return get(this.objects, pos.coordinates) || []
   }
 
   public set(pos: Vector, objects: A[]): void {
-    this.objects.set(pos.key, objects)
+    insert(this.objects, pos.coordinates, objects)
   }
 
   public add(pos: Vector, object: A): void {
-    const key = pos.key
-    const objects = this.objects.get(key) || []
-    objects.push(object)
-    this.objects.set(key, objects)
+    const leaf = getLeaf(this.objects, pos.coordinates)
+    if (leaf !== undefined) {
+      leaf.value.push(object)
+    } else {
+      this.set(pos, [object])
+    }
   }
 
   public addAll(shape: Shape, object: A): void {
@@ -33,9 +36,10 @@ export class DiscreteStackedSpace<A> implements StackedSpace<A> {
   }
 
   public retain(pos: Vector, predicate: (a: A) => boolean): void {
-    const key = pos.key
-    const objects = this.objects.get(key) || []
-    this.objects.set(key, objects.filter(o => predicate(o)))
+    const leaf = getLeaf(this.objects, pos.coordinates)
+    if (leaf !== undefined) {
+      leaf.value = leaf.value.filter(o => predicate(o))
+    }
   }
 }
 

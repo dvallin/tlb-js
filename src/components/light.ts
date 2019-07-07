@@ -1,9 +1,10 @@
-import { Color } from 'src/renderer/color'
-import { Entity } from 'src/ecs/entity'
+import { Color } from '../renderer/color'
+import { Entity } from '../ecs/entity'
 
 export interface LightComponent {
   color: Color
 }
 export interface LightingComponent {
+  incomingLightInFrame: Map<Entity, Color>
   incomingLight: Map<Entity, Color>
 }

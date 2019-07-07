@@ -16,12 +16,12 @@ describe('FreeModeControl', () => {
     world = new World()
     input = mockInput(world)
     world.registerComponentStorage('position', new VectorStorage<PositionComponent>())
-    world.createEntity().withComponent('position', { position: new Vector(2, 3) })
+    world.createEntity().withComponent('position', { position: new Vector([2, 3]) })
   })
 
   it('adds delta', () => {
-    input.createMovementDelta = jest.fn().mockReturnValue(new Vector(-1, 0))
+    input.createMovementDelta = jest.fn().mockReturnValue(new Vector([-1, 0]))
     system.update(world, 0)
-    expect(world.getComponent(0, 'position')).toEqual({ position: new Vector(1, 3) })
+    expect(world.getComponent(0, 'position')).toEqual({ position: new Vector([1, 3]) })
   })
 })

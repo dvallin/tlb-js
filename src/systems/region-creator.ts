@@ -20,7 +20,7 @@ export class RegionCreator implements TlbSystem {
     this.landmarkGenerator = new LandmarkGenerator(random)
   }
 
-  public update(world: TlbWorld, entity: number): void {
+  public update(world: TlbWorld, entity: Entity): void {
     const rootRegion = world.getComponent<RegionComponent>(entity, 'region')!
 
     const leftLandmark = this.buildLeftLandmark(world, entity, rootRegion)
