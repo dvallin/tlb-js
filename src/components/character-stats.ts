@@ -1,3 +1,5 @@
+import { ItemKind } from './items'
+
 export type CharacterStatsType = keyof typeof characterStats
 export interface CharacterStatsComponent {
   type: CharacterStatsType
@@ -12,6 +14,7 @@ export type bodyPartType = 'head' | 'arm' | 'torso' | 'leg'
 
 export interface BodyPart {
   type: bodyPartType
+  itemAttachments: ItemKind[]
   health: number
 }
 
@@ -25,12 +28,12 @@ export interface CharacterStats {
 
 function humanoidBodyParts(health: number): { [key: string]: BodyPart } {
   return {
-    head: { type: 'head', health },
-    leftArm: { type: 'arm', health },
-    rightArm: { type: 'arm', health },
-    torso: { type: 'torso', health },
-    leftLeg: { type: 'leg', health },
-    rightLeg: { type: 'leg', health },
+    head: { type: 'head', itemAttachments: ['helmet'], health },
+    leftArm: { type: 'arm', itemAttachments: ['glove', 'weapon'], health },
+    rightArm: { type: 'arm', itemAttachments: ['glove', 'weapon'], health },
+    torso: { type: 'torso', itemAttachments: ['armor'], health },
+    leftLeg: { type: 'leg', itemAttachments: ['pants', 'boots'], health },
+    rightLeg: { type: 'leg', itemAttachments: ['pants', 'boots'], health },
   }
 }
 

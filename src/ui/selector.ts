@@ -11,6 +11,7 @@ export interface Selector<T> {
 }
 
 export interface SelectorState {
+  focused: boolean
   firstRow: number
   selected: number | undefined
   hovered: number
@@ -139,6 +140,9 @@ export function updateSelectorState(world: TlbWorld, current: SelectorState, con
   let position: Vector | undefined
   if (input.position) {
     position = new Vector([input.position.x, input.position.y])
+    current.focused = content.containsVector(position)
+  } else {
+    current.focused = false
   }
   const up = input.keyPressed.has(KEYS.VK_K)
   const down = input.keyPressed.has(KEYS.VK_J)

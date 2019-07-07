@@ -60,7 +60,6 @@ export class Overview implements UIElement {
   public render(renderer: Renderer): void {
     if (this.state.stats !== undefined) {
       let y = 1
-      this.state.bodyParts.render(renderer)
 
       if (!this.state.bodyParts.collapsed) {
         const stats = this.state.stats
@@ -69,14 +68,15 @@ export class Overview implements UIElement {
           y++
         })
 
-        const globalEffects = this.state.activeEffects!.effects.filter(e => e.effect.global).map(e => e.effect.type[0])
-
-        globalEffects.forEach((name, index) => {
-          renderer.text(name, this.state.bodyParts.topLeft.add(new Vector([1 + index, y])), primary[2])
-        })
-
-        this.state.bodyParts.setHeight(y + 1)
+        this.state.bodyParts.setHeight(y + 2)
+        const globalEffects = this.state
+          .activeEffects!.effects.filter(e => e.effect.global)
+          .map(e => e.effect.type[0])
+          .join()
+        renderer.text('effects', this.state.bodyParts.topLeft.add(new Vector([1, y])), primary[1])
+        renderer.text(`${globalEffects}`, this.state.bodyParts.topLeft.add(new Vector([15, y])), primary[2])
       }
+      this.state.bodyParts.render(renderer)
     } else {
       this.state.bodyParts.setHeight(0)
     }
@@ -96,7 +96,6 @@ export class Overview implements UIElement {
         })
         this.state.inventoryWindow.setHeight(y + 1)
       }
-
       this.state.inventoryWindow.render(renderer)
     } else {
       this.state.inventoryWindow.setHeight(0)
@@ -105,7 +104,6 @@ export class Overview implements UIElement {
     this.state.turn.setY(this.state.inventoryWindow.bottom + 1)
     if (this.state.stats !== undefined && this.state.takeTurn !== undefined) {
       let y = 1
-      this.state.turn.render(renderer)
 
       if (!this.state.turn.collapsed) {
         const current = this.state.stats.current
@@ -125,6 +123,7 @@ export class Overview implements UIElement {
         })
         this.state.turn.setHeight(y + 1)
       }
+      this.state.turn.render(renderer)
     } else {
       this.state.turn.setHeight(0)
     }
@@ -138,7 +137,6 @@ export class Overview implements UIElement {
         y++
         this.state.environment.setHeight(y + 1)
       }
-
       this.state.environment.render(renderer)
     } else {
       this.state.environment.setHeight(0)
@@ -155,10 +153,8 @@ export class Overview implements UIElement {
     this.state.takeTurn = world.getComponent<TakeTurnComponent>(this.state.focus, 'take-turn')
     this.state.enemies = []
     world.getStorage('took-turn').foreach(entity => {
-      const feature = world.getComponent<FeatureComponent>(entity, 'feature') || {}
-      this.state.enemies.push({
-        ...feature,
-      })
+      const feature = world.getComponent<FeatureComponent>(entity, 'feature') || { type: undefined }
+      this.state.enemies.push({ feature: feature.type })
     })
     world.getStorage('wait-turn').foreach(entity => {
       const feature = world.getComponent<FeatureComponent>(entity, 'feature') || { type: undefined }

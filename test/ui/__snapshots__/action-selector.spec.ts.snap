@@ -1,0 +1,25 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ActionSelector two uncollapsed and one collapsed groups hover renders actions from the top 1`] = `
+"---------------/actions/-----------/description/-
+|- group1/name1         |group1/name1           |
+| | group1/actions/1    |                       |
+| | group1/actions/2    |                       |
+| | group1/actions/3    |                       |
+|+ group2/name1         |                       |
+|- group3/name1         |                       |
+-------------------------------------------------
+"
+`;
+
+exports[`ActionSelector two uncollapsed and one collapsed groups hover scrolls down 1`] = `
+"---------------/actions/-----------/description/-
+| | group1/actions/1    |group3/actions/1       |
+| | group1/actions/2    |cost: 1AP 2MP          |
+| | group1/actions/3    |                       |
+|+ group2/name1         |                       |
+|- group3/name1         |                       |
+| | group3/actions/1    |                       |
+-------------------------------------------------
+"
+`;

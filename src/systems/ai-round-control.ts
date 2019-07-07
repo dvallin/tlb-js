@@ -6,7 +6,7 @@ import { Entity } from '../ecs/entity'
 import { ScriptComponent } from '../components/script'
 import { Vector } from '../spatial'
 import { calculateAvailableActions } from '../component-reducers/available-actions'
-import { SelectedActionComponent, Movement, SelectedAction } from '../components/action'
+import { SelectedActionComponent, Movement, SelectedAction, Attack } from '../components/action'
 import { Random } from '../random'
 import { CharacterStatsComponent } from '../components/character-stats'
 import { ActionGroup } from '../ui/action-selector'
@@ -68,22 +68,25 @@ export class AiRoundControl implements TlbSystem {
       }
 
       const dist = targetPosition.position.minus(position.position)
-      let selection: SelectedAction
+      let selection: SelectedAction | undefined = undefined
       const canGetCloser = dist.lN() > 1 && movementActions.length > 0
       const isInSight = path !== undefined
       if (canGetCloser) {
         selection = this.random.pick(movementActions)
       } else if (fightActions.length > 0 && isInSight) {
         selection = this.random.pick(fightActions)
-      } else {
-        selection = this.random.pick(allActions)
       }
-      world.editEntity(entity).withComponent<SelectedActionComponent>('selected-action', {
-        skippedActions: 0,
-        target,
-        currentSubAction: 0,
-        selection,
-      })
+
+      if (selection !== undefined) {
+        world.editEntity(entity).withComponent<SelectedActionComponent>('selected-action', {
+          skippedActions: 0,
+          target,
+          currentSubAction: 0,
+          selection,
+        })
+      } else {
+        this.endTurn(world, entity)
+      }
     } else {
       this.endTurn(world, entity)
     }
@@ -108,13 +111,7 @@ export class AiRoundControl implements TlbSystem {
           this.move(world, entity, selectedAction.target!, currentAction)
           break
         case 'attack':
-          const position = world.getComponent<PositionComponent>(entity, 'position')!
-          const targetPosition = world.getComponent<PositionComponent>(selectedAction.target!, 'position')!
-          const path = this.queries.ray(world, position.position, targetPosition.position, {})
-          if (path !== undefined && path.cost <= currentAction.range) {
-            const bodyPart = this.chooseBodyPart(world, selectedAction.target!)
-            attackTarget(world, this.random, entity, selectedAction.target!, bodyPart!, currentAction)
-          }
+          this.attack(world, entity, selectedAction.target!, currentAction)
           break
       }
       selectedAction.currentSubAction++
@@ -132,6 +129,16 @@ export class AiRoundControl implements TlbSystem {
       world.editEntity(entity).withComponent<ScriptComponent>('script', {
         path: path.path,
       })
+    }
+  }
+
+  public attack(world: TlbWorld, entity: Entity, target: Entity, attack: Attack) {
+    const position = world.getComponent<PositionComponent>(entity, 'position')!
+    const targetPosition = world.getComponent<PositionComponent>(target!, 'position')!
+    const path = this.queries.ray(world, position.position, targetPosition.position, {})
+    if (path !== undefined && path.cost <= attack.range) {
+      const bodyPart = this.chooseBodyPart(world, target!)
+      attackTarget(world, this.random, entity, target!, bodyPart!, attack)
     }
   }
 

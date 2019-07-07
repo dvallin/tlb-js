@@ -30,7 +30,6 @@ export class PlayerRoundControl implements TlbSystem {
   public update(world: TlbWorld, entity: Entity): void {
     const script = world.getComponent<ScriptComponent>(entity, 'script')
     const takeTurn = world.getComponent<TakeTurnComponent>(entity, 'take-turn')!
-
     const isInAnimation = script !== undefined
     if (!isInAnimation) {
       const turnIsOver = takeTurn.actions + takeTurn.movements === 0

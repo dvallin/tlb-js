@@ -25,7 +25,7 @@ export interface Renderer {
 
   character(character: string, position: Position, fg: Color, bg?: Color): void
   text(text: string, position: Position, fg: Color, bg?: Color): void
-  flowText(text: string, position: Position, width: number, fg: Color, bg?: Color): void
+  flowText(text: string, position: Position, width: number, fg: Color, bg?: Color): number
 }
 
 export class RotRenderer implements Renderer {
@@ -141,9 +141,9 @@ export class RotRenderer implements Renderer {
     }
   }
 
-  public flowText(text: string, position: Position, width: number, fg: Color, bg?: Color): void {
+  public flowText(text: string, position: Position, width: number, fg: Color, bg?: Color): number {
     const fgTag = `%c{${fg.rgb}}`
     const bgTag = bg ? `%b{${bg.rgb}}` : ''
-    this.display.drawText(position.x, position.y, `${fgTag}${bgTag}${text}`, width)
+    return this.display.drawText(position.x, position.y, `${fgTag}${bgTag}${text}`, width)
   }
 }

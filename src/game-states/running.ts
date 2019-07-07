@@ -43,6 +43,7 @@ export class Running extends AbstractState {
     const stats = createCharacterStatsComponent('player')
     const nailgun = world.createEntity().withComponent<ItemComponent>('item', { type: 'nailGun' }).entity
     const rifle = world.createEntity().withComponent<ItemComponent>('item', { type: 'rifle' }).entity
+    const boots = world.createEntity().withComponent<ItemComponent>('item', { type: 'bootsOfStriding' }).entity
     const jacket = world.createEntity().withComponent<ItemComponent>('item', { type: 'leatherJacket' }).entity
 
     const player = world
@@ -54,13 +55,14 @@ export class Running extends AbstractState {
       .withComponent<FovComponent>('fov', { fov: [] })
       .withComponent<HasActionComponent>('has-action', { actions: ['longMove', 'hit', 'rush', 'endTurn'] })
       .withComponent<CharacterStatsComponent>('character-stats', stats)
-      .withComponent<InventoryComponent>('inventory', { content: [nailgun, rifle] })
+      .withComponent<InventoryComponent>('inventory', { content: [nailgun, rifle, jacket, boots] })
       .withComponent<ActiveEffectsComponent>('active-effects', { effects: [] })
       .withComponent<EquipedItemsComponent>('equiped-items', {
         equipment: [{ entity: nailgun, bodyParts: ['leftArm'] }, { entity: jacket, bodyParts: ['torso', 'leftArm', 'rightArm'] }],
       }).entity
     const ui = world.getResource<UIResource>('ui')
     ui.setOverview(world, player)
+    ui.setInventory(world, player)
     ui.setLog(world)
     map.setCharacter(position, player)
   }

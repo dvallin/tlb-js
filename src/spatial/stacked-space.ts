@@ -12,7 +12,7 @@ export interface StackedSpace<A> {
 }
 
 export class DiscreteStackedSpace<A> implements StackedSpace<A> {
-  private readonly objects: Tree<A[]> = { kind: 'root' }
+  private readonly objects: Tree<A[]> = { values: [] }
 
   public get(pos: Vector): A[] {
     return get(this.objects, pos.coordinates) || []

@@ -121,6 +121,7 @@ export function mockUi(world: TlbWorld): UI {
     selectedBodyPart: jest.fn(),
     hideBodyPartSelector: jest.fn(),
 
+    setInventory: jest.fn(),
     setOverview: jest.fn(),
     setLog: jest.fn(),
   }

@@ -10,7 +10,7 @@ export interface SetSpace {
 }
 
 export class DiscreteSetSpace implements SetSpace {
-  private readonly objects: Tree<{}> = { kind: 'root' }
+  private readonly objects: Tree<{}> = { values: [] }
 
   public has(pos: Vector): boolean {
     return get(this.objects, pos.coordinates) !== undefined

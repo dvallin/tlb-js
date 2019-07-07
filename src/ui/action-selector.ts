@@ -45,7 +45,7 @@ export class ActionSelector implements UIElement, Selector<SelectedAction> {
   public readonly groupSelector: CollapsibleGroupSelector<ActionGroup, SelectableAction>
 
   public constructor(public readonly entity: Entity, private readonly state: State) {
-    this.selectorState = { firstRow: 0, hovered: 0, selected: undefined }
+    this.selectorState = { focused: true, firstRow: 0, hovered: 0, selected: undefined }
     this.actionSelector = new CollapsibleGroupItemSelector(this.selectorState, this.state.groups)
     this.groupSelector = new CollapsibleGroupSelector(this.selectorState, this.state.groups)
   }

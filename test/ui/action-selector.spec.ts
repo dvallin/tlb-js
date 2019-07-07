@@ -4,6 +4,7 @@ import { World } from '../../src/ecs/world'
 import { TlbWorld } from '../../src/tlb'
 import { mockInput } from '../mocks'
 import { KEYS } from 'rot-js'
+import { createMockRenderer, takeSnapshot } from './mock-display'
 
 describe('ActionSelector', () => {
   describe('two uncollapsed groups', () => {
@@ -104,6 +105,43 @@ describe('ActionSelector', () => {
     const group1: ActionGroup = createGroup('1', '1', '2', '3')
     const group2: ActionGroup = createGroup('2', '1', '2')
     const group3: ActionGroup = createGroup('3', '1', '2')
+
+    describe('hover', () => {
+      let selector: ActionSelector
+      beforeEach(() => {
+        selector = ActionSelector.build(0, new Rectangle(0, 0, 50, 8), [group1, group2, group3])
+        clickAt(selector, 4)
+      })
+
+      it('renders actions from the top', () => {
+        const world: TlbWorld = new World()
+        mockInput(world)
+        const renderer = createMockRenderer()
+
+        selector.update(world)
+        selector.render(renderer.renderer)
+
+        takeSnapshot(renderer)
+      })
+
+      it('scrolls down', () => {
+        const world: TlbWorld = new World()
+        const input = mockInput(world)
+        input.keyPressed.add(KEYS.VK_J)
+        const renderer = createMockRenderer()
+
+        selector.update(world)
+        selector.update(world)
+        selector.update(world)
+        selector.update(world)
+        selector.update(world)
+        selector.update(world)
+
+        selector.render(renderer.renderer)
+
+        takeSnapshot(renderer)
+      })
+    })
 
     describe('hover', () => {
       let selector: ActionSelector

@@ -102,6 +102,14 @@ export const actions = {
     },
     subActions: [attack(1, 8, [damage(3)])],
   },
+  strideAndSlip: {
+    name: 'stride and slip',
+    cost: {
+      actions: 0,
+      movement: 3,
+    },
+    subActions: [movement(8), status([immobilize(1)])],
+  },
   rush: {
     name: 'rush',
     cost: {

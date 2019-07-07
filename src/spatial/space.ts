@@ -10,7 +10,7 @@ export interface Space<A> {
 }
 
 export class DiscreteSpace<A> implements Space<A> {
-  private readonly objects: Tree<A> = { kind: 'root' }
+  private readonly objects: Tree<A> = { values: [] }
 
   public get(pos: Vector): A | undefined {
     return get(this.objects, pos.coordinates)

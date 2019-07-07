@@ -35,7 +35,7 @@ export class BodyPartSelector implements UIElement, Selector<string> {
   public readonly bodyPartSelector: ItemSelector<BodyPartInfo>
 
   public constructor(public readonly entity: Entity, private readonly state: State) {
-    this.selectorState = { firstRow: 0, hovered: 0, selected: undefined }
+    this.selectorState = { focused: true, firstRow: 0, hovered: 0, selected: undefined }
     this.bodyPartSelector = new ItemSelector(this.selectorState, this.state.bodyParts)
   }
 

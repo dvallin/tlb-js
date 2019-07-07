@@ -73,42 +73,42 @@ export class Vector {
 
   public add(other: Vector): Vector {
     Vector.assertHasSameDimensions(this, other)
-    const result = []
+    const result = new Array(this.dimensions)
     for (let i = 0; i < this.dimensions; i++) {
-      result.push(this.at(i) + other.at(i))
+      result[i] = this.at(i) + other.at(i)
     }
     return new Vector(result)
   }
 
   public minus(other: Vector): Vector {
     Vector.assertHasSameDimensions(this, other)
-    const result = []
+    const result = new Array(this.dimensions)
     for (let i = 0; i < this.dimensions; i++) {
-      result.push(this.at(i) - other.at(i))
+      result[i] = this.at(i) - other.at(i)
     }
     return new Vector(result)
   }
 
   public floor(): Vector {
-    const result = []
+    const result = new Array(this.dimensions)
     for (let i = 0; i < this.dimensions; i++) {
-      result.push(Math.floor(this.at(i)))
+      result[i] = Math.floor(this.coordinates[i])
     }
     return new Vector(result)
   }
 
   public mult(scale: number): Vector {
-    const result = []
+    const result = new Array(this.dimensions)
     for (let i = 0; i < this.dimensions; i++) {
-      result.push(this.at(i) * scale)
+      result[i] = this.at(i) * scale
     }
     return new Vector(result)
   }
 
   public abs(): Vector {
-    const result = []
+    const result = new Array(this.dimensions)
     for (let i = 0; i < this.dimensions; i++) {
-      result.push(Math.abs(this.at(i)))
+      result[i] = Math.abs(this.at(i))
     }
     return new Vector(result)
   }

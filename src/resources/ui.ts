@@ -12,6 +12,7 @@ import { LogView } from '../ui/log-view'
 import { UIElement } from '../ui/ui-element'
 import { BodyPartSelector, BodyPartInfo } from '../ui/body-part-selector'
 import { InventoryTransferModal } from '../ui/inventory-transfer-modal'
+import { Inventory } from '../ui/inventory'
 
 export interface UI {
   hasElement(position: Vector): boolean
@@ -33,6 +34,7 @@ export interface UI {
 
   setOverview(world: TlbWorld, focus: Entity): void
   setLog(world: TlbWorld): void
+  setInventory(world: TlbWorld, focus: Entity): void
 }
 
 export class UIResource implements TlbResource, UI {
@@ -46,6 +48,7 @@ export class UIResource implements TlbResource, UI {
   private actionSelector: ActionSelector | undefined = undefined
   private inventoryTransferModal: InventoryTransferModal | undefined = undefined
   private overview: Overview | undefined = undefined
+  private inventory: Inventory | undefined = undefined
   private log: LogView | undefined = undefined
 
   public update(world: TlbWorld): void {
@@ -60,7 +63,10 @@ export class UIResource implements TlbResource, UI {
 
     if (this.actionSelector !== undefined) {
       this.actionSelector.update(world)
+    } else if (this.inventory !== undefined) {
+      this.inventory.update(world)
     }
+
     if (this.overview !== undefined) {
       this.overview.update(world)
     }
@@ -78,6 +84,8 @@ export class UIResource implements TlbResource, UI {
     }
     if (this.actionSelector !== undefined) {
       this.actionSelector.render(renderer)
+    } else if (this.inventory !== undefined) {
+      this.inventory.render(renderer)
     }
     if (this.overview !== undefined) {
       this.overview.render(renderer)
@@ -99,7 +107,13 @@ export class UIResource implements TlbResource, UI {
   public setLog(world: TlbWorld) {
     const viewport: Viewport = world.getResource<ViewportResource>('viewport')
     const entity = this.getOrCreateElement(world, this.log)
-    this.log = new LogView(entity, new Rectangle(0, viewport.boundaries.y - 13, 41, 13))
+    this.log = new LogView(entity, new Rectangle(0, viewport.boundaries.y - 13, 40, 13))
+  }
+
+  public setInventory(world: TlbWorld, focus: Entity) {
+    const viewport: Viewport = world.getResource<ViewportResource>('viewport')
+    const entity = this.getOrCreateElement(world, this.log)
+    this.inventory = new Inventory(entity, focus, new Rectangle(40, viewport.boundaries.y - 13, 40, 13))
   }
 
   public showInventoryTransferModal(world: TlbWorld, source: Entity, sourceTitle: string, target: Entity, targetTitle: string): void {
@@ -192,6 +206,7 @@ export class UIResource implements TlbResource, UI {
   public hasElement(position: Vector): boolean {
     return (
       (this.actionSelector !== undefined && this.actionSelector.contains(position)) ||
+      (this.inventory !== undefined && this.inventory.contains(position)) ||
       (this.overview !== undefined && this.overview.contains(position)) ||
       (this.log !== undefined && this.log.contains(position)) ||
       (this.bodyPartSelector !== undefined && this.bodyPartSelector.contains(position)) ||
