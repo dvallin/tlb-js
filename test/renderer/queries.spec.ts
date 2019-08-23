@@ -3,10 +3,10 @@ import { Vector } from '../../src/spatial'
 import { TlbWorld } from '../../src/tlb'
 import { WorldMap } from '../../src/resources/world-map'
 import { World } from '../../src/ecs/world'
-import { mockMap, mockImplementation2 } from '../mocks'
+import { mockMap, mockImplementation3 } from '../mocks'
 import { Color } from '../../src/renderer/color'
 
-describe('RotRayCaster', () => {
+describe('Queries', () => {
   let world: TlbWorld
   let map: WorldMap
   beforeEach(() => {
@@ -16,13 +16,13 @@ describe('RotRayCaster', () => {
 
   it('calculates field of view', () => {
     const callback = jest.fn()
-    mockImplementation2(map.isLightBlocking, ({}, position: Vector) => {
+    mockImplementation3(map.levels[0].isLightBlocking, (_a: TlbWorld, position: Vector, _c: boolean) => {
       return position.key !== '1,1' && position.key !== '1,2'
     })
 
-    new Queries().fov(world, new Vector([1.1, 1.1]), callback)
+    new Queries().fov(world, 0, new Vector([1.1, 1.1]), callback)
 
-    expect(callback).toHaveBeenCalledTimes(12)
+    expect(callback).toHaveBeenCalledTimes(21)
     // non-light blocking
     expect(callback).toHaveBeenCalledWith(new Vector([1, 1]), 0)
     expect(callback).toHaveBeenCalledWith(new Vector([1, 2]), 1)
@@ -41,11 +41,11 @@ describe('RotRayCaster', () => {
 
   it('calculates lighting', () => {
     const callback = jest.fn()
-    mockImplementation2(map.isLightBlocking, ({}, position: Vector) => {
+    mockImplementation3(map.levels[0].isLightBlocking, (_a: TlbWorld, position: Vector, _c: boolean) => {
       return position.key !== '1,1' && position.key !== '1,2'
     })
 
-    new Queries().lighting(world, new Vector([1.1, 1.1]), new Color([123, 123, 123]), callback)
+    new Queries().lighting(world, 0, new Vector([1.1, 1.1]), new Color([123, 123, 123]), callback)
 
     expect(callback).toHaveBeenCalledTimes(12)
     // non-light blocking

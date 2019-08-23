@@ -5,78 +5,37 @@ import { FeatureComponent, features } from '../components/feature'
 import { Shape } from '../geometry/shape'
 import { SetSpace, DiscreteSetSpace } from '../spatial/set-space'
 import { FovComponent } from '../components/fov'
-import { Rectangle } from '../geometry/rectangle'
 import { FunctionalShape } from '../geometry/functional-shape'
+import { PositionComponent } from '../components/position'
+import { Rectangle } from '../geometry/rectangle'
 
-export interface WorldMap {
-  boundaries: Rectangle
+export class Level {
+  public readonly boundary: Rectangle
 
-  setTile(position: Vector, entity: Entity): void
-  getTile(position: Vector): Entity | undefined
-  removeTile(position: Vector): Entity | undefined
+  public readonly tiles: Space<Entity>
+  public readonly characters: Space<Entity>
+  public readonly rooms: Space<Entity>
 
-  setCharacter(position: Vector, entity: Entity): void
-  getCharacter(position: Vector): Entity | undefined
-  removeCharacter(position: Vector): Entity | undefined
-  addLight(position: Vector, entity: Entity): void
+  public visible: SetSpace
+  public readonly discovered: SetSpace
 
-  isDiscovered(position: Vector): boolean
-  isVisible(position: Vector): boolean
+  public lights: StackedSpace<Entity>
 
-  isBlocking(world: TlbWorld, position: Vector, self?: Entity | undefined): boolean
-  isLightBlocking(world: TlbWorld, position: Vector, useCharacters?: boolean): boolean
+  public constructor(width: number) {
+    this.boundary = new Rectangle(0, 0, width, width)
 
-  tileMatches(world: TlbWorld, position: Vector, predicate: (f: FeatureComponent | undefined) => boolean): boolean
-  characterMatches(world: TlbWorld, position: Vector, predicate: (f: FeatureComponent | undefined) => boolean): boolean
-  featureMatches(world: TlbWorld, entity: Entity | undefined, predicate: (f: FeatureComponent | undefined) => boolean): boolean
+    this.tiles = new DiscreteSpace(width)
+    this.characters = new DiscreteSpace(width)
+    this.rooms = new DiscreteSpace(width)
 
-  isShapeFree(world: TlbWorld, shape: Shape): boolean
-  isShapeBlocked(world: TlbWorld, shape: Shape): boolean
-  shapeHasAll(world: TlbWorld, shape: Shape, predicate: (f: FeatureComponent | undefined) => boolean): boolean
-  shapeHasSome(world: TlbWorld, shape: Shape, predicate: (f: FeatureComponent | undefined) => boolean): boolean
-}
+    this.visible = new DiscreteSetSpace(width)
+    this.discovered = new DiscreteSetSpace(width)
 
-export class WorldMapResource implements TlbResource, WorldMap {
-  public readonly kind: ResourceName = 'map'
-
-  public readonly tiles: Space<Entity> = new DiscreteSpace<Entity>()
-  public readonly characters: Space<Entity> = new DiscreteSpace<Entity>()
-
-  public boundaries = new Rectangle(0, 0, 0, 0)
-
-  public visible: SetSpace = new DiscreteSetSpace()
-  public readonly discovered: SetSpace = new DiscreteSetSpace()
-
-  public lights: StackedSpace<Entity> = new DiscreteStackedSpace<Entity>()
-
-  public constructor() {}
-
-  public update(world: TlbWorld): void {
-    this.visible = new DiscreteSetSpace()
-    const visibleLights = new Set<Entity>()
-    world.components.get('player')!.foreach(player => {
-      const fov = world.getComponent<FovComponent>(player, 'fov')
-      if (fov !== undefined) {
-        fov.fov.forEach(p => {
-          this.visible.set(p.position)
-          this.discovered.set(p.position)
-          this.lights.get(p.position).forEach(v => visibleLights.add(v))
-        })
-      }
-    })
-    world.components.get('light')!.foreach(l => {
-      const light = world.editEntity(l)
-      if (visibleLights.has(l)) {
-        light.withComponent('active', {})
-      } else {
-        light.removeComponent('active')
-      }
-    })
+    this.lights = new DiscreteStackedSpace(width)
   }
 
   public setTile(position: Vector, entity: Entity): void {
     this.tiles.set(position, entity)
-    this.boundaries = this.boundaries.cover(position)
   }
   public getTile(position: Vector): Entity | undefined {
     return this.tiles.get(position)
@@ -85,9 +44,15 @@ export class WorldMapResource implements TlbResource, WorldMap {
     return this.tiles.remove(position)
   }
 
+  public setRoom(position: Vector, entity: Entity): void {
+    this.rooms.set(position, entity)
+  }
+  public getRoom(position: Vector): Entity | undefined {
+    return this.rooms.get(position)
+  }
+
   public setCharacter(position: Vector, entity: Entity): void {
     this.characters.set(position, entity)
-    this.boundaries = this.boundaries.cover(position)
   }
   public getCharacter(position: Vector): Entity | undefined {
     return this.characters.get(position)
@@ -186,5 +151,46 @@ export class WorldMapResource implements TlbResource, WorldMap {
 
   public shapeHasSome(world: TlbWorld, shape: Shape, predicate: (f: FeatureComponent | undefined) => boolean): boolean {
     return shape.some(p => this.tileMatches(world, p, predicate))
+  }
+}
+
+export interface WorldMap {
+  levels: Level[]
+}
+
+export class WorldMapResource implements TlbResource, WorldMap {
+  public readonly kind: ResourceName = 'map'
+
+  public readonly levels: Level[] = []
+
+  public constructor(public readonly width: number) {
+    this.levels.push(new Level(this.width))
+  }
+
+  public update(world: TlbWorld): void {
+    const visibleLights = new Set<Entity>()
+    world.components.get('player')!.foreach(player => {
+      const position = world.getComponent<PositionComponent>(player, 'position')
+      if (position !== undefined) {
+        const level = this.levels[position.level]
+        const fov = world.getComponent<FovComponent>(player, 'fov')
+        level.visible = new DiscreteSetSpace(this.width)
+        if (fov !== undefined) {
+          fov.fov.forEach(p => {
+            level.visible.set(p.position)
+            level.discovered.set(p.position)
+            level.lights.get(p.position).forEach(v => visibleLights.add(v))
+          })
+        }
+      }
+    })
+    world.components.get('light')!.foreach(l => {
+      const light = world.editEntity(l)
+      if (visibleLights.has(l)) {
+        light.withComponent('active', {})
+      } else {
+        light.removeComponent('active')
+      }
+    })
   }
 }

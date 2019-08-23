@@ -41,8 +41,8 @@ export class Script implements TlbSystem {
       newPosition = target.center
       reached = true
     }
-    map.removeCharacter(current.position.floor())
-    map.setCharacter(newPosition.floor(), entity)
+    map.levels[current.level].removeCharacter(current.position.floor())
+    map.levels[current.level].setCharacter(newPosition.floor(), entity)
     current.position = newPosition
     return reached
   }

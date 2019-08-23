@@ -17,10 +17,11 @@ import { Shape } from '../../src/geometry/shape'
 const mockCreateFeature = jest.fn()
 const mockCreateDoor = jest.fn()
 jest.mock('../../src/components/feature', () => ({
-  createFeature: (world: TlbWorld, map: WorldMap, pos: Vector, type: FeatureType) => mockCreateFeature(world, map, pos, type),
+  createFeature: (world: TlbWorld, map: WorldMap, level: number, pos: Vector, type: FeatureType) =>
+    mockCreateFeature(world, map, level, pos, type),
 }))
 jest.mock('../../src/components/asset', () => ({
-  createDoor: (world: TlbWorld, map: WorldMap, shape: Shape) => mockCreateDoor(world, map, shape),
+  createDoor: (world: TlbWorld, map: WorldMap, level: number, shape: Shape) => mockCreateDoor(world, map, level, shape),
 }))
 
 describe('Agent', () => {
@@ -35,17 +36,17 @@ describe('Agent', () => {
       const agent = new Agent(mockRandom())
       const map = mockMap(world)
 
-      mockReturnValue(map.isShapeFree, true)
+      mockReturnValue(map.levels[0].isShapeFree, true)
 
       expect(agent.createAction(world, emptyState())).toEqual('render')
-      expect(map.isShapeFree).toHaveBeenCalledTimes(1)
-      expect(map.isShapeFree).toHaveBeenCalledWith(world, new Rectangle(31, 43, 2, 1))
+      expect(map.levels[0].isShapeFree).toHaveBeenCalledTimes(1)
+      expect(map.levels[0].isShapeFree).toHaveBeenCalledWith(world, new Rectangle(31, 43, 2, 1))
     })
 
     it('closes after more moves than maximum age', () => {
       const agent = new Agent(mockRandom(), 2)
       const map = mockMap(world)
-      mockReturnValue(map.isShapeFree, true)
+      mockReturnValue(map.levels[0].isShapeFree, true)
 
       expect(agent.createAction(world, stateOfActions(['move', 'move', 'move']))).toEqual('close')
       expect(agent.createAction(world, stateOfActions(['move', 'changeDirection', 'move', 'move']))).toEqual('close')
@@ -58,7 +59,7 @@ describe('Agent', () => {
       const agent = new Agent(random)
       agent.freeCells = jest.fn().mockReturnValue(1)
       const map = mockMap(world)
-      mockReturnValue(map.isShapeFree, false)
+      mockReturnValue(map.levels[0].isShapeFree, false)
 
       expect(agent.createAction(world, stateOfActions(['move', 'move', 'move']))).toEqual('changeDirection')
       expect(agent.createAction(world, stateOfActions(['move', 'changeDirection', 'move', 'move', 'move']))).toEqual('changeDirection')
@@ -71,7 +72,7 @@ describe('Agent', () => {
       const agent = new Agent(random)
       agent.freeCells = jest.fn().mockReturnValue(2)
       const map = mockMap(world)
-      mockReturnValue(map.isShapeFree, false)
+      mockReturnValue(map.levels[0].isShapeFree, false)
 
       expect(agent.createAction(world, stateOfActions(['move', 'move', 'move']))).not.toEqual('changeDirection')
     })
@@ -82,7 +83,7 @@ describe('Agent', () => {
       const map = mockMap(world)
       agent.freeCells = jest.fn().mockReturnValue(2)
       mockReturnValue(random.decision, true)
-      mockReturnValue(map.isShapeFree, false)
+      mockReturnValue(map.levels[0].isShapeFree, false)
 
       expect(agent.createAction(world, stateOfActions(['move', 'move', 'move']))).toEqual('createRoom')
     })
@@ -92,7 +93,7 @@ describe('Agent', () => {
       const agent = new Agent(random)
       agent.freeCells = jest.fn().mockReturnValue(2)
       const map = mockMap(world)
-      mockReturnValues(map.isShapeFree, false, true)
+      mockReturnValues(map.levels[0].isShapeFree, false, true)
 
       const nextAction = agent.createAction(world, stateOfActions(['move', 'move', 'move']))
       expect(nextAction).toEqual('move')
@@ -103,7 +104,7 @@ describe('Agent', () => {
       const agent = new Agent(random)
       agent.freeCells = jest.fn().mockReturnValue(2)
       const map = mockMap(world)
-      mockReturnValue(map.isShapeFree, false)
+      mockReturnValue(map.levels[0].isShapeFree, false)
 
       expect(agent.createAction(world, stateOfActions(['move', 'move', 'move']))).toEqual('close')
     })
@@ -128,7 +129,7 @@ describe('Agent', () => {
 
       agent.takeAction(world, 42, state, 'move')
 
-      expect(positions.insert).toHaveBeenCalledWith(42, { position: new Vector([2, 3]) })
+      expect(positions.insert).toHaveBeenCalledWith(42, { level: 0, position: new Vector([2, 3]) })
       expect(state.agent.actions).toEqual(['move'])
     })
 
@@ -142,7 +143,7 @@ describe('Agent', () => {
       agent.takeAction(world, 42, state, 'changeDirection')
 
       expect(agents.insert).toHaveBeenCalledWith(42, { actions: ['changeDirection'], direction: 'left', generation: 1, width: 2 })
-      expect(positions.insert).toHaveBeenCalledWith(42, { position: new Vector([2, 3]) })
+      expect(positions.insert).toHaveBeenCalledWith(42, { position: new Vector([2, 3]), level: 0 })
       expect(state.agent.actions).toEqual(['changeDirection'])
     })
 
@@ -172,7 +173,7 @@ describe('Agent', () => {
     it('turns right if all is free', () => {
       const agent = new Agent(mockRandom())
       const map = mockMap(world)
-      mockReturnValue(map.isShapeFree, true)
+      mockReturnValue(map.levels[0].isShapeFree, true)
 
       expect(agent.changeDirection(world, stateOfDirection('up')).direction).toEqual('right')
       expect(agent.changeDirection(world, stateOfDirection('right')).direction).toEqual('down')
@@ -183,7 +184,7 @@ describe('Agent', () => {
     it('turns left if there is more room', () => {
       const agent = new Agent(mockRandom())
       const map = mockMap(world)
-      mockImplementation2(map.isShapeFree, ({  }: TlbWorld, r: Rectangle) => {
+      mockImplementation2(map.levels[0].isShapeFree, ({  }: TlbWorld, r: Rectangle) => {
         return r.left === 30 && r.height === 4
       })
 
@@ -193,7 +194,7 @@ describe('Agent', () => {
     it('keeps going forward if there is more room', () => {
       const agent = new Agent(mockRandom())
       const map = mockMap(world)
-      mockImplementation2(map.isShapeFree, ({  }: TlbWorld, r: Rectangle) => {
+      mockImplementation2(map.levels[0].isShapeFree, ({  }: TlbWorld, r: Rectangle) => {
         return r.top === 42 && r.width === 4
       })
 
@@ -203,45 +204,45 @@ describe('Agent', () => {
     it('checks correct surrounding in up direction', () => {
       const agent = new Agent(mockRandom())
       const map = mockMap(world)
-      mockReturnValue(map.isShapeFree, false)
+      mockReturnValue(map.levels[0].isShapeFree, false)
       agent.changeDirection(world, stateOfDirection('up'))
-      expect(map.isShapeFree).toHaveBeenCalledTimes(3)
-      expect(map.isShapeFree).toHaveBeenCalledWith(world, new Rectangle(33, 42, 1, 4))
-      expect(map.isShapeFree).toHaveBeenCalledWith(world, new Rectangle(30, 42, 1, 4))
-      expect(map.isShapeFree).toHaveBeenCalledWith(world, new Rectangle(30, 42, 4, 1))
+      expect(map.levels[0].isShapeFree).toHaveBeenCalledTimes(3)
+      expect(map.levels[0].isShapeFree).toHaveBeenCalledWith(world, new Rectangle(33, 42, 1, 4))
+      expect(map.levels[0].isShapeFree).toHaveBeenCalledWith(world, new Rectangle(30, 42, 1, 4))
+      expect(map.levels[0].isShapeFree).toHaveBeenCalledWith(world, new Rectangle(30, 42, 4, 1))
     })
 
     it('checks correct surrounding in down direction', () => {
       const agent = new Agent(mockRandom())
       const map = mockMap(world)
-      mockReturnValue(map.isShapeFree, false)
+      mockReturnValue(map.levels[0].isShapeFree, false)
       agent.changeDirection(world, stateOfDirection('down'))
-      expect(map.isShapeFree).toHaveBeenCalledTimes(3)
-      expect(map.isShapeFree).toHaveBeenCalledWith(world, new Rectangle(30, 41, 1, 4))
-      expect(map.isShapeFree).toHaveBeenCalledWith(world, new Rectangle(33, 41, 1, 4))
-      expect(map.isShapeFree).toHaveBeenCalledWith(world, new Rectangle(30, 44, 4, 1))
+      expect(map.levels[0].isShapeFree).toHaveBeenCalledTimes(3)
+      expect(map.levels[0].isShapeFree).toHaveBeenCalledWith(world, new Rectangle(30, 41, 1, 4))
+      expect(map.levels[0].isShapeFree).toHaveBeenCalledWith(world, new Rectangle(33, 41, 1, 4))
+      expect(map.levels[0].isShapeFree).toHaveBeenCalledWith(world, new Rectangle(30, 44, 4, 1))
     })
 
     it('checks correct surrounding in right direction', () => {
       const agent = new Agent(mockRandom())
       const map = mockMap(world)
-      mockReturnValue(map.isShapeFree, false)
+      mockReturnValue(map.levels[0].isShapeFree, false)
       agent.changeDirection(world, stateOfDirection('right'))
-      expect(map.isShapeFree).toHaveBeenCalledTimes(3)
-      expect(map.isShapeFree).toHaveBeenCalledWith(world, new Rectangle(33, 41, 1, 4))
-      expect(map.isShapeFree).toHaveBeenCalledWith(world, new Rectangle(30, 41, 4, 1))
-      expect(map.isShapeFree).toHaveBeenCalledWith(world, new Rectangle(30, 44, 4, 1))
+      expect(map.levels[0].isShapeFree).toHaveBeenCalledTimes(3)
+      expect(map.levels[0].isShapeFree).toHaveBeenCalledWith(world, new Rectangle(33, 41, 1, 4))
+      expect(map.levels[0].isShapeFree).toHaveBeenCalledWith(world, new Rectangle(30, 41, 4, 1))
+      expect(map.levels[0].isShapeFree).toHaveBeenCalledWith(world, new Rectangle(30, 44, 4, 1))
     })
 
     it('checks correct surrounding in left direction', () => {
       const agent = new Agent(mockRandom())
       const map = mockMap(world)
-      mockReturnValue(map.isShapeFree, false)
+      mockReturnValue(map.levels[0].isShapeFree, false)
       agent.changeDirection(world, stateOfDirection('left'))
-      expect(map.isShapeFree).toHaveBeenCalledTimes(3)
-      expect(map.isShapeFree).toHaveBeenCalledWith(world, new Rectangle(31, 41, 1, 4))
-      expect(map.isShapeFree).toHaveBeenCalledWith(world, new Rectangle(31, 44, 4, 1))
-      expect(map.isShapeFree).toHaveBeenCalledWith(world, new Rectangle(31, 41, 4, 1))
+      expect(map.levels[0].isShapeFree).toHaveBeenCalledTimes(3)
+      expect(map.levels[0].isShapeFree).toHaveBeenCalledWith(world, new Rectangle(31, 41, 1, 4))
+      expect(map.levels[0].isShapeFree).toHaveBeenCalledWith(world, new Rectangle(31, 44, 4, 1))
+      expect(map.levels[0].isShapeFree).toHaveBeenCalledWith(world, new Rectangle(31, 41, 4, 1))
     })
   })
 
@@ -283,7 +284,7 @@ describe('Agent', () => {
         .mockReturnValueOnce(2)
         .mockReturnValueOnce(0)
       random.decision = jest.fn().mockReturnValue(false)
-      map.isShapeFree = jest.fn().mockReturnValue(true)
+      map.levels[0].isShapeFree = jest.fn().mockReturnValue(true)
       agent.buildRoom = jest.fn()
 
       agent.createRoom(world, stateOfDirection('up'))
@@ -294,7 +295,7 @@ describe('Agent', () => {
     it('does not create room if map is not free', () => {
       random.integerBetween = jest.fn().mockReturnValue(2)
       random.decision = jest.fn().mockReturnValue(false)
-      map.isShapeFree = jest.fn().mockReturnValue(false)
+      map.levels[0].isShapeFree = jest.fn().mockReturnValue(false)
       agent.buildRoom = jest.fn()
 
       agent.createRoom(world, stateOfDirection('up'))
@@ -331,7 +332,7 @@ describe('Agent', () => {
     it('creates tiles for each cell in the shape', () => {
       const map = mockMap(world)
       const state: PositionedAgent = {
-        position: { position: new Vector([1, 2]) },
+        position: { level: 0, position: new Vector([1, 2]) },
         agent: { actions: [], direction: 'up', width: 2, generation: 1 },
         region: undefined,
       }
@@ -347,13 +348,13 @@ describe('Agent', () => {
       agent.buildRoom(world, state, map, room)
 
       expect(mockCreateFeature).toHaveBeenCalledTimes(1)
-      expect(mockCreateFeature).toHaveBeenCalledWith(world, map, new Vector([3, 4]), 'room')
+      expect(mockCreateFeature).toHaveBeenCalledWith(world, map, 0, new Vector([3, 4]), 'room')
     })
 
     it('spawns new agents at available entries', () => {
       const map = mockMap(world)
       const state: PositionedAgent = {
-        position: { position: new Vector([1, 2]) },
+        position: { level: 0, position: new Vector([1, 2]) },
         agent: { actions: [], direction: 'up', width: 2, generation: 1 },
         region: undefined,
       }
@@ -367,18 +368,18 @@ describe('Agent', () => {
 
       mockReturnValues(random.integerBetween, 255, 255, 255, 1, 0, 3)
       mockReturnValue(random.insideRectangle, new Vector([4, 5]))
-      mockReturnValue(map.isShapeFree, true)
+      mockReturnValue(map.levels[0].isShapeFree, true)
 
       agent.buildRoom(world, state, map, room)
 
       expect(agent.spawnAgent).toHaveBeenCalledTimes(1)
-      expect(agent.spawnAgent).toHaveBeenCalledWith(world, new Vector([6, 7]), 3, 'right', 2, undefined)
+      expect(agent.spawnAgent).toHaveBeenCalledWith(world, 0, new Vector([6, 7]), 3, 'right', 2, undefined)
     })
 
     it('does not spawn new agents if generation is too high', () => {
       const map = mockMap(world)
       const state: PositionedAgent = {
-        position: { position: new Vector([1, 2]) },
+        position: { level: 0, position: new Vector([1, 2]) },
         agent: { actions: [], direction: 'up', width: 2, generation: 10 },
         region: undefined,
       }
@@ -392,7 +393,7 @@ describe('Agent', () => {
 
       mockReturnValues(random.integerBetween, 255, 255, 255, 1, 0, 3)
       mockReturnValue(random.insideRectangle, new Vector([4, 5]))
-      mockReturnValue(map.isShapeFree, true)
+      mockReturnValue(map.levels[0].isShapeFree, true)
 
       agent.buildRoom(world, state, map, room)
 
@@ -402,7 +403,7 @@ describe('Agent', () => {
     it('does not spawn new agents at entries that are not free', () => {
       const map = mockMap(world)
       const state: PositionedAgent = {
-        position: { position: new Vector([1, 2]) },
+        position: { level: 0, position: new Vector([1, 2]) },
         agent: { actions: [], direction: 'up', width: 2, generation: 1 },
         region: undefined,
       }
@@ -416,7 +417,7 @@ describe('Agent', () => {
 
       mockReturnValues(random.integerBetween, 255, 255, 255, 1, 0, 3)
       mockReturnValue(random.insideRectangle, new Vector([4, 5]))
-      mockReturnValue(map.isShapeFree, false)
+      mockReturnValue(map.levels[0].isShapeFree, false)
 
       agent.buildRoom(world, state, map, room)
 
@@ -426,7 +427,7 @@ describe('Agent', () => {
     it('creates tiles for each entry', () => {
       const map = mockMap(world)
       const state: PositionedAgent = {
-        position: { position: new Vector([1, 2]) },
+        position: { level: 0, position: new Vector([1, 2]) },
         agent: { actions: [], direction: 'up', width: 2, generation: 1, allowedRegion: undefined },
         region: undefined,
       }
@@ -441,7 +442,7 @@ describe('Agent', () => {
 
       agent.buildRoom(world, state, map, room)
       expect(mockCreateFeature).toHaveBeenCalledTimes(2)
-      expect(mockCreateFeature).toHaveBeenCalledWith(world, map, new Vector([5, 6]), 'corridor')
+      expect(mockCreateFeature).toHaveBeenCalledWith(world, map, 0, new Vector([5, 6]), 'corridor')
     })
   })
 
@@ -487,17 +488,17 @@ describe('Agent', () => {
 
     it('spawns', () => {
       const agent = new Agent(mockRandom())
-      agent.spawnAgent(world, new Vector([1, 2]), 3, 'left', 4)
+      agent.spawnAgent(world, 0, new Vector([1, 2]), 3, 'left', 4)
 
       expect(agentComponent.insert).toHaveBeenCalledWith(0, { actions: [], direction: 'left', width: 3, generation: 4 })
-      expect(positionComponent.insert).toHaveBeenCalledWith(0, { position: new Vector([1, 2]) })
+      expect(positionComponent.insert).toHaveBeenCalledWith(0, { position: new Vector([1, 2]), level: 0 })
     })
   })
 })
 
 function emptyState(): PositionedAgent {
   return {
-    position: { position: new Vector([32, 43]) },
+    position: { level: 0, position: new Vector([32, 43]) },
     agent: {
       actions: [],
       direction: 'up',

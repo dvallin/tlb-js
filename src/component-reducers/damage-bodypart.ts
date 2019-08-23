@@ -49,7 +49,7 @@ export function kill(world: TlbWorld, entity: Entity) {
     const position = world.getComponent<PositionComponent>(entity, 'position')!
     const inventory = world.getComponent<InventoryComponent>(entity, 'inventory')!
     const map: WorldMap = world.getResource<WorldMapResource>('map')
-    map.removeCharacter(position.position.floor())
+    map.levels[position.level].removeCharacter(position.position.floor())
 
     world
       .editEntity(entity)
@@ -58,7 +58,7 @@ export function kill(world: TlbWorld, entity: Entity) {
       .removeComponent('took-turn')
       .removeComponent('wait-turn')
 
-    const loot = createLoot(world, map, position.position.floor())
+    const loot = createLoot(world, map, position.level, position.position.floor())
     world.editEntity(loot).withComponent<InventoryComponent>('inventory', { ...inventory })
 
     const log: Log = world.getResource<LogResource>('log')

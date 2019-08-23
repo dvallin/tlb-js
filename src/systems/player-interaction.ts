@@ -19,7 +19,7 @@ export class PlayerInteraction implements TlbSystem {
       const position = world.getComponent<PositionComponent>(entity, 'position')!
       const neighbourhood = FunctionalShape.lN(position.position.floor(), 1, true)
 
-      const trigger = this.findTrigger(world, map, neighbourhood)
+      const trigger = this.findTrigger(world, map, position.level, neighbourhood)
       if (trigger !== undefined) {
         world
           .editEntity(trigger)
@@ -29,10 +29,10 @@ export class PlayerInteraction implements TlbSystem {
     }
   }
 
-  public findTrigger(world: TlbWorld, map: WorldMap, shape: Shape): Entity | undefined {
+  public findTrigger(world: TlbWorld, map: WorldMap, level: number, shape: Shape): Entity | undefined {
     let trigger: Entity | undefined
     shape.some(p => {
-      const entity = map.getTile(p)
+      const entity = map.levels[level].getTile(p)
       if (entity !== undefined) {
         if (world.getComponent(entity, 'triggers') !== undefined) {
           trigger = entity

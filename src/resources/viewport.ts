@@ -16,14 +16,16 @@ export interface Viewport {
   fromDisplay(p: Position): Vector
   collectRenderables(world: TlbWorld): Renderable[]
   toDisplay(p: Vector, centered: boolean): Position
-  focus(position: Vector): void
+  focus(region: number, position: Vector): void
   addLayer(layer: Layer): void
   gridLocked: boolean
   boundaries: Vector
+
+  level: number
 }
 
 export interface Layer {
-  getRenderable: (world: TlbWorld, position: Vector) => Renderable
+  getRenderable: (world: TlbWorld, layer: number, position: Vector) => Renderable
   transformed: boolean
 }
 
@@ -32,6 +34,7 @@ export class ViewportResource implements TlbResource, Viewport {
 
   public gridLocked: boolean = false
   public topLeft: Vector = new Vector([0, 0])
+  public level: number = 0
 
   public readonly layers: Layer[] = []
 
@@ -46,7 +49,7 @@ export class ViewportResource implements TlbResource, Viewport {
     world.components.get('viewport-focus')!.foreach(focus => {
       const position = world.getComponent<PositionComponent>(focus, 'position')
       if (position !== undefined) {
-        this.focus(position.position)
+        this.focus(position.level, position.position)
       }
     })
   }
@@ -59,9 +62,9 @@ export class ViewportResource implements TlbResource, Viewport {
           const layer = this.layers[l]
           let renderable
           if (layer.transformed) {
-            renderable = layer.getRenderable(world, this.fromDisplay({ x, y }))
+            renderable = layer.getRenderable(world, this.level, this.fromDisplay({ x, y }))
           } else {
-            renderable = layer.getRenderable(world, new Vector([x, y]))
+            renderable = layer.getRenderable(world, this.level, new Vector([x, y]))
           }
           if (renderable.entity !== undefined) {
             renderables.push(renderable)
@@ -96,7 +99,9 @@ export class ViewportResource implements TlbResource, Viewport {
     return position
   }
 
-  public focus(position: Vector): void {
+  public focus(level: number, position: Vector): void {
+    this.level = level
+
     const x = position.x - Math.floor(this.boundaries.x / 2) + 5
     const y = position.y - Math.floor(this.boundaries.y / 2) + 5
     if (this.gridLocked) {

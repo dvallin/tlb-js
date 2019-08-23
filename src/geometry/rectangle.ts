@@ -1,9 +1,20 @@
 import { AbstractShape } from './shape'
 import { Vector } from '../spatial'
+import { Direction } from '../spatial/direction'
 
 export class Rectangle extends AbstractShape {
   public static fromBounds(left: number, right: number, top: number, bottom: number): Rectangle {
     return new Rectangle(left, top, right - left + 1, bottom - top + 1)
+  }
+
+  public static footprint(position: Vector, direction: Direction, width: number): Rectangle {
+    const delta: Vector = Vector.fromDirection(direction)
+      .perpendicular()
+      .abs()
+    const length = Math.floor(width / 2)
+    const left = position.add(delta.mult(-length))
+    const right = left.add(delta.mult(width - 1))
+    return Rectangle.fromBounds(left.x, right.x, left.y, right.y)
   }
 
   public static centerAt(x: number, y: number, size: number): Rectangle {
@@ -52,6 +63,19 @@ export class Rectangle extends AbstractShape {
     return new Vector([Math.floor(cx), Math.floor(cy)])
   }
 
+  public centerOf(direction: Direction): Vector {
+    switch (direction) {
+      case 'up':
+        return this.centerTop
+      case 'right':
+        return this.centerRight
+      case 'down':
+        return this.centerBottom
+      case 'left':
+        return this.centerLeft
+    }
+  }
+
   public get centerLeft(): Vector {
     const cy = (this.top + this.bottom) / 2
     return new Vector([this.left, Math.floor(cy)])
@@ -78,6 +102,15 @@ export class Rectangle extends AbstractShape {
       Math.max(this.right, other.right),
       Math.min(this.top, other.top),
       Math.max(this.bottom, other.bottom)
+    )
+  }
+
+  public intersect(other: Rectangle): Rectangle {
+    return Rectangle.fromBounds(
+      Math.max(this.left, other.left),
+      Math.min(this.right, other.right),
+      Math.max(this.top, other.top),
+      Math.min(this.bottom, other.bottom)
     )
   }
 

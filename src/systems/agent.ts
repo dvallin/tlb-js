@@ -1,6 +1,6 @@
 import { TlbWorld, ComponentName, TlbSystem } from '../tlb'
 import { Vector } from '../spatial'
-import { WorldMap, WorldMapResource } from '../resources/world-map'
+import { WorldMap, WorldMapResource, Level } from '../resources/world-map'
 import { AgentComponent, Action } from '../components/agent'
 import { PositionComponent } from '../components/position'
 import { Entity } from '../ecs/entity'
@@ -15,14 +15,14 @@ import { dropAt } from '../array-utils'
 import { createDoor, AssetType, createAssetFromPosition } from '../components/asset'
 import { RegionComponent } from '../components/region'
 import { Shape } from '../geometry/shape'
-import { LightComponent } from '../components/light'
-import { Color } from '../renderer/color'
+import { createLight } from '../components/light'
 import { FovComponent } from '../components/fov'
 import { createCharacterStatsComponent, CharacterStatsComponent } from '../components/character-stats'
 import { AiComponent } from '../components/ai'
 import { ItemComponent, InventoryComponent, EquipedItemsComponent } from '../components/items'
 import { HasActionComponent } from '../components/action'
 import { ActiveEffectsComponent } from '../components/effects'
+import { Color } from '../renderer/color'
 
 export interface PositionedAgent {
   position: PositionComponent
@@ -72,7 +72,7 @@ export class Agent implements TlbSystem {
     }
 
     const footprint = this.footprint(state.position.position, state.agent.direction, state.agent.width)
-    const map: WorldMap = world.getResource<WorldMapResource>('map')
+    const map = world.getResource<WorldMapResource>('map').levels[state.position.level]
     const canRender = map.isShapeFree(world, footprint)
     if (canRender) {
       return 'render'
@@ -97,6 +97,7 @@ export class Agent implements TlbSystem {
 
   public takeAction(world: TlbWorld, entity: Entity, state: PositionedAgent, action: Action): void {
     state.agent.actions.push(action)
+    const level = state.position.level
     switch (action) {
       case 'render': {
         this.render(world, state)
@@ -107,12 +108,12 @@ export class Agent implements TlbSystem {
         world
           .editEntity(entity)
           .withComponent<AgentComponent>('agent', { ...state.agent, direction })
-          .withComponent<PositionComponent>('position', { position })
+          .withComponent<PositionComponent>('position', { level, position })
         break
       }
       case 'move': {
         const position = this.move(state)
-        world.editEntity(entity).withComponent<PositionComponent>('position', { position })
+        world.editEntity(entity).withComponent<PositionComponent>('position', { level, position })
         break
       }
       case 'createRoom': {
@@ -128,8 +129,9 @@ export class Agent implements TlbSystem {
 
   public render(world: TlbWorld, state: PositionedAgent): void {
     const map: WorldMap = world.getResource<WorldMapResource>('map')
+    const level = state.position.level
     const footprint = this.footprint(state.position.position, state.agent.direction, state.agent.width)
-    footprint.foreach(position => createFeature(world, map, position, 'corridor'))
+    footprint.foreach(position => createFeature(world, map, level, position, 'corridor'))
     let moves = 0
     for (const action of state.agent.actions) {
       if (action === 'move') {
@@ -137,12 +139,13 @@ export class Agent implements TlbSystem {
       }
     }
     if (moves % 10 === 0) {
-      this.spawnLight(world, map, state.position.position)
+      const color = new Color([this.random.integerBetween(0, 255), this.random.integerBetween(0, 255), this.random.integerBetween(0, 255)])
+      createLight(world, map, level, state.position.position, color)
     }
   }
 
   public createRoom(world: TlbWorld, state: PositionedAgent): void {
-    const map: WorldMap = world.getResource<WorldMapResource>('map')
+    const map = world.getResource<WorldMapResource>('map')
     const currentDirection = state.agent.direction
     const width = state.agent.width
     const footprint = this.footprint(state.position.position, currentDirection, width)
@@ -157,16 +160,18 @@ export class Agent implements TlbSystem {
 
     const entry = this.footprint(doorPosition, direction, doorWidth)
     const room = this.roomGenerator.generate(entry, direction)
-    if (this.isInRegion(state, room.shape) && map.isShapeFree(world, room.shape.grow())) {
+    if (this.isInRegion(state, room.shape) && map.levels[state.position.level].isShapeFree(world, room.shape.grow())) {
       this.buildRoom(world, state, map, room)
     }
   }
 
   public buildRoom(world: TlbWorld, state: PositionedAgent, map: WorldMap, room: Room): void {
-    room.shape.foreach(p => createFeature(world, map, p, 'room'))
+    const level = state.position.level
+    room.shape.foreach(p => createFeature(world, map, level, p, 'room'))
 
-    this.spawnLight(world, map, room.shape.bounds().center)
-    this.spawnEnemy(world, map, this.random.insideRectangle(room.shape.bounds()))
+    const color = new Color([this.random.integerBetween(0, 255), this.random.integerBetween(0, 255), this.random.integerBetween(0, 255)])
+    createLight(world, map, level, room.shape.bounds().center, color)
+    this.spawnEnemy(world, map, level, this.random.insideRectangle(room.shape.bounds()))
 
     let remainingSpawns = this.random.integerBetween(0, 2)
     while (remainingSpawns-- > 0 && room.availableEntries.length > 0) {
@@ -175,25 +180,29 @@ export class Agent implements TlbSystem {
       const agentDirection = oppositeOf(exitSlot.direction)
       const exitWidth = this.random.integerBetween(1, 3)
       const largerShape = this.footprint(exitSlot.position, agentDirection, exitWidth + 2)
-      if (map.isShapeFree(world, largerShape)) {
+      if (map.levels[level].isShapeFree(world, largerShape)) {
         dropAt(room.availableEntries, exitIndex)
         room.entries.push(this.footprint(exitSlot.position, agentDirection, exitWidth))
         if (state.agent.generation < this.maximumGenerations) {
-          this.spawnAgent(world, exitSlot.position, exitWidth, agentDirection, state.agent.generation + 1, state.agent.allowedRegion)
+          this.spawnAgent(world, level, exitSlot.position, exitWidth, agentDirection, state.agent.generation + 1, state.agent.allowedRegion)
         }
       }
     }
 
     room.entries.forEach(entry => {
-      entry.foreach(p => createFeature(world, map, p, 'corridor'))
-      createDoor(world, map, entry)
+      entry.foreach(p => createFeature(world, map, level, p, 'corridor'))
+      createDoor(world, map, level, entry)
     })
 
     let remainingAssets = this.random.integerBetween(1, 2)
     while (remainingAssets-- > 0 && room.availableAssets.length > 0) {
       const assetIndex = this.random.integerBetween(0, room.availableAssets.length - 1)
       const assetSlot = room.availableAssets[assetIndex]
-      const hasWall = map.shapeHasSome(world, FunctionalShape.lN(assetSlot.position, 2), f => f === undefined || f.type === 'wall')
+      const hasWall = map.levels[level].shapeHasSome(
+        world,
+        FunctionalShape.lN(assetSlot.position, 2),
+        f => f === undefined || f.type === 'wall'
+      )
 
       const possibleAssets: AssetType[] = []
       if (hasWall) {
@@ -203,7 +212,7 @@ export class Agent implements TlbSystem {
       const assetType = this.random.pick<AssetType>(possibleAssets)
       dropAt(room.availableAssets, assetIndex)
 
-      const entity = createAssetFromPosition(world, map, assetSlot.position, assetType)
+      const entity = createAssetFromPosition(world, map, level, assetSlot.position, assetType)
       switch (assetType) {
         case 'trash':
         case 'locker':
@@ -217,7 +226,7 @@ export class Agent implements TlbSystem {
   }
 
   public changeDirection(world: TlbWorld, state: PositionedAgent): { direction: Direction; position: Vector } {
-    const map: WorldMap = world.getResource<WorldMapResource>('map')
+    const map = world.getResource<WorldMapResource>('map').levels[state.position.level]
     const currentDirection = state.agent.direction
     const width = state.agent.width
     const footprint = this.footprint(state.position.position, currentDirection, width)
@@ -277,7 +286,7 @@ export class Agent implements TlbSystem {
 
   public freeCells(
     world: TlbWorld,
-    map: WorldMap,
+    level: Level,
     state: PositionedAgent,
     position: Vector,
     direction: Direction,
@@ -288,7 +297,7 @@ export class Agent implements TlbSystem {
     let steps = 0
     let nextPosition = position.add(delta)
     let positions = this.footprint(nextPosition, direction, width + 2)
-    while (this.isInRegion(state, positions) && map.isShapeFree(world, positions)) {
+    while (this.isInRegion(state, positions) && level.isShapeFree(world, positions)) {
       steps++
       nextPosition = nextPosition.add(delta)
       positions = this.footprint(nextPosition, direction, width + 2)
@@ -315,6 +324,7 @@ export class Agent implements TlbSystem {
 
   public spawnAgent(
     world: TlbWorld,
+    level: number,
     position: Vector,
     width: number,
     direction: Direction,
@@ -330,12 +340,10 @@ export class Agent implements TlbSystem {
         generation,
         allowedRegion,
       })
-      .withComponent<PositionComponent>('position', {
-        position,
-      })
+      .withComponent<PositionComponent>('position', { level, position })
   }
 
-  public spawnEnemy(world: TlbWorld, map: WorldMap, position: Vector): void {
+  public spawnEnemy(world: TlbWorld, map: WorldMap, level: number, position: Vector): void {
     const elite = this.random.decision(0.2)
 
     const characterType = elite ? 'eliteGuard' : 'guard'
@@ -348,7 +356,7 @@ export class Agent implements TlbSystem {
       .createEntity()
       .withComponent('npc', {})
       .withComponent<FeatureComponent>('feature', { type: characterType })
-      .withComponent<PositionComponent>('position', { position: centeredPosition })
+      .withComponent<PositionComponent>('position', { level, position: centeredPosition })
       .withComponent<FovComponent>('fov', { fov: [] })
       .withComponent<AiComponent>('ai', { type: 'rushing', state: 'idle' })
       .withComponent<HasActionComponent>('has-action', { actions: ['longMove', 'hit', 'rush', 'endTurn'] })
@@ -356,17 +364,6 @@ export class Agent implements TlbSystem {
       .withComponent<InventoryComponent>('inventory', { content: [weapon] })
       .withComponent<EquipedItemsComponent>('equiped-items', { equipment: [{ entity: weapon, bodyParts: ['leftArm'] }] })
       .withComponent<ActiveEffectsComponent>('active-effects', { effects: [] }).entity
-    map.setCharacter(position, entity)
-  }
-
-  public spawnLight(world: TlbWorld, map: WorldMap, position: Vector): void {
-    const entity = world
-      .createEntity()
-      .withComponent<LightComponent>('light', {
-        color: new Color([this.random.integerBetween(0, 255), this.random.integerBetween(0, 255), this.random.integerBetween(0, 255)]),
-      })
-      .withComponent<PositionComponent>('position', { position })
-      .withComponent('active', {}).entity
-    map.addLight(position, entity)
+    map.levels[level].setCharacter(position, entity)
   }
 }

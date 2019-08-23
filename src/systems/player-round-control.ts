@@ -170,10 +170,11 @@ export class PlayerRoundControl implements TlbSystem {
 
   public findTarget(world: TlbWorld, input: Input, viewport: Viewport, map: WorldMap, entity: Entity, attack: Attack): Entity | undefined {
     const range = attack.range
+    const region = map.levels[viewport.level]
     const path = this.selectAttackPath(world, input, viewport, map, entity, range)
     if (path !== undefined) {
       for (let i = 0; i < path.path.length; ++i) {
-        let target = map.getCharacter(path.path[i])
+        let target = region.getCharacter(path.path[i])
         const hasEnemy = target !== undefined && target !== entity
         if (hasEnemy) {
           return target
@@ -214,13 +215,14 @@ export class PlayerRoundControl implements TlbSystem {
     if (input.position !== undefined) {
       const cursor = viewport.fromDisplay(input.position)
       const position = world.getComponent<PositionComponent>(entity, 'position')!
-      const path = this.queries.shortestPath(world, position.position, cursor, {
+      const region = map.levels[position.level]
+      const path = this.queries.shortestPath(world, position.level, position.position, cursor, {
         maximumCost: movement.range,
         onlyDiscovered: true,
       })
       if (path !== undefined) {
         path.path.forEach(position => {
-          const tile = map.getTile(position)!
+          const tile = region.getTile(position)!
           world.editEntity(tile).withComponent<OverlayComponent>('overlay', { background: primary[2] })
         })
 
@@ -243,15 +245,16 @@ export class PlayerRoundControl implements TlbSystem {
     if (input.position !== undefined) {
       const cursor = viewport.fromDisplay(input.position)
       const position = world.getComponent<PositionComponent>(entity, 'position')!
-      const path = this.queries.ray(world, position.position, cursor, { maximumCost: range })
+      const path = this.queries.ray(world, position.level, position.position, cursor, { maximumCost: range })
       if (path !== undefined) {
+        const level = map.levels[position.level]
         path.path.forEach(p => {
-          const target = map.getCharacter(p)
+          const target = level.getCharacter(p)
           const hasEnemy = target !== undefined && target !== entity
           if (hasEnemy) {
             world.editEntity(target!).withComponent<OverlayComponent>('overlay', { background: primary[3] })
           } else {
-            const tile = map.getTile(p)!
+            const tile = level.getTile(p)!
             world.editEntity(tile).withComponent<OverlayComponent>('overlay', { background: primary[1] })
           }
         })

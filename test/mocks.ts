@@ -1,5 +1,5 @@
 import { Storage } from '../src/ecs/storage'
-import { WorldMapResource } from '../src/resources/world-map'
+import { WorldMapResource, Level } from '../src/resources/world-map'
 import { Renderer } from '../src/renderer/renderer'
 import { ComponentName, TlbWorld, ResourceName } from '../src/tlb'
 import { Random } from '../src/random'
@@ -10,7 +10,7 @@ import { SetSpace } from '../src/spatial/set-space'
 import { Rectangle } from '../src/geometry/rectangle'
 import { Input } from '../src/resources/input'
 import { UI } from '../src/resources/ui'
-import { Viewport } from '../src/resources/viewport'
+import { Viewport, ViewportResource } from '../src/resources/viewport'
 import { Log, LogResource } from '../src/resources/log'
 
 export function mockComponent<T>(world: TlbWorld, component: ComponentName): Storage<T> {
@@ -39,16 +39,17 @@ function mockStackedSpace<T>(): StackedSpace<T> {
 }
 
 export function mockMap(world: TlbWorld): WorldMapResource {
-  const map: WorldMapResource = {
-    kind: 'map' as ResourceName,
-    update: jest.fn(),
-
-    boundaries: new Rectangle(0, 0, 0, 0),
+  const level: Level = {
+    boundary: new Rectangle(0, 0, 0, 0),
     tiles: mockSpace<Entity>(),
     characters: mockSpace<Entity>(),
+    rooms: mockSpace<Entity>(),
     visible: mockSetSpace(),
     discovered: mockSetSpace(),
     lights: mockStackedSpace<Entity>(),
+
+    setRoom: jest.fn(),
+    getRoom: jest.fn(),
 
     setTile: jest.fn(),
     getTile: jest.fn(),
@@ -74,6 +75,12 @@ export function mockMap(world: TlbWorld): WorldMapResource {
     isShapeBlocked: jest.fn(),
     shapeHasAll: jest.fn(),
     shapeHasSome: jest.fn(),
+  }
+  const map: WorldMapResource = {
+    kind: 'map' as ResourceName,
+    update: jest.fn(),
+    width: 0,
+    levels: [level],
   }
   world.registerResource(map)
   return map
@@ -130,7 +137,7 @@ export function mockUi(world: TlbWorld): UI {
 }
 
 export function mockViewport(world: TlbWorld): Viewport {
-  const viewport = {
+  const viewport: ViewportResource = {
     kind: 'viewport' as ResourceName,
     update: jest.fn(),
     fromDisplay: jest.fn(),
@@ -138,8 +145,13 @@ export function mockViewport(world: TlbWorld): Viewport {
     toDisplay: jest.fn(),
     focus: jest.fn(),
     addLayer: jest.fn(),
-    gridLocked: false,
+
     boundaries: new Vector([0, 1]),
+
+    gridLocked: false,
+    topLeft: new Vector([0, 0]),
+    level: 0,
+    layers: [],
   }
   world.registerResource(viewport)
   return viewport

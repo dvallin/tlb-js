@@ -120,16 +120,16 @@ export function getFeature(world: TlbWorld, entity: Entity): Feature | undefined
   return undefined
 }
 
-export function createFeature(world: TlbWorld, map: WorldMap, position: Vector, type: FeatureType): Entity {
-  const e = map.getTile(position)
+export function createFeature(world: TlbWorld, map: WorldMap, level: number, position: Vector, type: FeatureType): Entity {
+  const e = map.levels[level].getTile(position)
   if (e !== undefined) {
     throw new Error(`there is already a tile at ${position.key}`)
   }
 
   const entity = world
     .createEntity()
-    .withComponent<PositionComponent>('position', { position })
+    .withComponent<PositionComponent>('position', { level, position })
     .withComponent<FeatureComponent>('feature', { type }).entity
-  map.setTile(position, entity)
+  map.levels[level].setTile(position, entity)
   return entity
 }

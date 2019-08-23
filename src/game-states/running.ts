@@ -39,7 +39,7 @@ export class Running extends AbstractState {
   }
 
   public spawnPlayer(world: TlbWorld, map: WorldMap, spawn: Entity): void {
-    const position = world.getComponent<PositionComponent>(spawn, 'position')!.position
+    const position = world.getComponent<PositionComponent>(spawn, 'position')!
     const stats = createCharacterStatsComponent('player')
     const nailgun = world.createEntity().withComponent<ItemComponent>('item', { type: 'nailGun' }).entity
     const rifle = world.createEntity().withComponent<ItemComponent>('item', { type: 'rifle' }).entity
@@ -50,7 +50,7 @@ export class Running extends AbstractState {
       .createEntity()
       .withComponent<{}>('player', {})
       .withComponent<{}>('viewport-focus', {})
-      .withComponent<PositionComponent>('position', { position })
+      .withComponent<PositionComponent>('position', { ...position })
       .withComponent<FeatureComponent>('feature', { type: 'player' })
       .withComponent<FovComponent>('fov', { fov: [] })
       .withComponent<HasActionComponent>('has-action', { actions: ['longMove', 'hit', 'rush', 'endTurn'] })
@@ -64,7 +64,7 @@ export class Running extends AbstractState {
     ui.setOverview(world, player)
     ui.setInventory(world, player)
     ui.setLog(world)
-    map.setCharacter(position, player)
+    map.levels[position.level].setCharacter(position.position, player)
   }
 
   public setupAnchor(world: TlbWorld): void {
@@ -73,13 +73,13 @@ export class Running extends AbstractState {
       .createEntity()
       .withComponent<{}>('free-mode-anchor', {})
       .withComponent<{}>('viewport-focus', {})
-      .withComponent<PositionComponent>('position', { position })
+      .withComponent<PositionComponent>('position', { level: 0, position })
   }
 
   public createUILayer(world: TlbWorld): void {
     const viewport: Viewport = world.getResource<ViewportResource>('viewport')
     viewport.addLayer({
-      getRenderable: (world, position) => {
+      getRenderable: (world, _, position) => {
         const ui = world.getResource<UIResource>('ui')
         const p = position.floor()
         return { entity: undefined, opaque: !ui.hasElement(p), centered: true }

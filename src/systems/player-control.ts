@@ -1,7 +1,7 @@
 import { ComponentName, TlbSystem, TlbWorld } from '../tlb'
 import { PositionComponent } from '../components/position'
 import { Input, InputResource } from '../resources/input'
-import { WorldMap, WorldMapResource } from '../resources/world-map'
+import { WorldMapResource } from '../resources/world-map'
 import { Entity } from '../ecs/entity'
 import { CharacterStatsComponent, speed } from '../components/character-stats'
 
@@ -15,11 +15,11 @@ export class PlayerControl implements TlbSystem {
     const delta = input.createMovementDelta()
     if (delta.squaredLength() > 0) {
       const newPosition = position.position.add(delta.mult(speed(stats)))
-      const map: WorldMap = world.getResource<WorldMapResource>('map')
-      if (!map.isBlocking(world, newPosition.floor(), entity)) {
-        map.removeCharacter(position.position.floor())
-        map.setCharacter(newPosition.floor(), entity)
-        world.editEntity(entity).withComponent('position', { position: newPosition })
+      const level = world.getResource<WorldMapResource>('map').levels[position.level]
+      if (!level.isBlocking(world, newPosition.floor(), entity)) {
+        level.removeCharacter(position.position.floor())
+        level.setCharacter(newPosition.floor(), entity)
+        world.editEntity(entity).withComponent<PositionComponent>('position', { level: position.level, position: newPosition })
       }
     }
   }

@@ -23,34 +23,34 @@ describe('PlayerControl', () => {
     world.registerComponentStorage('character-stats', new VectorStorage<CharacterStatsComponent>())
     world
       .createEntity()
-      .withComponent('position', { position: new Vector([2, 3]) })
+      .withComponent<PositionComponent>('position', { level: 0, position: new Vector([2, 3]) })
       .withComponent<CharacterStatsComponent>('character-stats', createCharacterStatsComponent('player'))
   })
 
   it('only adds delta if non blocking', () => {
     input.createMovementDelta = jest.fn().mockReturnValue(new Vector([-1, 0]))
-    mockReturnValue(map.isBlocking, true)
+    mockReturnValue(map.levels[0].isBlocking, true)
 
     system.update(world, 0)
 
-    expect(world.getComponent(0, 'position')).toEqual({ position: new Vector([2, 3]) })
+    expect(world.getComponent(0, 'position')).toEqual({ level: 0, position: new Vector([2, 3]) })
   })
 
   describe('movement allowed', () => {
     beforeEach(() => {
       input.createMovementDelta = jest.fn().mockReturnValue(new Vector([-1, 0]))
-      mockReturnValue(map.isBlocking, false)
+      mockReturnValue(map.levels[0].isBlocking, false)
 
       system.update(world, 0)
     })
 
     it('adds delta times speed', () => {
-      expect(world.getComponent(0, 'position')).toEqual({ position: new Vector([1.7692307692307692, 3]) })
+      expect(world.getComponent(0, 'position')).toEqual({ level: 0, position: new Vector([1.7692307692307692, 3]) })
     })
 
     it('moves character', () => {
-      expect(map.removeCharacter).toHaveBeenCalledWith(new Vector([2, 3]))
-      expect(map.setCharacter).toHaveBeenCalledWith(new Vector([1, 3]), 0)
+      expect(map.levels[0].removeCharacter).toHaveBeenCalledWith(new Vector([2, 3]))
+      expect(map.levels[0].setCharacter).toHaveBeenCalledWith(new Vector([1, 3]), 0)
     })
   })
 })

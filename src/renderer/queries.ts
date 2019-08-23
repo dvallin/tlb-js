@@ -1,6 +1,6 @@
 import { FOV, Lighting } from 'rot-js'
 import { TlbWorld } from '../tlb'
-import { WorldMap, WorldMapResource } from '../resources/world-map'
+import { WorldMapResource } from '../resources/world-map'
 import { Vector } from '../spatial'
 import { Color } from './color'
 import { bfs } from './bfs'
@@ -18,11 +18,11 @@ export interface QueryParameters {
 }
 
 export class Queries {
-  public fov(world: TlbWorld, origin: Vector, callback: (pos: Vector, distance: number) => void) {
+  public fov(world: TlbWorld, level: number, origin: Vector, callback: (pos: Vector, distance: number) => void) {
     const originFloor = origin.floor()
-    const map: WorldMap = world.getResource<WorldMapResource>('map')
-    const fov = new FOV.RecursiveShadowcasting((x, y) => !map.isLightBlocking(world, new Vector([x, y])), { topology: 8 })
-    const seenAlready = new DiscreteSetSpace()
+    const map = world.getResource<WorldMapResource>('map')
+    const fov = new FOV.RecursiveShadowcasting((x, y) => !map.levels[level].isLightBlocking(world, new Vector([x, y])), { topology: 8 })
+    const seenAlready = new DiscreteSetSpace(map.levels[level].boundary.width)
     fov.compute(originFloor.x, originFloor.y, 20, (x, y, distance) => {
       const position = new Vector([x, y])
       if (!seenAlready.has(position)) {
@@ -32,11 +32,11 @@ export class Queries {
     })
   }
 
-  public lighting(world: TlbWorld, origin: Vector, color: Color, callback: (pos: Vector, color: Color) => void) {
+  public lighting(world: TlbWorld, level: number, origin: Vector, color: Color, callback: (pos: Vector, color: Color) => void) {
+    const map = world.getResource<WorldMapResource>('map')
     const originFloor = origin.floor()
-    const map: WorldMap = world.getResource<WorldMapResource>('map')
-    const fov = new FOV.RecursiveShadowcasting((x, y) => !map.isLightBlocking(world, new Vector([x, y])), { topology: 8 })
-    const lighting = new Lighting((x, y) => (map.isLightBlocking(world, new Vector([x, y])) ? 0.0 : 1.0), { passes: 1 })
+    const fov = new FOV.RecursiveShadowcasting((x, y) => !map.levels[level].isLightBlocking(world, new Vector([x, y])), { topology: 8 })
+    const lighting = new Lighting((x, y) => (map.levels[level].isLightBlocking(world, new Vector([x, y])) ? 0.0 : 1.0), { passes: 1 })
     lighting.setLight(originFloor.x, originFloor.y, color.color)
     lighting.setFOV(fov)
     lighting.setOptions({ range: 6 })
@@ -47,24 +47,25 @@ export class Queries {
 
   public explore(
     world: TlbWorld,
+    level: number,
     origin: Vector,
     visit: (pos: Vector, distance: number) => boolean,
     params: Partial<QueryParameters>
   ): void {
+    const map = world.getResource<WorldMapResource>('map')
     const originFloor = origin.floor()
-    const map: WorldMap = world.getResource<WorldMapResource>('map')
     const maximumDepth = params.maximumCost || Number.MAX_SAFE_INTEGER
     const onlyDiscovered = params.onlyDiscovered || false
-    bfs(originFloor, target => FunctionalShape.lN(target, 1, false), visit, (target, depth) => {
-      if (depth >= maximumDepth || map.isBlocking(world, target)) {
+    bfs(map.levels[level].boundary.width, originFloor, target => FunctionalShape.lN(target, 1, false), visit, (target, depth) => {
+      if (depth >= maximumDepth || map.levels[level].isBlocking(world, target)) {
         return false
       }
-      return onlyDiscovered ? map.isDiscovered(target) : true
+      return onlyDiscovered ? map.levels[level].isDiscovered(target) : true
     })
   }
 
-  public shortestPath(world: TlbWorld, origin: Vector, target: Vector, params: Partial<QueryParameters>): Path | undefined {
-    const map: WorldMap = world.getResource<WorldMapResource>('map')
+  public shortestPath(world: TlbWorld, level: number, origin: Vector, target: Vector, params: Partial<QueryParameters>): Path | undefined {
+    const map = world.getResource<WorldMapResource>('map')
     const onlyDiscovered = params.onlyDiscovered || false
     const originFloor = origin.floor()
     const targetFloor = target.floor()
@@ -74,10 +75,10 @@ export class Queries {
       originFloor,
       targetFloor,
       (current, neighbour) => {
-        if (map.isBlocking(world, neighbour)) {
+        if (map.levels[level].isBlocking(world, neighbour)) {
           return undefined
         }
-        if (onlyDiscovered && !map.isDiscovered(neighbour)) {
+        if (onlyDiscovered && !map.levels[level].isDiscovered(neighbour)) {
           return undefined
         }
         return current.minus(neighbour).l1()
@@ -93,15 +94,15 @@ export class Queries {
     return undefined
   }
 
-  public ray(world: TlbWorld, origin: Vector, target: Vector, params: Partial<QueryParameters>): Path | undefined {
-    const map: WorldMap = world.getResource<WorldMapResource>('map')
+  public ray(world: TlbWorld, level: number, origin: Vector, target: Vector, params: Partial<QueryParameters>): Path | undefined {
+    const map = world.getResource<WorldMapResource>('map')
     const originFloor = origin.floor()
     const targetFloor = target.floor()
     const maximumCost = params.maximumCost || Number.MAX_SAFE_INTEGER
     const path: Vector[] = []
     const success = new LineSegment(targetFloor, originFloor).all(p => {
       path.push(p)
-      return !map.isLightBlocking(world, p, false)
+      return !map.levels[level].isLightBlocking(world, p, false)
     })
     if (success) {
       let cost = path.length - 1

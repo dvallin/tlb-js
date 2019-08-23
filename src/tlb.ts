@@ -12,7 +12,7 @@ import { FovComponent } from './components/fov'
 import { GroundComponent } from './components/ground'
 import { LightingComponent, LightComponent } from './components/light'
 import { PositionComponent } from './components/position'
-import { RegionComponent } from './components/region'
+import { RegionComponent, StructureComponent } from './components/region'
 
 import { Agent } from './systems/agent'
 import { Fov } from './systems/fov'
@@ -49,7 +49,6 @@ import { TriggersComponent, TriggeredByComponent } from './components/trigger'
 import { EffectComponent, ActiveEffectsComponent } from './components/effects'
 import { InventoryComponent, ItemComponent, EquipedItemsComponent } from './components/items'
 import { StartRound } from './systems/start-round'
-
 export type ComponentName =
   | 'active'
   | 'age'
@@ -73,6 +72,7 @@ export type ComponentName =
   | 'player'
   | 'position'
   | 'region'
+  | 'structure'
   | 'script'
   | 'selected-action'
   | 'active-effects'
@@ -120,10 +120,11 @@ export function registerComponents<S, R>(world: World<ComponentName, S, R>): voi
   world.registerComponentStorage('ground', new MapStorage<GroundComponent>())
   world.registerComponentStorage('has-action', new MapStorage<HasActionComponent>())
   world.registerComponentStorage('inventory', new MapStorage<InventoryComponent>())
+  world.registerComponentStorage('structure', new MapStorage<StructureComponent>())
   world.registerComponentStorage('equiped-items', new MapStorage<EquipedItemsComponent>())
   world.registerComponentStorage('item', new MapStorage<ItemComponent>())
   world.registerComponentStorage('light', new MapStorage<LightComponent>())
-  world.registerComponentStorage('lighting', new VectorStorage<LightingComponent>())
+  world.registerComponentStorage('lighting', new MapStorage<LightingComponent>())
   world.registerComponentStorage('npc', new SetStorage())
   world.registerComponentStorage('overlay', new MapStorage<OverlayComponent>())
   world.registerComponentStorage('player', new SingletonStorage<{}>())
@@ -143,7 +144,7 @@ export function registerComponents<S, R>(world: World<ComponentName, S, R>): voi
 }
 
 export function registerResources(world: World<ComponentName, SystemName, ResourceName>, renderer: Renderer): void {
-  world.registerResource(new WorldMapResource())
+  world.registerResource(new WorldMapResource(256))
   world.registerResource(new ViewportResource(renderer.boundaries))
   world.registerResource(new InputResource(e => renderer.eventToPosition(e)))
   world.registerResource(new UIResource())
@@ -166,7 +167,7 @@ export function registerSystems(
   world.registerSystem('player-control', new PlayerControl())
   world.registerSystem('player-interaction', new PlayerInteraction())
   world.registerSystem('player-round-control', new PlayerRoundControl(queries, new Random(uniform)))
-  world.registerSystem('region-creator', new RegionCreator(new Random(uniform)))
+  world.registerSystem('region-creator', new RegionCreator(uniform))
   world.registerSystem('script', new Script())
   world.registerSystem('trigger', new Trigger(pushState))
   world.registerSystem('start-round', new StartRound(new Random(uniform)))

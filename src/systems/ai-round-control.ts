@@ -44,7 +44,7 @@ export class AiRoundControl implements TlbSystem {
 
     if (target !== undefined) {
       const targetPosition = world.getComponent<PositionComponent>(target, 'position')!
-      const path = this.queries.ray(world, position.position, targetPosition.position, {})
+      const path = this.queries.ray(world, position.level, position.position, targetPosition.position, {})
 
       const movementActions: SelectedAction[] = []
       const fightActions: SelectedAction[] = []
@@ -121,7 +121,7 @@ export class AiRoundControl implements TlbSystem {
   public move(world: TlbWorld, entity: Entity, target: Entity, movement: Movement) {
     const position = world.getComponent<PositionComponent>(entity, 'position')!
     const targetPosition = world.getComponent<PositionComponent>(target, 'position')!
-    const path = this.queries.shortestPath(world, position.position, targetPosition.position, {
+    const path = this.queries.shortestPath(world, position.level, position.position, targetPosition.position, {
       maximumCost: movement.range,
       bestEffort: true,
     })
@@ -135,7 +135,7 @@ export class AiRoundControl implements TlbSystem {
   public attack(world: TlbWorld, entity: Entity, target: Entity, attack: Attack) {
     const position = world.getComponent<PositionComponent>(entity, 'position')!
     const targetPosition = world.getComponent<PositionComponent>(target!, 'position')!
-    const path = this.queries.ray(world, position.position, targetPosition.position, {})
+    const path = this.queries.ray(world, position.level, position.position, targetPosition.position, {})
     if (path !== undefined && path.cost <= attack.range) {
       const bodyPart = this.chooseBodyPart(world, target!)
       attackTarget(world, this.random, entity, target!, bodyPart!, attack)

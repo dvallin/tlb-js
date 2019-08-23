@@ -140,11 +140,11 @@ describe('RotRenderer', () => {
       })
 
       it('renders features', () => {
-        const position = { position: new Vector([0, 1]) }
+        const position = { level: 0, position: new Vector([0, 1]) }
 
         renderer.renderFeature(world, viewport, 42, true, features['player'], position)
 
-        expect(map.isDiscovered).toHaveBeenCalledWith(new Vector([0, 1]))
+        expect(map.levels[0].isDiscovered).toHaveBeenCalledWith(new Vector([0, 1]))
       })
     })
   })

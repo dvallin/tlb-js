@@ -24,17 +24,17 @@ describe('createAssetFromPosition', () => {
     const position = new Vector([0, 0])
 
     // when / then
-    expect(() => createAssetFromPosition(world, map, position, 'door')).toThrowErrorMatchingSnapshot()
+    expect(() => createAssetFromPosition(world, map, 0, position, 'door')).toThrowErrorMatchingSnapshot()
   })
 
   it('throws error on blocking ground', () => {
     // given
     const position = new Vector([0, 0])
     const ground = world.createEntity().withComponent<FeatureComponent>('feature', { type: 'wall' }).entity
-    map.setTile(position, ground)
+    map.levels[0].setTile(position, ground)
 
     // when / then
-    expect(() => createAssetFromPosition(world, map, position, 'door')).toThrowErrorMatchingSnapshot()
+    expect(() => createAssetFromPosition(world, map, 0, position, 'door')).toThrowErrorMatchingSnapshot()
   })
 
   it('creates doors', () => {
@@ -43,17 +43,17 @@ describe('createAssetFromPosition', () => {
     const entities: Entity[] = []
     shape.foreach(position => {
       const ground = world.createEntity().withComponent<FeatureComponent>('feature', { type: 'corridor' }).entity
-      map.setTile(position, ground)
+      map.levels[0].setTile(position, ground)
       entities.push(ground)
     })
 
     // when
-    const asset = createDoor(world, map, shape)
+    const asset = createDoor(world, map, 0, shape)
 
     // then
     shape.foreach(position => {
-      const tile = map.getTile(position)!
-      expect(world.getComponent(tile, 'position')).toEqual({ position })
+      const tile = map.levels[0].getTile(position)!
+      expect(world.getComponent(tile, 'position')).toEqual({ position, level: 0 })
       expect(world.getComponent(tile, 'ground')).toEqual({ feature: 'corridor' })
       expect(world.getComponent(tile, 'feature')).toEqual({ type: 'door' })
       expect(world.getComponent(tile, 'triggered-by')).toEqual({ entity: asset })
@@ -67,14 +67,14 @@ describe('createAssetFromPosition', () => {
     // given
     const position = new Vector([0, 0])
     const ground = world.createEntity().withComponent<FeatureComponent>('feature', { type: 'corridor' }).entity
-    map.setTile(position, ground)
+    map.levels[0].setTile(position, ground)
 
     // when
-    const asset = createLocker(world, map, position)
+    const asset = createLocker(world, map, 0, position)
 
     // then
-    const tile = map.getTile(position)!
-    expect(world.getComponent(tile, 'position')).toEqual({ position })
+    const tile = map.levels[0].getTile(position)!
+    expect(world.getComponent(tile, 'position')).toEqual({ position, level: 0 })
     expect(world.getComponent(tile, 'ground')).toEqual({ feature: 'corridor' })
     expect(world.getComponent(tile, 'feature')).toEqual({ type: 'locker' })
     expect(world.getComponent(tile, 'triggered-by')).toEqual({ entity: asset })
@@ -87,14 +87,14 @@ describe('createAssetFromPosition', () => {
     // given
     const position = new Vector([0, 0])
     const ground = world.createEntity().withComponent<FeatureComponent>('feature', { type: 'corridor' }).entity
-    map.setTile(position, ground)
+    map.levels[0].setTile(position, ground)
 
     // when
-    const asset = createTrash(world, map, position)
+    const asset = createTrash(world, map, 0, position)
 
     // then
-    const tile = map.getTile(position)!
-    expect(world.getComponent(tile, 'position')).toEqual({ position })
+    const tile = map.levels[0].getTile(position)!
+    expect(world.getComponent(tile, 'position')).toEqual({ position, level: 0 })
     expect(world.getComponent(tile, 'ground')).toEqual({ feature: 'corridor' })
     expect(world.getComponent(tile, 'feature')).toEqual({ type: 'trash' })
     expect(world.getComponent(tile, 'triggered-by')).toEqual({ entity: asset })

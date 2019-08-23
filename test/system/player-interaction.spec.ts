@@ -45,7 +45,7 @@ describe('PlayerInteraction', () => {
 
       playerInteraction.update(world, 0)
 
-      const searchShape = callArgument<Shape>(playerInteraction.findTrigger, 0, 2)
+      const searchShape = callArgument<Shape>(playerInteraction.findTrigger, 0, 3)
       const expectedShape = FunctionalShape.lN(new Vector([1, 1]), 1, true)
       expect(searchShape.equals(expectedShape)).toBeTruthy()
     })
@@ -62,7 +62,7 @@ describe('PlayerInteraction', () => {
 
   describe('findTrigger', () => {
     beforeEach(() => {
-      mockImplementation(map.getTile, (p: Vector) => (p.key === '1,1' ? 42 : undefined))
+      mockImplementation(map.levels[0].getTile, (p: Vector) => (p.key === '1,1' ? 42 : undefined))
     })
 
     it('finds triggers', () => {
@@ -70,7 +70,7 @@ describe('PlayerInteraction', () => {
       mockImplementation(triggers.get, entity => (entity === 42 ? {} : undefined))
       mockReturnValue(triggeredBy.get, undefined)
 
-      const trigger = playerInteraction.findTrigger(world, map, new Rectangle(0, 0, 2, 2))
+      const trigger = playerInteraction.findTrigger(world, map, 0, new Rectangle(0, 0, 2, 2))
 
       expect(trigger).toEqual(42)
     })
@@ -80,7 +80,7 @@ describe('PlayerInteraction', () => {
       mockImplementation(triggers.get, entity => (entity === 43 ? {} : undefined))
       mockReturnValue(triggeredBy.get, { entity: 43 })
 
-      const trigger = playerInteraction.findTrigger(world, map, new Rectangle(0, 0, 2, 2))
+      const trigger = playerInteraction.findTrigger(world, map, 0, new Rectangle(0, 0, 2, 2))
 
       expect(trigger).toEqual(43)
     })

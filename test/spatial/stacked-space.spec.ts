@@ -1,12 +1,8 @@
-import { DiscreteStackedSpace, SubStackedSpace, StackedSpace } from '../../src/spatial/stacked-space'
+import { DiscreteStackedSpace, StackedSpace } from '../../src/spatial/stacked-space'
 import { Vector } from '../../src/spatial/vector'
 
 describe('DiscreteStackedSpace', () => {
-  testStackedSpace(new Vector([0, 2]), () => new DiscreteStackedSpace())
-})
-
-describe('SubStackedSpace', () => {
-  testStackedSpace(new Vector([0]), () => new SubStackedSpace(new DiscreteStackedSpace(), (v: Vector) => new Vector([v.x, 2])))
+  testStackedSpace(new Vector([0, 2]), () => new DiscreteStackedSpace(10))
 })
 
 function testStackedSpace(position: Vector, spaceBuilder: () => StackedSpace<string>): void {

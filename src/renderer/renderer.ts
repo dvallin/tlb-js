@@ -9,7 +9,7 @@ import { TlbWorld } from '../tlb'
 import { getFeature, Feature } from '../components/feature'
 import { PositionComponent } from '../components/position'
 import { Entity } from '../ecs/entity'
-import { WorldMap, WorldMapResource } from '../resources/world-map'
+import { WorldMapResource } from '../resources/world-map'
 import { LightingComponent } from '../components/light'
 import { OverlayComponent } from '../components/overlay'
 import { UI, UIResource } from '../resources/ui'
@@ -48,6 +48,7 @@ export class RotRenderer implements Renderer {
   ): RotRenderer {
     const ambientColor = new Color([120, 120, 120])
     const display = new Display(displayOptions)
+
     root.appendChild(display.getContainer() as Node)
     return new RotRenderer(display, ambientColor)
   }
@@ -89,11 +90,11 @@ export class RotRenderer implements Renderer {
     feature: Feature,
     position: PositionComponent
   ): void {
-    const map: WorldMap = world.getResource<WorldMapResource>('map')
+    const level = world.getResource<WorldMapResource>('map').levels[position.level]
     const p = position.position.floor()
-    if (map.isDiscovered(p)) {
+    if (level.isDiscovered(p)) {
       let lighting = undefined
-      if (map.isVisible(p)) {
+      if (level.isVisible(p)) {
         lighting = world.getComponent<LightingComponent>(entity, 'lighting')
       }
       const overlay = world.getComponent<OverlayComponent>(entity, 'overlay') || { background: undefined }
