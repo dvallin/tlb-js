@@ -11,14 +11,12 @@ import { InputResource, Input } from '../resources/input'
 import { WindowDecoration } from './window-decoration'
 import { Rectangle } from '../geometry/rectangle'
 import { calculateBrightness } from '../component-reducers/brigthness'
-import { FeatureType, FeatureComponent, features } from '../components/feature'
+import { FeatureComponent, FeatureProvider } from '../components/feature'
 import { ActiveEffectsComponent } from '../components/effects'
 import { renderBodyPartInfo } from './render-helpers'
-import { InventoryComponent, ItemComponent, items, EquipedItemsComponent, EquipmentAttachement } from '../components/items'
+import { InventoryComponent, ItemComponent, EquipedItemsComponent, EquipmentAttachement } from '../components/items'
 
-export interface CharacterDescription {
-  feature?: FeatureType
-}
+import { items } from '../assets/items'
 
 export interface State {
   bodyParts: WindowDecoration
@@ -31,7 +29,9 @@ export interface State {
   stats?: CharacterStatsComponent
   activeEffects?: ActiveEffectsComponent
   takeTurn?: TakeTurnComponent
-  enemies: CharacterDescription[]
+  enemies: {
+    feature?: FeatureProvider
+  }[]
   lighting?: LightingComponent
   inventory?: {
     item: ItemComponent
@@ -115,9 +115,8 @@ export class Overview implements UIElement {
         y++
         this.state.enemies.forEach(enemy => {
           if (enemy.feature !== undefined) {
-            const feature = features[enemy.feature]
-            renderer.character(feature.character, this.state.turn.topLeft.add(new Vector([1, y])), feature.diffuse)
-            renderer.text(feature.name, this.state.turn.topLeft.add(new Vector([3, y])), primary[1])
+            renderer.character(enemy.feature().character, this.state.turn.topLeft.add(new Vector([1, y])), enemy.feature().diffuse)
+            renderer.text(enemy.feature().name, this.state.turn.topLeft.add(new Vector([3, y])), primary[1])
             y++
           }
         })
@@ -153,12 +152,12 @@ export class Overview implements UIElement {
     this.state.takeTurn = world.getComponent<TakeTurnComponent>(this.state.focus, 'take-turn')
     this.state.enemies = []
     world.getStorage('took-turn').foreach(entity => {
-      const feature = world.getComponent<FeatureComponent>(entity, 'feature') || { type: undefined }
-      this.state.enemies.push({ feature: feature.type })
+      const feature = world.getComponent<FeatureComponent>(entity, 'feature') || { feature: undefined }
+      this.state.enemies.push({ feature: feature.feature })
     })
     world.getStorage('wait-turn').foreach(entity => {
-      const feature = world.getComponent<FeatureComponent>(entity, 'feature') || { type: undefined }
-      this.state.enemies.push({ feature: feature.type })
+      const feature = world.getComponent<FeatureComponent>(entity, 'feature') || { feature: undefined }
+      this.state.enemies.push({ feature: feature.feature })
     })
     this.state.activeEffects = world.getComponent<ActiveEffectsComponent>(this.state.focus, 'active-effects')
     this.state.stats = world.getComponent<CharacterStatsComponent>(this.state.focus, 'character-stats')

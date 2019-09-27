@@ -1,4 +1,4 @@
-import { CharacterStatsComponent, characterStats } from '../components/character-stats'
+import { CharacterStatsComponent } from '../components/character-stats'
 import { Entity } from '../ecs/entity'
 import { WorldMap, WorldMapResource } from '../resources/world-map'
 import { Log, LogResource } from '../resources/log'
@@ -6,7 +6,8 @@ import { PositionComponent } from '../components/position'
 import { TlbWorld } from '../tlb'
 import { EffectComponent } from '../components/effects'
 import { InventoryComponent } from '../components/items'
-import { createLoot } from '../components/asset'
+import { characterStats } from '../assets/characters'
+import { createAsset } from '../components/asset'
 
 export function damageBodyPart(
   world: TlbWorld,
@@ -58,7 +59,7 @@ export function kill(world: TlbWorld, entity: Entity) {
       .removeComponent('took-turn')
       .removeComponent('wait-turn')
 
-    const loot = createLoot(world, map, position.level, position.position.floor())
+    const loot = createAsset(world, map, position.level, position.position.floor(), 'up', 'loot')
     world.editEntity(loot).withComponent<InventoryComponent>('inventory', { ...inventory })
 
     const log: Log = world.getResource<LogResource>('log')

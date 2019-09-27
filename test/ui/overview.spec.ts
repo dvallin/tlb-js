@@ -12,14 +12,15 @@ import { ActiveEffectsComponent } from '../../src/components/effects'
 import { TakeTurnComponent } from '../../src/components/rounds'
 import { FeatureComponent } from '../../src/components/feature'
 import { takeSnapshot, MockRenderer, createMockRenderer, clear } from './mock-display'
+import { features } from '../../src/assets/features'
 
 const mockItems: { [idx: number]: ItemComponent } = {
   2: { type: 'bandages' },
   3: { type: 'deathPill' },
 }
 const mockFeatures: { [idx: number]: FeatureComponent } = {
-  4: { type: 'eliteGuard' },
-  5: { type: 'guard' },
+  4: { feature: () => features['eliteGuard'] },
+  5: { feature: () => features['guard'] },
 }
 
 describe('ActionSelector', () => {

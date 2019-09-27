@@ -1,10 +1,11 @@
 import { ComponentName, TlbSystem, TlbWorld } from '../tlb'
 import { Entity } from '../ecs/entity'
 import { Random } from '../random'
-import { CharacterStatsComponent, characterStats } from '../components/character-stats'
+import { CharacterStatsComponent } from '../components/character-stats'
 import { ActiveEffectsComponent } from '../components/effects'
 import { damageBodyPart } from '../component-reducers/damage-bodypart'
 import { TakeTurnComponent } from '../components/rounds'
+import { characterStats } from '../assets/characters'
 
 export class StartRound implements TlbSystem {
   public readonly components: ComponentName[] = ['start-turn', 'position']

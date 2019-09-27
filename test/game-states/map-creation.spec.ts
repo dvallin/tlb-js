@@ -39,7 +39,6 @@ describe('MapCreation', () => {
 
     it('starts systems', () => {
       expect(world.activeSystems).toContain('region-creator')
-      expect(world.activeSystems).toContain('agent')
     })
   })
 })

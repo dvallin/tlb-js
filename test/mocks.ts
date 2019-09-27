@@ -43,13 +43,13 @@ export function mockMap(world: TlbWorld): WorldMapResource {
     boundary: new Rectangle(0, 0, 0, 0),
     tiles: mockSpace<Entity>(),
     characters: mockSpace<Entity>(),
-    rooms: mockSpace<Entity>(),
+    structures: mockSpace<Entity>(),
     visible: mockSetSpace(),
     discovered: mockSetSpace(),
     lights: mockStackedSpace<Entity>(),
 
-    setRoom: jest.fn(),
-    getRoom: jest.fn(),
+    setStructure: jest.fn(),
+    getStructure: jest.fn(),
 
     setTile: jest.fn(),
     getTile: jest.fn(),
@@ -207,6 +207,7 @@ export function mockRandom(): Random {
     weightedDecision: jest.fn(),
     shuffle: jest.fn(),
     pick: jest.fn(),
+    pickIndex: jest.fn(),
     insideRectangle: jest.fn(),
   }
 }

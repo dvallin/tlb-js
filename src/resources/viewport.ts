@@ -16,7 +16,7 @@ export interface Viewport {
   fromDisplay(p: Position): Vector
   collectRenderables(world: TlbWorld): Renderable[]
   toDisplay(p: Vector, centered: boolean): Position
-  focus(region: number, position: Vector): void
+  focus(level: number, position: Vector): void
   addLayer(layer: Layer): void
   gridLocked: boolean
   boundaries: Vector

@@ -3,13 +3,14 @@ import { TlbWorld } from '../../src/tlb'
 import { World } from '../../src/ecs/world'
 import { mockComponent, mockReturnValue, mockQueries, mockRandom, mockImplementation, mockReturnValues } from '../mocks'
 import { Storage } from '../../src/ecs/storage'
-import { HasActionComponent, SelectedActionComponent, actions } from '../../src/components/action'
+import { HasActionComponent, SelectedActionComponent } from '../../src/components/action'
 import { EquipedItemsComponent } from '../../src/components/items'
 import { PositionComponent } from '../../src/components/position'
 import { Vector } from '../../src/spatial'
 import { Random } from '../../src/random'
 import { Queries } from '../../src/renderer/queries'
 import { TakeTurnComponent } from '../../src/components/rounds'
+import { actions } from '../../src/assets/actions'
 
 describe('AiRoundControl', () => {
   let world: TlbWorld

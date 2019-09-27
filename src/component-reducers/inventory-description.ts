@@ -1,7 +1,8 @@
 import { TlbWorld } from '../tlb'
-import { InventoryComponent, ItemComponent, items, Item, EquipedItemsComponent, EquipmentAttachement } from '../components/items'
+import { InventoryComponent, ItemComponent, Item, EquipedItemsComponent, EquipmentAttachement } from '../components/items'
 import { Entity } from '../ecs/entity'
 import { CharacterStatsComponent } from '../components/character-stats'
+import { items } from '../assets/items'
 
 export function maximumInventoryWeight(stats: CharacterStatsComponent): number {
   return stats.current.strength * 5

@@ -3,8 +3,9 @@ import { EffectComponent, ActiveEffectsComponent, Effect } from '../components/e
 import { Entity } from '../ecs/entity'
 import { CharacterStatsComponent } from '../components/character-stats'
 import { LogResource, Log } from '../resources/log'
-import { EquipedItemsComponent, ItemComponent, items } from '../components/items'
+import { EquipedItemsComponent, ItemComponent } from '../components/items'
 import { damageBodyPart, healBodyPart, kill } from '../component-reducers/damage-bodypart'
+import { items } from '../assets/items'
 
 export class ApplyEffects implements TlbSystem {
   public readonly components: ComponentName[] = ['effect']

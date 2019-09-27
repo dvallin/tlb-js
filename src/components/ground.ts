@@ -1,5 +1,5 @@
-import { FeatureType } from './feature'
+import { FeatureProvider } from './feature'
 
 export interface GroundComponent {
-  feature: FeatureType
+  feature: FeatureProvider
 }

@@ -7,16 +7,13 @@ import { primary, gray } from '../renderer/palettes'
 import { InputResource, Input } from '../resources/input'
 import { WindowDecoration } from './window-decoration'
 import { Rectangle } from '../geometry/rectangle'
-import { FeatureType } from '../components/feature'
 import { createInventoryDescription, InventoryDescription } from '../component-reducers/inventory-description'
 import { SelectorState, updateSelectorState } from './selector'
-import { EquipedItemsComponent, ItemComponent, items } from '../components/items'
+import { EquipedItemsComponent, ItemComponent } from '../components/items'
 import { CharacterStatsComponent } from '../components/character-stats'
 import { dropAt } from '../array-utils'
 
-export interface CharacterDescription {
-  feature?: FeatureType
-}
+import { items } from '../assets/items'
 
 export interface State {
   window: WindowDecoration

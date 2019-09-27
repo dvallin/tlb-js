@@ -1,6 +1,6 @@
 import { ComponentName, TlbSystem, TlbWorld } from '../tlb'
 import { AssetComponent, removeAsset } from '../components/asset'
-import { FeatureComponent, features } from '../components/feature'
+import { FeatureComponent } from '../components/feature'
 import { GroundComponent } from '../components/ground'
 import { Entity } from '../ecs/entity'
 import { TriggersComponent, TriggeredByComponent } from '../components/trigger'
@@ -54,8 +54,8 @@ export class Trigger implements TlbSystem {
       const triggers = world.getComponent<TriggersComponent>(entity, 'triggers')!
       const sourceFeature = world.getComponent<FeatureComponent>(triggers.entities[0], 'feature')!
       const targetFeature = world.getComponent<FeatureComponent>(triggeredBy.entity, 'feature')!
-      const targetText = features[targetFeature.type].name
-      const sourceText = features[sourceFeature.type].name
+      const targetText = targetFeature.feature().name
+      const sourceText = sourceFeature.feature().name
       ui.showInventoryTransferModal(world, entity, sourceText, triggeredBy.entity, targetText)
       this.pushState(new Modal(world.activeSystemsList()))
     } else if (!ui.inventoryTransferModalShowing()) {
@@ -72,8 +72,8 @@ export class Trigger implements TlbSystem {
   public swapGroundAndFeature(world: TlbWorld, entity: Entity): void {
     const feature = world.getComponent<FeatureComponent>(entity, 'feature')!
     const ground = world.getComponent<GroundComponent>(entity, 'ground')!
-    const featureType = feature.type
-    feature.type = ground.feature
-    ground.feature = featureType
+    const f = feature.feature
+    feature.feature = ground.feature
+    ground.feature = f
   }
 }

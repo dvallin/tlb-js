@@ -12,6 +12,7 @@ import { HasActionComponent } from '../components/action'
 import { InventoryComponent, ItemComponent, EquipedItemsComponent } from '../components/items'
 import { Entity } from '../ecs/entity'
 import { ActiveEffectsComponent } from '../components/effects'
+import { features } from '../assets/features'
 
 export class Running extends AbstractState {
   public constructor() {
@@ -51,7 +52,7 @@ export class Running extends AbstractState {
       .withComponent<{}>('player', {})
       .withComponent<{}>('viewport-focus', {})
       .withComponent<PositionComponent>('position', { ...position })
-      .withComponent<FeatureComponent>('feature', { type: 'player' })
+      .withComponent<FeatureComponent>('feature', { feature: () => features['player'] })
       .withComponent<FovComponent>('fov', { fov: [] })
       .withComponent<HasActionComponent>('has-action', { actions: ['longMove', 'hit', 'rush', 'endTurn'] })
       .withComponent<CharacterStatsComponent>('character-stats', stats)

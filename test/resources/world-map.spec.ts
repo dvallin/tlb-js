@@ -7,6 +7,7 @@ import { MapStorage } from '../../src/ecs/storage'
 import { PositionComponent } from '../../src/components/position'
 import { Rectangle } from '../../src/geometry/rectangle'
 import { Difference } from '../../src/geometry/difference'
+import { features } from '../../src/assets/features'
 
 describe('WorldMap', () => {
   describe('tile based queries', () => {
@@ -18,8 +19,8 @@ describe('WorldMap', () => {
 
       world.registerComponentStorage('position', new MapStorage<PositionComponent>())
       world.registerComponentStorage('feature', new MapStorage<FeatureComponent>())
-      createFeature(world, map, 0, new Vector([1, 0]), 'locker')
-      createFeature(world, map, 0, new Vector([1, 1]), 'corridor')
+      createFeature(world, map, 0, new Vector([1, 0]), () => features['locker'])
+      createFeature(world, map, 0, new Vector([1, 1]), () => features['corridor'])
     })
 
     describe('tileMatches', () => {
@@ -27,12 +28,6 @@ describe('WorldMap', () => {
         const predicate = jest.fn()
         map.levels[0].tileMatches(world, new Vector([0, 0]), predicate)
         expect(predicate).toHaveBeenCalledWith(undefined)
-      })
-
-      it('calls predicate with feature', () => {
-        const predicate = jest.fn()
-        map.levels[0].tileMatches(world, new Vector([1, 0]), predicate)
-        expect(predicate).toHaveBeenCalledWith({ type: 'locker' })
       })
     })
 

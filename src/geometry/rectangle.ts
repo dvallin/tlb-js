@@ -7,14 +7,16 @@ export class Rectangle extends AbstractShape {
     return new Rectangle(left, top, right - left + 1, bottom - top + 1)
   }
 
-  public static footprint(position: Vector, direction: Direction, width: number): Rectangle {
-    const delta: Vector = Vector.fromDirection(direction)
+  public static footprint(position: Vector, direction: Direction, size: Vector): Rectangle {
+    const up: Vector = Vector.fromDirection(direction).abs()
+    const right: Vector = Vector.fromDirection(direction)
       .perpendicular()
       .abs()
-    const length = Math.floor(width / 2)
-    const left = position.add(delta.mult(-length))
-    const right = left.add(delta.mult(width - 1))
-    return Rectangle.fromBounds(left.x, right.x, left.y, right.y)
+    const cx = Math.floor(size.x / 2)
+    const cy = Math.floor(size.y / 2)
+    const topLeft = position.add(right.mult(-cx)).add(up.mult(-cy))
+    const bottomRight = topLeft.add(right.mult(size.x - 1)).add(up.mult(size.y - 1))
+    return Rectangle.fromBounds(topLeft.x, bottomRight.x, topLeft.y, bottomRight.y)
   }
 
   public static centerAt(x: number, y: number, size: number): Rectangle {

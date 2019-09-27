@@ -1,4 +1,4 @@
-import { createFeature } from '../components/feature'
+import { createFeatureFromType } from '../components/feature'
 import { createLight } from '../components/light'
 import { RegionComponent, StructureComponent } from '../components/region'
 import { Entity } from '../ecs/entity'
@@ -12,6 +12,10 @@ import { WorldMap, WorldMapResource } from '../resources/world-map'
 import { Vector } from '../spatial'
 import { directions } from '../spatial/direction'
 import { ComponentName, TlbSystem, TlbWorld } from '../tlb'
+import { shapeOfAsset, createAssetFromShape } from '../components/asset'
+import { regionParams } from '../assets/complexes'
+import { embedComplexes } from '../generative/complex-embedder'
+import { fill } from '../generative/complex-filler'
 
 interface Corridor {
   kind: 'corridor'
@@ -41,15 +45,27 @@ export class RegionCreator implements TlbSystem {
     const region = world.getComponent<RegionComponent>(entity, 'region')!
 
     const structure = this.buildStructure(region.shape, 8, 15, 3) as Corridor
-
     const map = world.getResource<WorldMapResource>('map')
-    this.renderCorridors(world, map, region.level, structure)
-    this.renderRooms(world, map, region.level, structure)
-    this.createConnections(world, map, region.level)
+    this.renderCorridors(world, map, entity, region.level, structure)
+    this.renderRooms(world, map, entity, region.level, structure)
 
-    region.entry = structure.shape.bounds().center
+    this.createConnections(world, map, region.level)
+    region.entry = structure.shape.bounds().centerLeft
+
+    const rootStructure = map.levels[region.level].getStructure(region.entry)!
+    this.fillStructure(world, map, region.level, entity, rootStructure)
 
     world.editEntity(entity).removeComponent('active')
+  }
+
+  private fillStructure(world: TlbWorld, map: WorldMap, level: number, entity: Entity, structure: Entity): void {
+    const s = world.getComponent<StructureComponent>(structure, 'structure')!
+    if (s.region === entity) {
+      const region = world.getComponent<RegionComponent>(entity, 'region')!
+      const params = regionParams[region.type]
+      const embeddings = embedComplexes(world, this.uniform, entity, params)
+      embeddings.forEach(e => fill(world, map, level, e.embedding, this.uniform, e.structure))
+    }
   }
 
   private buildStructure(shape: Shape, minRoomWidth: number, maxRoomWidth: number, corridorWidth: number): Corridor | Room {
@@ -176,16 +192,17 @@ export class RegionCreator implements TlbSystem {
     return [a, b, c]
   }
 
-  private renderCorridors(world: TlbWorld, map: WorldMap, level: number, corridor: Corridor): void {
+  private renderCorridors(world: TlbWorld, map: WorldMap, level: number, region: Entity, corridor: Corridor): void {
     const entity = world.createEntity().withComponent<StructureComponent>('structure', {
       kind: 'corridor',
       shape: corridor.shape,
       connections: [],
+      region,
     }).entity
 
     corridor.shape.foreach(p => {
-      createFeature(world, map, level, p, 'corridor')
-      map.levels[level].setRoom(p, entity)
+      createFeatureFromType(world, map, level, p, 'corridor')
+      map.levels[level].setStructure(p, entity)
     })
 
     const color = new Color([
@@ -195,23 +212,25 @@ export class RegionCreator implements TlbSystem {
     ])
     createLight(world, map, level, corridor.shape.bounds().center, color)
 
-    corridor.exits.forEach(c => this.renderCorridors(world, map, level, c))
+    corridor.exits.forEach(c => this.renderCorridors(world, map, level, region, c))
   }
 
-  private renderRooms(world: TlbWorld, map: WorldMap, level: number, corridor: Corridor): void {
-    corridor.rooms.forEach(r => this.renderRoom(world, map, level, r))
-    corridor.exits.forEach(c => this.renderRooms(world, map, level, c))
+  private renderRooms(world: TlbWorld, map: WorldMap, level: number, region: Entity, corridor: Corridor): void {
+    corridor.rooms.forEach(r => this.renderRoom(world, map, level, region, r))
+    corridor.exits.forEach(c => this.renderRooms(world, map, level, region, c))
   }
 
-  private renderRoom(world: TlbWorld, map: WorldMap, level: number, room: Room): void {
+  private renderRoom(world: TlbWorld, map: WorldMap, level: number, region: Entity, room: Room): void {
+    const structureShape = room.shape.shrink()
     const entity = world.createEntity().withComponent<StructureComponent>('structure', {
       kind: 'room',
-      shape: room.shape,
+      shape: structureShape,
       connections: [],
+      region,
     }).entity
-    room.shape.shrink().foreach(p => {
-      createFeature(world, map, level, p, 'room')
-      map.levels[level].setRoom(p, entity)
+    structureShape.foreach(p => {
+      createFeatureFromType(world, map, level, p, 'room')
+      map.levels[level].setStructure(p, entity)
     })
 
     const color = new Color([
@@ -226,24 +245,28 @@ export class RegionCreator implements TlbSystem {
     this.uniform.shuffle(doors)
     const count = this.exponential.integerBetween(1, doors.length)
     for (let i = 0; i < count; ++i) {
-      doors[i].foreach(p => {
-        createFeature(world, map, level, p, 'corridor')
-        map.levels[level].setRoom(p, entity)
+      const shape = doors[i]
+      shape.foreach(p => {
+        createFeatureFromType(world, map, level, p, 'corridor')
+        map.levels[level].setStructure(p, entity)
       })
+      createAssetFromShape(world, map, level, shape, 'door')
     }
 
-    room.rooms.forEach(r => this.renderRoom(world, map, level, r))
+    room.rooms.forEach(r => this.renderRoom(world, map, level, region, r))
   }
 
   private findPossibleDoors(world: TlbWorld, map: WorldMap, level: number, rectangle: Rectangle): Shape[] {
     const result: Shape[] = []
     directions.forEach(direction => {
       const center = rectangle.centerOf(direction)
-      const footprint = Rectangle.footprint(center, direction, 3)
-      const entryFootprint = footprint.translate(Vector.fromDirection(direction))
-      const doorCanBeBuilt = entryFootprint.all(p => map.levels[level].tileMatches(world, p, t => t !== undefined && t.type !== 'wall'))
+      const shape = shapeOfAsset('door', center, direction)
+      const shapeInsideNeighbourRoom = shape.translate(Vector.fromDirection(direction))
+      const doorCanBeBuilt = shapeInsideNeighbourRoom.all(p =>
+        map.levels[level].tileMatches(world, p, t => t !== undefined && t.feature().name !== 'wall')
+      )
       if (doorCanBeBuilt) {
-        result.push(footprint)
+        result.push(shape)
       }
     })
     return result
@@ -251,12 +274,12 @@ export class RegionCreator implements TlbSystem {
 
   private createConnections(world: TlbWorld, map: WorldMap, level: number) {
     map.levels[level].boundary.foreach(p => {
-      const focus = map.levels[level].getRoom(p)
+      const focus = map.levels[level].getStructure(p)
       if (focus !== undefined) {
         const structure = world.getComponent<StructureComponent>(focus, 'structure')!
         directions.forEach(d => {
           const position = p.add(Vector.fromDirection(d))
-          const other = map.levels[level].getRoom(position)
+          const other = map.levels[level].getStructure(position)
           if (other !== undefined && other !== focus) {
             structure.connections.push({
               position,

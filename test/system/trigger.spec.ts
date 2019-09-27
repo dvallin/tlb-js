@@ -8,6 +8,7 @@ import { GroundComponent } from '../../src/components/ground'
 import { Trigger } from '../../src/systems/trigger'
 import { Entity } from '../../src/ecs/entity'
 import { TriggersComponent } from '../../src/components/trigger'
+import { features } from '../../src/assets/features'
 
 describe('Trigger', () => {
   let world: TlbWorld
@@ -15,7 +16,7 @@ describe('Trigger', () => {
   let actives: Storage<{}>
   let assets: Storage<AssetComponent>
   let triggers: Storage<TriggersComponent>
-  let features: Storage<FeatureComponent>
+  let featuresStorage: Storage<FeatureComponent>
   let grounds: Storage<GroundComponent>
   let triggeredBy: Storage<{}>
   beforeEach(() => {
@@ -24,7 +25,7 @@ describe('Trigger', () => {
     actives = mockComponent(world, 'active')
     assets = mockComponent<AssetComponent>(world, 'asset')
     triggers = mockComponent<TriggersComponent>(world, 'triggers')
-    features = mockComponent<FeatureComponent>(world, 'feature')
+    featuresStorage = mockComponent<FeatureComponent>(world, 'feature')
     grounds = mockComponent<GroundComponent>(world, 'ground')
     triggeredBy = mockComponent<{}>(world, 'triggered-by')
   })
@@ -47,15 +48,17 @@ describe('Trigger', () => {
     it('swaps ground and feature of all triggers', () => {
       mockReturnValue<TriggersComponent>(triggers.get, { entities: [1, 2] })
 
-      const featureComponents: FeatureComponent[] = [{ type: 'door' }, { type: 'corridor' }]
-      const groundComponents: GroundComponent[] = [{ feature: 'corridor' }, { feature: 'door' }]
-      mockImplementation(features.get, (e: Entity) => featureComponents[e - 1])
+      const featureComponents: FeatureComponent[] = [{ feature: () => features['door'] }, { feature: () => features['corridor'] }]
+      const groundComponents: GroundComponent[] = [{ feature: () => features['corridor'] }, { feature: () => features['door'] }]
+      mockImplementation(featuresStorage.get, (e: Entity) => featureComponents[e - 1])
       mockImplementation(grounds.get, (e: Entity) => groundComponents[e - 1])
 
       new Trigger(jest.fn()).update(world, 0)
 
-      expect(featureComponents).toEqual([{ type: 'corridor' }, { type: 'door' }])
-      expect(groundComponents).toEqual([{ feature: 'door' }, { feature: 'corridor' }])
+      expect(featureComponents[0].feature()).toEqual(features['corridor'])
+      expect(featureComponents[1].feature()).toEqual(features['door'])
+      expect(groundComponents[0].feature()).toEqual(features['door'])
+      expect(groundComponents[1].feature()).toEqual(features['corridor'])
     })
   })
 })

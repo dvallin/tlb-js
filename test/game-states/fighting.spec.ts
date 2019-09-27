@@ -2,11 +2,12 @@ import { Fighting } from '../../src/game-states/fighting'
 import { World } from '../../src/ecs/world'
 import { TlbWorld } from '../../src/tlb'
 import { mockComponent, mockReturnValue, mockViewport, mockImplementation, mockReturnValues } from '../mocks'
-import { characterStats, CharacterStatsComponent } from '../../src/components/character-stats'
+import { CharacterStatsComponent } from '../../src/components/character-stats'
 import { Viewport } from '../../src/resources/viewport'
 import { Entity } from '../../src/ecs/entity'
 import { TakeTurnComponent } from '../../src/components/rounds'
 import { Storage } from '../../src/ecs/storage'
+import { characterStats } from '../../src/assets/characters'
 
 describe('Fighting', () => {
   const state = new Fighting()

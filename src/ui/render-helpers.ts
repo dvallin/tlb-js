@@ -1,8 +1,9 @@
-import { CharacterStatsComponent, characterStats } from '../components/character-stats'
+import { CharacterStatsComponent } from '../components/character-stats'
 import { ActiveEffectsComponent } from '../components/effects'
 import { Renderer } from '../renderer/renderer'
 import { primary } from '../renderer/palettes'
 import { Vector } from '../spatial'
+import { characterStats } from '../assets/characters'
 
 export function renderBodyPartInfo(
   renderer: Renderer,

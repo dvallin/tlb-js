@@ -4,7 +4,6 @@ import { System } from './ecs/system'
 import { Resource } from './ecs/resource'
 
 import { AgeComponent } from './components/age'
-import { AgentComponent } from './components/agent'
 import { AssetComponent } from './components/asset'
 import { CharacterStatsComponent } from './components/character-stats'
 import { FeatureComponent } from './components/feature'
@@ -14,7 +13,6 @@ import { LightingComponent, LightComponent } from './components/light'
 import { PositionComponent } from './components/position'
 import { RegionComponent, StructureComponent } from './components/region'
 
-import { Agent } from './systems/agent'
 import { Fov } from './systems/fov'
 import { FreeModeControl } from './systems/free-mode-control'
 import { Light } from './systems/light'
@@ -52,7 +50,6 @@ import { StartRound } from './systems/start-round'
 export type ComponentName =
   | 'active'
   | 'age'
-  | 'agent'
   | 'ai'
   | 'asset'
   | 'character-stats'
@@ -85,7 +82,6 @@ export type ComponentName =
   | 'viewport-focus'
   | 'wait-turn'
 export type SystemName =
-  | 'agent'
   | 'ai-round-control'
   | 'start-round'
   | 'effect'
@@ -109,7 +105,6 @@ export type TlbSystem = System<ComponentName, SystemName, ResourceName>
 export function registerComponents<S, R>(world: World<ComponentName, S, R>): void {
   world.registerComponentStorage('active', new SetStorage())
   world.registerComponentStorage('age', new MapStorage<AgeComponent>())
-  world.registerComponentStorage('agent', new MapStorage<AgentComponent>())
   world.registerComponentStorage('ai', new MapStorage<AiComponent>())
   world.registerComponentStorage('asset', new MapStorage<AssetComponent>())
   world.registerComponentStorage('character-stats', new MapStorage<CharacterStatsComponent>())
@@ -157,7 +152,6 @@ export function registerSystems(
   pushState: (s: State) => void
 ): void {
   const uniform = new Uniform('some seed')
-  world.registerSystem('agent', new Agent(new Random(uniform)))
   world.registerSystem('ai-round-control', new AiRoundControl(queries, new Random(uniform)))
   world.registerSystem('effect', new ApplyEffects())
   world.registerSystem('fov', new Fov(queries))

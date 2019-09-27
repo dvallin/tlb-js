@@ -1,9 +1,11 @@
 import { TlbWorld } from '../tlb'
 import { Entity } from '../ecs/entity'
 import { TakeTurnComponent } from '../components/rounds'
-import { HasActionComponent, ActionType, actions } from '../components/action'
-import { EquipedItemsComponent, ItemComponent, items } from '../components/items'
+import { HasActionComponent } from '../components/action'
+import { EquipedItemsComponent, ItemComponent } from '../components/items'
 import { SelectableAction, ActionGroup } from '../ui/action-selector'
+import { ActionType, actions } from '../assets/actions'
+import { items } from '../assets/items'
 
 export function calculateAvailableActions(world: TlbWorld, entity: Entity, takeTurn: TakeTurnComponent): ActionGroup[] {
   const playerActionGroup = buildPlayerActionGroup(world, entity, takeTurn)

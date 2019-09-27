@@ -8,11 +8,12 @@ import { TlbWorld } from '../../src/tlb'
 import { World } from '../../src/ecs/world'
 import { Viewport } from '../../src/resources/viewport'
 import { Vector } from '../../src/spatial'
-import { features, FeatureComponent } from '../../src/components/feature'
+import { FeatureComponent } from '../../src/components/feature'
 import { Storage } from '../../src/ecs/storage'
 import { WorldMap } from '../../src/resources/world-map'
 import { Position } from '../../src/renderer/position'
 import { PositionComponent } from '../../src/components/position'
+import { features } from '../../src/assets/features'
 
 class C extends Color {
   public rgb: string
@@ -120,7 +121,7 @@ describe('RotRenderer', () => {
       it('renders only features', () => {
         renderer.renderFeature = jest.fn()
         const position = { position: new Vector([3, 0]) }
-        mockReturnValue(featureStorage.get, { type: 'player' })
+        mockReturnValue(featureStorage.get, { feature: () => features['player'] })
         mockReturnValue(positions.get, position)
 
         renderer.renderEntity(world, viewport, 42, true)

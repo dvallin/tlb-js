@@ -8,14 +8,14 @@ import { Entity } from '../ecs/entity'
 import { PositionComponent } from '../components/position'
 import { WorldMap, WorldMapResource } from '../resources/world-map'
 import { FunctionalShape } from '../geometry/functional-shape'
-import { createFeature, FeatureComponent } from '../components/feature'
+import { FeatureComponent, createFeatureFromType } from '../components/feature'
 import { ViewportResource, Viewport } from '../resources/viewport'
 
 export class MapCreation extends AbstractState {
   private startRegion: Entity | undefined
 
   public constructor() {
-    super(['region-creator', 'agent'])
+    super(['region-creator'])
   }
 
   public start(world: TlbWorld): void {
@@ -41,6 +41,7 @@ export class MapCreation extends AbstractState {
     this.startRegion = world
       .createEntity()
       .withComponent<RegionComponent>('region', {
+        type: 'red',
         shape: new Rectangle(0, 0, 50, 50),
         level: 0,
         entry: undefined,
@@ -72,10 +73,10 @@ export class MapCreation extends AbstractState {
       region.boundary.foreach(p => {
         const someTileExists = FunctionalShape.lN(p, 1, false).some(p1 => {
           const e = region.getTile(p1)
-          return e !== undefined && world.getComponent<FeatureComponent>(e, 'feature')!.type !== 'wall'
+          return e !== undefined && world.getComponent<FeatureComponent>(e, 'feature')!.feature().name !== 'wall'
         })
         if (region.getTile(p) === undefined && someTileExists) {
-          createFeature(world, map, index, p, 'wall')
+          createFeatureFromType(world, map, index, p, 'wall')
         }
       })
     })

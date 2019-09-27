@@ -1,7 +1,7 @@
 import { DiscreteSpace, Vector, Space, StackedSpace, DiscreteStackedSpace } from '../spatial'
 import { Entity } from '../ecs/entity'
 import { ResourceName, TlbResource, TlbWorld } from '../tlb'
-import { FeatureComponent, features } from '../components/feature'
+import { FeatureComponent } from '../components/feature'
 import { Shape } from '../geometry/shape'
 import { SetSpace, DiscreteSetSpace } from '../spatial/set-space'
 import { FovComponent } from '../components/fov'
@@ -14,7 +14,7 @@ export class Level {
 
   public readonly tiles: Space<Entity>
   public readonly characters: Space<Entity>
-  public readonly rooms: Space<Entity>
+  public readonly structures: Space<Entity>
 
   public visible: SetSpace
   public readonly discovered: SetSpace
@@ -26,7 +26,7 @@ export class Level {
 
     this.tiles = new DiscreteSpace(width)
     this.characters = new DiscreteSpace(width)
-    this.rooms = new DiscreteSpace(width)
+    this.structures = new DiscreteSpace(width)
 
     this.visible = new DiscreteSetSpace(width)
     this.discovered = new DiscreteSetSpace(width)
@@ -44,11 +44,11 @@ export class Level {
     return this.tiles.remove(position)
   }
 
-  public setRoom(position: Vector, entity: Entity): void {
-    this.rooms.set(position, entity)
+  public setStructure(position: Vector, entity: Entity): void {
+    this.structures.set(position, entity)
   }
-  public getRoom(position: Vector): Entity | undefined {
-    return this.rooms.get(position)
+  public getStructure(position: Vector): Entity | undefined {
+    return this.structures.get(position)
   }
 
   public setCharacter(position: Vector, entity: Entity): void {
@@ -78,7 +78,7 @@ export class Level {
         if (f === undefined) {
           return true
         }
-        return features[f.type].blocking
+        return f.feature().blocking
       }) ||
       this.characterMatches(
         world,
@@ -87,7 +87,7 @@ export class Level {
           if (f === undefined) {
             return false
           }
-          return features[f.type].blocking
+          return f.feature().blocking
         },
         self
       )
@@ -100,14 +100,14 @@ export class Level {
         if (f === undefined) {
           return true
         }
-        return features[f.type].lightBlocking
+        return f.feature().lightBlocking
       }) ||
       (useCharacters &&
         this.characterMatches(world, position, (f: FeatureComponent | undefined) => {
           if (f === undefined) {
             return false
           }
-          return features[f.type].lightBlocking
+          return f.feature().lightBlocking
         }))
     )
   }

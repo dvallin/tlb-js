@@ -18,5 +18,6 @@
     "allowSyntheticDefaultImports": false,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true
-  }
+  },
+  "include": ["types"]
 }

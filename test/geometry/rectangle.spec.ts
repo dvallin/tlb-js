@@ -189,4 +189,57 @@ describe('Rectangle', () => {
       expect(threeByTwo.shrink().shrink()).toEqual(new Rectangle(1, 0, 0, 0))
     })
   })
+
+  describe('footprint', () => {
+    const position = new Vector([1, 2])
+
+    function test(size: Vector, xPivot: Vector, yPivot: Vector) {
+      expect(Rectangle.footprint(position, 'down', size)).toEqual(new Rectangle(xPivot.x, xPivot.y, size.x, size.y))
+      expect(Rectangle.footprint(position, 'left', size)).toEqual(new Rectangle(yPivot.x, yPivot.y, size.y, size.x))
+      expect(Rectangle.footprint(position, 'right', size)).toEqual(new Rectangle(yPivot.x, yPivot.y, size.y, size.x))
+      expect(Rectangle.footprint(position, 'up', size)).toEqual(new Rectangle(xPivot.x, xPivot.y, size.x, size.y))
+    }
+
+    it('1x1', () => {
+      const size = new Vector([1, 1])
+      const xPivot = new Vector([1, 2])
+      const yPivot = new Vector([1, 2])
+      test(size, xPivot, yPivot)
+    })
+
+    it('2x1', () => {
+      const size = new Vector([2, 1])
+      const xPivot = new Vector([0, 2])
+      const yPivot = new Vector([1, 1])
+      test(size, xPivot, yPivot)
+    })
+
+    it('3x1', () => {
+      const size = new Vector([3, 1])
+      const xPivot = new Vector([0, 2])
+      const yPivot = new Vector([1, 1])
+      test(size, xPivot, yPivot)
+    })
+
+    it('1x2', () => {
+      const size = new Vector([1, 2])
+      const xPivot = new Vector([1, 1])
+      const yPivot = new Vector([0, 2])
+      test(size, xPivot, yPivot)
+    })
+
+    it('1x3', () => {
+      const size = new Vector([1, 3])
+      const xPivot = new Vector([1, 1])
+      const yPivot = new Vector([0, 2])
+      test(size, xPivot, yPivot)
+    })
+
+    it('2x2', () => {
+      const size = new Vector([2, 2])
+      const xPivot = new Vector([0, 1])
+      const yPivot = new Vector([0, 1])
+      test(size, xPivot, yPivot)
+    })
+  })
 })
