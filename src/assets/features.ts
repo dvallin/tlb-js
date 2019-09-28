@@ -1,6 +1,6 @@
 import { Feature } from '../components/feature'
 import { gray, primary } from '../renderer/palettes'
-import { strangeSymbols } from '../symbols'
+import { strangeSymbols, gridSymbols } from '../symbols'
 
 function enemy(character: string, name: string): Feature {
   return {
@@ -101,7 +101,7 @@ export const features: { [key in FeatureType]: Feature } = featuresDefinition
 
 const generatorsDefinition = {
   block: (index: number) => ({
-    character: strangeSymbols[[7, 5, 17, 15][index]],
+    character: gridSymbols[[7, 5, 15, 17][index]],
     diffuse: primary[1],
     blocking: true,
     lightBlocking: false,

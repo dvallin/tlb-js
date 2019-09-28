@@ -1,9 +1,9 @@
 import { Color } from '../renderer/color'
 import { Entity } from '../ecs/entity'
-import { TlbWorld } from 'src/tlb'
-import { WorldMap } from 'src/resources/world-map'
-import { Vector } from 'src/spatial'
 import { PositionComponent } from './position'
+import { WorldMap } from '../resources/world-map'
+import { TlbWorld } from '../tlb'
+import { Vector } from '../spatial'
 
 export interface LightComponent {
   color: Color
@@ -20,4 +20,13 @@ export function createLight(world: TlbWorld, map: WorldMap, level: number, posit
     .withComponent<PositionComponent>('position', { level, position })
     .withComponent('active', {}).entity
   map.levels[level].addLight(position, entity)
+}
+
+export function getLighting(world: TlbWorld, entity: Entity): LightingComponent {
+  return (
+    world.getComponent<LightingComponent>(entity, 'lighting') || {
+      incomingLight: new Map(),
+      incomingLightInFrame: new Map(),
+    }
+  )
 }

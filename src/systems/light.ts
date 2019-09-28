@@ -1,7 +1,7 @@
 import { ComponentName, TlbSystem, TlbWorld } from '../tlb'
 import { PositionComponent } from '../components/position'
 import { Queries } from '../renderer/queries'
-import { LightComponent, LightingComponent } from '../components/light'
+import { LightComponent, getLighting } from '../components/light'
 import { WorldMapResource } from '../resources/world-map'
 import { Vector } from '../spatial'
 import { Color } from '../renderer/color'
@@ -29,10 +29,7 @@ export class Light implements TlbSystem {
   }
 
   public addLight(world: TlbWorld, entity: Entity, light: Entity, color: Color) {
-    const lighting = world.getComponent<LightingComponent>(entity, 'lighting') || {
-      incomingLight: new Map(),
-      incomingLightInFrame: new Map(),
-    }
+    const lighting = getLighting(world, entity)
     lighting.incomingLightInFrame.set(light, color)
     world.editEntity(entity).withComponent('lighting', lighting)
   }

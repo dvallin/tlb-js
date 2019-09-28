@@ -60,13 +60,11 @@ export class Inventory implements UIElement {
     if (!this.state.window.collapsed) {
       if (this.state.inventory !== undefined) {
         const inventory = this.state.inventory
-        this.renderInventory(
-          renderer,
-          this.state.inventoryContent,
-          inventory,
-          this.selectorState.focused ? this.selectorState.hovered : undefined
-        )
-        this.renderDescription(renderer, this.state.descriptionContent, inventory, this.selectorState.hovered)
+        const hovered = this.selectorState.focused ? this.selectorState.hovered : undefined
+        this.renderInventory(renderer, this.state.inventoryContent, inventory, hovered)
+        if (hovered !== undefined) {
+          this.renderDescription(renderer, this.state.descriptionContent, inventory, hovered)
+        }
 
         if (inventory.maximumWeight !== undefined) {
           this.state.window.title = `inventory (${inventory.currentWeight}/${inventory.maximumWeight})`

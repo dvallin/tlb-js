@@ -159,7 +159,7 @@ export function registerSystems(
   world.registerSystem('light', new Light(queries))
   world.registerSystem('npc', new Npc(pushState))
   world.registerSystem('player-control', new PlayerControl())
-  world.registerSystem('player-interaction', new PlayerInteraction())
+  world.registerSystem('player-interaction', new PlayerInteraction(pushState))
   world.registerSystem('player-round-control', new PlayerRoundControl(queries, new Random(uniform)))
   world.registerSystem('region-creator', new RegionCreator(uniform))
   world.registerSystem('script', new Script())

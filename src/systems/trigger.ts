@@ -28,6 +28,7 @@ export class Trigger implements TlbSystem {
           break
         case 'trash':
         case 'locker':
+        case 'table':
           handled = this.loot(world, entity, false)
           break
       }

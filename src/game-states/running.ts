@@ -24,6 +24,7 @@ export class Running extends AbstractState {
     if (world.components.get('viewport-focus')!.size() === 0) {
       this.createViewportFocus(world)
     }
+    world.getResource<UIResource>('ui').reset()
   }
 
   public createViewportFocus(world: TlbWorld): void {

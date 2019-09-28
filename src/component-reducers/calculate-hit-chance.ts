@@ -3,7 +3,7 @@ import { Attack } from '../components/action'
 import { Entity } from '../ecs/entity'
 import { CharacterStatsComponent, bodyPartType } from '../components/character-stats'
 import { PositionComponent } from '../components/position'
-import { LightingComponent } from '../components/light'
+import { getLighting } from '../components/light'
 import { calculateBrightness } from './brigthness'
 
 export interface HitChance {
@@ -14,14 +14,14 @@ export interface HitChance {
 export function calculateHitChance(world: TlbWorld, entity: Entity, target: Entity, bodyPart: string, attack: Attack): HitChance {
   const stats = world.getComponent<CharacterStatsComponent>(entity, 'character-stats')!
   const position = world.getComponent<PositionComponent>(entity, 'position')!
-  const targetPosition = world.getComponent<PositionComponent>(target, 'position')!
   const targetStats = world.getComponent<CharacterStatsComponent>(target, 'character-stats')!
+  const targetPosition = world.getComponent<PositionComponent>(target, 'position')!
   const distance = position.position
     .floor()
     .minus(targetPosition.position.floor())
     .lN()
   const normalizedDistance = Math.floor((10 * (distance - 1)) / attack.range)
-  const lighting = world.getComponent<LightingComponent>(target, 'lighting')!
+  const lighting = getLighting(world, target)
   const brightness = calculateBrightness(lighting)
 
   const baseChance = stats.current.aim + attack.accuracy

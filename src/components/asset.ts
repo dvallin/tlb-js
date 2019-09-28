@@ -21,6 +21,7 @@ export interface AssetComponent {
 
 export type Cover = 'full' | 'partial' | 'none'
 export interface Asset {
+  name: string
   size: Vector
   cover: Cover
   hasInventory: boolean
@@ -49,7 +50,7 @@ export function createAsset(
   const entity = world
     .createEntity()
     .withComponent<AssetComponent>('asset', { type })
-    .withComponent<TriggersComponent>('triggers', { entities: [] }).entity
+    .withComponent<TriggersComponent>('triggers', { name: asset.name, entities: [] }).entity
   if (asset.hasInventory) {
     world.editEntity(entity).withComponent<InventoryComponent>('inventory', { content: [] })
   }
@@ -65,7 +66,7 @@ export function createAssetFromShape(world: TlbWorld, map: WorldMap, level: numb
   const entity = world
     .createEntity()
     .withComponent<AssetComponent>('asset', { type })
-    .withComponent<TriggersComponent>('triggers', { entities: [] }).entity
+    .withComponent<TriggersComponent>('triggers', { name: asset.name, entities: [] }).entity
   if (asset.hasInventory) {
     world.editEntity(entity).withComponent<InventoryComponent>('inventory', { content: [] })
   }

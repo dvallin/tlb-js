@@ -6,7 +6,6 @@ import { Solver, exactlyOne, atMostOne, or, not } from 'logic-solver'
 import { indices } from '../array-utils'
 import { Entity } from '../ecs/entity'
 import { AssetType } from '../assets/assets'
-import { CharacterStatsType } from '../assets/characters'
 import { ItemType } from '../assets/items'
 import { retry } from './retry'
 
@@ -41,11 +40,16 @@ export interface StructureRestriction {
   blocking: boolean
 }
 
+export interface CharacterCreator {
+  (world: TlbWorld): Entity
+}
+
 export interface StructureDescription {
   decorations: Spawn<AssetType>[]
   containers: Spawn<AssetType>[]
-  npcs: Spawn<CharacterStatsType>[]
   loots: Spawn<ItemType>[]
+  npcs: Spawn<CharacterCreator>[]
+  bosses: Spawn<CharacterCreator>[]
 }
 
 export function occur(min: number = 1, max?: number): Occurrence {

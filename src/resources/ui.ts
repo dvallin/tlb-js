@@ -13,6 +13,7 @@ import { UIElement } from '../ui/ui-element'
 import { BodyPartSelector, BodyPartInfo } from '../ui/body-part-selector'
 import { InventoryTransferModal } from '../ui/inventory-transfer-modal'
 import { Inventory } from '../ui/inventory'
+import { MultipleChoiceModal } from '../ui/multiple-choice-modal'
 
 export interface UI {
   hasElement(position: Vector): boolean
@@ -20,9 +21,16 @@ export interface UI {
 
   isModal: boolean
 
+  reset(): void
+
   showInventoryTransferModal(world: TlbWorld, source: Entity, sourceTitle: string, target: Entity, targetTitle: string): void
   inventoryTransferModalShowing(): boolean
   hideInventoryTransferModal(world: TlbWorld): void
+
+  showMultipleChoiceModal(world: TlbWorld, title: string, options: { entity: Entity; description: string }[]): void
+  selectedOption(): Entity | undefined
+  multipleChoiceModalShowing(): boolean
+  hideMultipleChoiceModal(world: TlbWorld): void
 
   showActionSelector(world: TlbWorld, groups: ActionGroup[]): void
   selectedAction(): SelectedAction | undefined
@@ -47,6 +55,7 @@ export class UIResource implements TlbResource, UI {
   private bodyPartSelector: BodyPartSelector | undefined = undefined
   private actionSelector: ActionSelector | undefined = undefined
   private inventoryTransferModal: InventoryTransferModal | undefined = undefined
+  private multipleChoiceModal: MultipleChoiceModal | undefined = undefined
   private overview: Overview | undefined = undefined
   private inventory: Inventory | undefined = undefined
   private log: LogView | undefined = undefined
@@ -57,6 +66,11 @@ export class UIResource implements TlbResource, UI {
         this.inventoryTransferModal.update(world)
         if (this.inventoryTransferModal.closed) {
           this.hideInventoryTransferModal(world)
+        }
+      } else if (this.multipleChoiceModal !== undefined) {
+        this.multipleChoiceModal.update(world)
+        if (this.multipleChoiceModal.closed) {
+          this.isModal = false
         }
       }
     }
@@ -79,23 +93,32 @@ export class UIResource implements TlbResource, UI {
   }
 
   public render(renderer: Renderer): void {
-    if (this.inventoryTransferModal !== undefined) {
-      this.inventoryTransferModal.render(renderer)
-    }
     if (this.actionSelector !== undefined) {
       this.actionSelector.render(renderer)
+    } else if (this.bodyPartSelector !== undefined) {
+      this.bodyPartSelector.render(renderer)
     } else if (this.inventory !== undefined) {
       this.inventory.render(renderer)
     }
+
+    if (this.inventoryTransferModal !== undefined) {
+      this.inventoryTransferModal.render(renderer)
+    } else if (this.multipleChoiceModal !== undefined) {
+      this.multipleChoiceModal.render(renderer)
+    }
+
     if (this.overview !== undefined) {
       this.overview.render(renderer)
     }
     if (this.log !== undefined) {
       this.log.render(renderer)
     }
-    if (this.bodyPartSelector !== undefined) {
-      this.bodyPartSelector.render(renderer)
-    }
+  }
+
+  reset(): void {
+    this.bodyPartSelector = undefined
+    this.actionSelector = undefined
+    this.inventoryTransferModal = undefined
   }
 
   public setOverview(world: TlbWorld, focus: Entity) {
@@ -145,6 +168,40 @@ export class UIResource implements TlbResource, UI {
     if (this.inventoryTransferModal !== undefined) {
       world.deleteEntity(this.inventoryTransferModal.entity)
       this.inventoryTransferModal = undefined
+    }
+  }
+
+  public showMultipleChoiceModal(world: TlbWorld, title: string, options: { entity: Entity; description: string }[]): void {
+    this.isModal = true
+
+    const viewport: Viewport = world.getResource<ViewportResource>('viewport')
+    const window = new WindowDecoration(new Rectangle(viewport.boundaries.x / 2 - 20, viewport.boundaries.y / 2 - 20, 40, 10), title)
+
+    const entity = this.getOrCreateElement(world, this.actionSelector)
+    this.multipleChoiceModal = new MultipleChoiceModal(entity, {
+      window,
+      options,
+    })
+  }
+
+  public selectedOption(): number | undefined {
+    if (this.multipleChoiceModal !== undefined) {
+      const s = this.multipleChoiceModal.selector.selected
+      if (s !== undefined) {
+        return s.entity
+      }
+    }
+    return undefined
+  }
+
+  public multipleChoiceModalShowing(): boolean {
+    return this.multipleChoiceModal !== undefined
+  }
+
+  public hideMultipleChoiceModal(world: TlbWorld) {
+    if (this.multipleChoiceModal !== undefined) {
+      world.deleteEntity(this.multipleChoiceModal.entity)
+      this.multipleChoiceModal = undefined
     }
   }
 
@@ -210,7 +267,8 @@ export class UIResource implements TlbResource, UI {
       (this.overview !== undefined && this.overview.contains(position)) ||
       (this.log !== undefined && this.log.contains(position)) ||
       (this.bodyPartSelector !== undefined && this.bodyPartSelector.contains(position)) ||
-      (this.isModal && this.inventoryTransferModal !== undefined && this.inventoryTransferModal.contains(position))
+      (this.isModal && this.inventoryTransferModal !== undefined && this.inventoryTransferModal.contains(position)) ||
+      (this.isModal && this.multipleChoiceModal !== undefined && this.multipleChoiceModal.contains(position))
     )
   }
 }
