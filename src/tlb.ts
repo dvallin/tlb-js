@@ -53,6 +53,7 @@ export type ComponentName =
   | 'ai'
   | 'asset'
   | 'character-stats'
+  | 'dead'
   | 'effect'
   | 'equiped-items'
   | 'feature'
@@ -108,6 +109,7 @@ export function registerComponents<S, R>(world: World<ComponentName, S, R>): voi
   world.registerComponentStorage('ai', new MapStorage<AiComponent>())
   world.registerComponentStorage('asset', new MapStorage<AssetComponent>())
   world.registerComponentStorage('character-stats', new MapStorage<CharacterStatsComponent>())
+  world.registerComponentStorage('dead', new SetStorage())
   world.registerComponentStorage('effect', new MapStorage<EffectComponent>())
   world.registerComponentStorage('feature', new VectorStorage<FeatureComponent>())
   world.registerComponentStorage('fov', new MapStorage<FovComponent>())

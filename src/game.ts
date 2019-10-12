@@ -44,7 +44,7 @@ export class Game {
     msLeft -= renderDelta
     this.renderTime += renderDelta
 
-    state.update(this.world)
+    state.update(this.world, s => this.pushState(s))
     while (true) {
       const start = Date.now()
       this.world.updateSystems()

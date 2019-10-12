@@ -12,7 +12,7 @@ export class FreeModeControl implements TlbSystem {
     const delta = input.createMovementDelta()
     if (delta.squaredLength() > 0) {
       const newPosition = position.position.add(delta)
-      world.editEntity(entity).withComponent('position', { position: newPosition })
+      world.editEntity(entity).withComponent<PositionComponent>('position', { level: position.level, position: newPosition })
     }
   }
 }

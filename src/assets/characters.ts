@@ -12,41 +12,41 @@ import { AiComponent } from '../components/ai'
 import { ActionType } from './actions'
 import { ItemType } from './items'
 
-function humanoidBodyParts(health: number): { [key: string]: BodyPart } {
+function humanoidBodyParts(core: number, head: number, limp: number): { [key: string]: BodyPart } {
   return {
-    head: { type: 'head', itemAttachments: ['helmet'], health },
-    leftArm: { type: 'arm', itemAttachments: ['glove', 'weapon'], health },
-    rightArm: { type: 'arm', itemAttachments: ['glove', 'weapon'], health },
-    torso: { type: 'torso', itemAttachments: ['armor'], health },
-    leftLeg: { type: 'leg', itemAttachments: ['pants', 'boots'], health },
-    rightLeg: { type: 'leg', itemAttachments: ['pants', 'boots'], health },
+    head: { type: 'head', itemAttachments: ['helmet'], health: head },
+    leftArm: { type: 'arm', itemAttachments: ['glove', 'weapon'], health: limp },
+    rightArm: { type: 'arm', itemAttachments: ['glove', 'weapon'], health: limp },
+    torso: { type: 'torso', itemAttachments: ['armor'], health: core },
+    leftLeg: { type: 'leg', itemAttachments: ['pants', 'boots'], health: limp },
+    rightLeg: { type: 'leg', itemAttachments: ['pants', 'boots'], health: limp },
   }
 }
 
 const charactersStatsDefinition = {
   player: {
-    bodyParts: humanoidBodyParts(14),
+    bodyParts: humanoidBodyParts(14, 5, 5),
     strength: 5,
     movement: 3,
-    actions: 3,
-    aim: 7,
+    actions: 4,
+    aim: 10,
   },
   guard: {
-    bodyParts: humanoidBodyParts(8),
+    bodyParts: humanoidBodyParts(3, 1, 1),
     strength: 5,
     movement: 3,
     actions: 3,
-    aim: 3,
+    aim: 6,
   },
   eliteGuard: {
-    bodyParts: humanoidBodyParts(12),
+    bodyParts: humanoidBodyParts(5, 3, 3),
     strength: 8,
     movement: 2,
     actions: 5,
     aim: 6,
   },
   boss: {
-    bodyParts: humanoidBodyParts(12),
+    bodyParts: humanoidBodyParts(8, 5, 5),
     strength: 10,
     movement: 3,
     actions: 9,

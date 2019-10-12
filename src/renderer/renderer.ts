@@ -46,7 +46,7 @@ export class RotRenderer implements Renderer {
       bg: gray[4].rgb,
     }
   ): RotRenderer {
-    const ambientColor = new Color([120, 120, 120])
+    const ambientColor = new Color([200, 120, 120])
     const display = new Display(displayOptions)
 
     root.appendChild(display.getContainer() as Node)

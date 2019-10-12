@@ -61,7 +61,7 @@ describe('createAssetFromPosition', () => {
       expect(world.getComponent(tile, 'triggered-by')).toEqual({ entity: asset })
     })
 
-    expect(world.getComponent(asset, 'triggers')).toEqual({ entities })
+    expect(world.getComponent(asset, 'triggers')).toEqual({ entities, name: 'metal door' })
     expect(world.getComponent(asset, 'asset')).toEqual({ type: 'door' })
   })
 })

@@ -1,4 +1,5 @@
 import { Entity } from '../ecs/entity'
+import { bodyPartType } from './character-stats'
 
 export type effect = 'damage' | 'kill' | 'stun' | 'bleed' | 'confuse' | 'defend' | 'immobilize'
 
@@ -7,6 +8,7 @@ export interface Effect {
   global: boolean
   negated: boolean
 
+  restricted?: bodyPartType[]
   duration?: number
   value?: number
 }
@@ -20,13 +22,13 @@ export interface ActiveEffectsComponent {
 
 export interface EffectComponent {
   effect: Effect
-  bodyPart?: string
   source: Entity
   target: Entity
+  bodyParts?: string[]
 }
 
-export function damage(value: number): Effect {
-  return { type: 'damage', global: false, negated: false, value }
+export function damage(value: number, restricted: bodyPartType[] = ['torso']): Effect {
+  return { type: 'damage', global: false, negated: false, value, restricted }
 }
 
 export function confuse(duration: number): Effect {

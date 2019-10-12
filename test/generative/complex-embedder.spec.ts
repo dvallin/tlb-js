@@ -27,6 +27,7 @@ function structure(
       containers: [],
       npcs: [],
       loots: [],
+      bosses: [],
     },
     restriction,
   }

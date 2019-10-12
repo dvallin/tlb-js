@@ -7,15 +7,8 @@ import { UIElement } from './ui-element'
 import { TlbWorld } from '../tlb'
 
 import { WindowDecoration } from './window-decoration'
-import { HitChance } from '../component-reducers/calculate-hit-chance'
 import { InputResource, Input } from '../resources/input'
-import { KEYS } from 'rot-js'
-import { SelectorState, ItemSelector, updateSelectorState } from './selector'
-
-export interface BodyPartInfo {
-  name: string
-  hitChance: HitChance
-}
+import { ItemSelector } from './selector'
 
 export interface State {
   window: WindowDecoration
@@ -25,12 +18,10 @@ export interface State {
 export class MultipleChoiceModal implements UIElement {
   public closed: boolean = false
 
-  private readonly selectorState: SelectorState
   public readonly selector: ItemSelector<{ entity: Entity; description: string }>
 
-  public constructor(public readonly entity: Entity, private readonly state: State) {
-    this.selectorState = { focused: true, firstRow: 0, hovered: 0, selected: undefined }
-    this.selector = new ItemSelector(this.selectorState, this.state.options)
+  public constructor(private readonly state: State) {
+    this.selector = new ItemSelector(this.state.options)
   }
 
   public render(renderer: Renderer) {
@@ -41,23 +32,23 @@ export class MultipleChoiceModal implements UIElement {
     let y = 0
     options.forEach((option, i) => {
       renderer.text(
-        `${option.description} (${i + 1})`,
-        this.state.window.content.topLeft.add(new Vector([1, y])),
+        `${i + 1} ${option.description}`,
+        this.state.window.content.topLeft.add(new Vector([0, y])),
         primary[1],
-        this.selectorState.hovered === y ? gray[1] : undefined
+        this.selector.hoveredIndex === y ? gray[1] : undefined
       )
       y++
     })
   }
 
   public update(world: TlbWorld) {
-    updateSelectorState(world, this.selectorState, this.state.window.content, this.state.options.length)
+    this.selector.update(world, this.state.window.content)
 
     const input: Input = world.getResource<InputResource>('input')
-    if (input.keyPressed.has(KEYS.VK_ESCAPE)) {
+    if (input.isActive('accept')) {
       this.closed = true
     }
-    if (this.selectorState.selected !== undefined) {
+    if (this.selector.selected !== undefined) {
       this.closed = true
     }
   }

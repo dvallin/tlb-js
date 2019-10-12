@@ -5,6 +5,7 @@ import { State } from '../game-states/state'
 import { Fighting } from '../game-states/fighting'
 import { Entity } from '../ecs/entity'
 import { AiComponent } from '../components/ai'
+import { turnBasedEntities } from '../component-reducers/turn-based'
 
 export class Npc implements TlbSystem {
   public readonly components: ComponentName[] = ['npc', 'ai', 'fov']
@@ -23,7 +24,9 @@ export class Npc implements TlbSystem {
             if (playerKey === f.position.floor().key) {
               ai.state = 'engaging'
               world.editEntity(entity).withComponent('wait-turn', {})
-              this.pushState(new Fighting())
+              if (turnBasedEntities(world) === 1) {
+                this.pushState(new Fighting())
+              }
             }
           })
         }

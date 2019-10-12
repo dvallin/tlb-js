@@ -78,7 +78,15 @@ const actionsDefinition = {
       actions: 3,
       movement: 0,
     },
-    subActions: [attack(5, 4, [damage(5)])],
+    subActions: [attack(10, 4, [damage(5)])],
+  },
+  headshot: {
+    name: 'headshot',
+    cost: {
+      actions: 4,
+      movement: 0,
+    },
+    subActions: [attack(20, 10, [damage(5, ['head'])])],
   },
   overcharge: {
     name: 'overcharge',
@@ -87,7 +95,7 @@ const actionsDefinition = {
       movement: 0,
     },
     attack: {},
-    subActions: [attack(3, 4, [damage(3), immobilize(1)])],
+    subActions: [attack(8, 4, [damage(3), immobilize(1)])],
   },
   bolt: {
     name: 'bolt',
@@ -95,7 +103,7 @@ const actionsDefinition = {
       actions: 3,
       movement: 0,
     },
-    subActions: [attack(1, 5, [damage(7), stun(1)])],
+    subActions: [attack(1, 5, [damage(2, ['head']), stun(1)])],
   },
   hitAndRun: {
     name: 'hit and run',

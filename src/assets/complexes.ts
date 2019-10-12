@@ -57,7 +57,7 @@ const complexesDefinition = {
         description: {
           decorations: [],
           containers: [spawnTimes<AssetType>('locker', 5)],
-          loots: [spawnTimes<ItemType>('rifle', 5), spawnTimes<ItemType>('bandages', 3), spawnTimes<ItemType>('leatherJacket', 5)],
+          loots: [spawnTimes<ItemType>('sniperRifle', 5), spawnTimes<ItemType>('bandages', 3), spawnTimes<ItemType>('leatherJacket', 5)],
           npcs: [spawn<CharacterCreator>(characterCreators.eliteGuard, characterCreators.guard)],
           bosses: [],
         },
@@ -86,7 +86,7 @@ export const complexes: { [key in ComplexesType]: ComplexTemplate } = complexesD
 export const regionParams: { [key in RegionsType]: ComplexDescription[] } = {
   red: [
     {
-      occurrence: occur(1, 3),
+      occurrence: occur(1, 2),
       template: complexes.anEncounter,
     },
     {

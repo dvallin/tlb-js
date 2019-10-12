@@ -103,6 +103,8 @@ export function mockInput(world: TlbWorld): Input {
     handleKeyboardEvents: jest.fn(),
     handleMouseEvent: jest.fn(),
     createMovementDelta: jest.fn(),
+    numericActive: jest.fn(),
+    isActive: jest.fn(),
   }
   world.registerResource(input)
   return input
@@ -116,21 +118,28 @@ export function mockUi(world: TlbWorld): UI {
     hasElement: jest.fn(),
     render: jest.fn(),
 
+    reset: jest.fn(),
+
     showInventoryTransferModal: jest.fn(),
     inventoryTransferModalShowing: jest.fn(),
     hideInventoryTransferModal: jest.fn(),
 
+    showMultipleChoiceModal: jest.fn(),
+    selectedOption: jest.fn(),
+    multipleChoiceModalShowing: jest.fn(),
+    hideMultipleChoiceModal: jest.fn(),
+    hideSelectors: jest.fn(),
+
     showActionSelector: jest.fn(),
-    hideActionSelector: jest.fn(),
     selectedAction: jest.fn(),
 
-    showBodyPartSelector: jest.fn(),
-    selectedBodyPart: jest.fn(),
-    hideBodyPartSelector: jest.fn(),
+    showMovementSelector: jest.fn(),
+    selectedMovement: jest.fn(),
 
-    setInventory: jest.fn(),
-    setOverview: jest.fn(),
-    setLog: jest.fn(),
+    showAttackSelector: jest.fn(),
+    selectedAttack: jest.fn(),
+
+    createTabs: jest.fn(),
   }
   world.registerResource(ui)
   return ui
@@ -163,11 +172,12 @@ export function mockLog(world: TlbWorld): Log {
     update: jest.fn(),
     getEntries: jest.fn(),
     effectApplied: jest.fn(),
+    owner: jest.fn(),
+    text: jest.fn(),
     died: jest.fn(),
     missed: jest.fn(),
     attack: jest.fn(),
     render: jest.fn(),
-    objectify: jest.fn(),
     verbify: jest.fn(),
     entries: [],
     getName: jest.fn(),

@@ -9,6 +9,7 @@ import { WorldMap, WorldMapResource } from '../resources/world-map'
 import { State } from '../game-states/state'
 import { UIResource, UI } from '../resources/ui'
 import { Modal } from '../game-states/modal'
+import { LogResource, Log } from '../resources/log'
 
 export class Trigger implements TlbSystem {
   public readonly components: ComponentName[] = ['active', 'triggers']
@@ -30,6 +31,10 @@ export class Trigger implements TlbSystem {
         case 'locker':
         case 'table':
           handled = this.loot(world, entity, false)
+          break
+        case 'generator':
+          this.log(world, 'clonck')
+          handled = true
           break
       }
     }
@@ -68,6 +73,11 @@ export class Trigger implements TlbSystem {
       return true
     }
     return false
+  }
+
+  public log(world: TlbWorld, text: string) {
+    const log: Log = world.getResource<LogResource>('log')
+    log.text(text)
   }
 
   public swapGroundAndFeature(world: TlbWorld, entity: Entity): void {

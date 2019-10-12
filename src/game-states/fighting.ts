@@ -1,8 +1,8 @@
 import { TlbWorld } from '../tlb'
 import { AbstractState } from './state'
 import { Entity } from '../ecs/entity'
+import { playerIsDead, playerIsStruggling, turnBasedEntities } from '../component-reducers/turn-based'
 import { ViewportResource, Viewport } from '../resources/viewport'
-import { ActiveEffectsComponent } from '../components/effects'
 
 export class Fighting extends AbstractState {
   public constructor() {
@@ -41,17 +41,10 @@ export class Fighting extends AbstractState {
   }
 
   public isDone(world: TlbWorld): boolean {
-    const turnBasedEntities =
-      world.components.get('wait-turn')!.size() +
-      world.components.get('start-turn')!.size() +
-      world.components.get('take-turn')!.size() +
-      world.components.get('took-turn')!.size()
-    const onlyPlayerPlays = turnBasedEntities <= world.components.get('player')!.size()
-
-    const player: Entity = world.getStorage('player').first()!
-    const activeEffects = world.getComponent<ActiveEffectsComponent>(player, 'active-effects')!
-    const playerIsStruggling = activeEffects.effects.find(e => e.effect.type === 'bleed') !== undefined
-    return onlyPlayerPlays && !playerIsStruggling
+    const isDead = playerIsDead(world)
+    const isStruggling = playerIsStruggling(world)
+    const onlyPlayerPlays = turnBasedEntities(world) <= world.components.get('player')!.size()
+    return isDead || (onlyPlayerPlays && !isStruggling)
   }
 
   public newRound(world: TlbWorld) {

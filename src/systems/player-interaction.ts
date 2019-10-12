@@ -1,5 +1,3 @@
-import { KEYS } from 'rot-js'
-
 import { ComponentName, TlbSystem, TlbWorld } from '../tlb'
 import { PositionComponent } from '../components/position'
 import { Input, InputResource } from '../resources/input'
@@ -21,7 +19,7 @@ export class PlayerInteraction implements TlbSystem {
     const ui: UI = world.getResource<UIResource>('ui')
     const input: Input = world.getResource<InputResource>('input')
     let trigger: Entity | undefined
-    if (input.keyPressed.has(KEYS.VK_E)) {
+    if (input.isActive('use')) {
       const map: WorldMap = world.getResource<WorldMapResource>('map')
       const position = world.getComponent<PositionComponent>(entity, 'position')!
       const neighbourhood = FunctionalShape.lN(position.position.floor(), 1, true)
@@ -35,7 +33,7 @@ export class PlayerInteraction implements TlbSystem {
       }
     } else if (ui.multipleChoiceModalShowing()) {
       trigger = ui.selectedOption()
-      ui.hideMultipleChoiceModal(world)
+      ui.hideMultipleChoiceModal()
     }
 
     if (trigger !== undefined) {

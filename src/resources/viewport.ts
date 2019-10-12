@@ -3,7 +3,6 @@ import { Position } from '../renderer/position'
 import { TlbWorld, ResourceName, TlbResource } from '../tlb'
 import { PositionComponent } from '../components/position'
 import { Input, InputResource } from './input'
-import { KEYS } from 'rot-js'
 import { Entity } from '../ecs/entity'
 
 export interface Renderable {
@@ -42,7 +41,7 @@ export class ViewportResource implements TlbResource, Viewport {
 
   public update(world: TlbWorld): void {
     const input: Input = world.getResource<InputResource>('input')
-    if (input.keyPressed.has(KEYS.VK_G)) {
+    if (input.isActive('grid')) {
       this.gridLocked = !this.gridLocked
     }
 

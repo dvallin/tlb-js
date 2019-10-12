@@ -123,6 +123,7 @@ function placeCharacterRandomly(
     const isFree = canPlace(world, map, level, position)
     if (isFree) {
       const character = creator(world)
+      map.levels[level].setCharacter(position, character)
       world.editEntity(character).withComponent<PositionComponent>('position', centeredPosition(level, position))
       placedCharacters.push(character)
     }

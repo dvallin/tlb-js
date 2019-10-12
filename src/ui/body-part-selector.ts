@@ -7,16 +7,15 @@ import { UIElement } from './ui-element'
 import { TlbWorld } from '../tlb'
 
 import { WindowDecoration } from './window-decoration'
-import { HitChance } from '../component-reducers/calculate-hit-chance'
 import { renderBodyPartInfo, renderPercentage } from './render-helpers'
 import { CharacterStatsComponent } from '../components/character-stats'
 import { ActiveEffectsComponent } from '../components/effects'
-import { Selector, ItemSelector, SelectorState, updateSelectorState } from './selector'
+import { Selector, ItemSelector } from './selector'
 import { Rectangle } from '../geometry/rectangle'
 
 export interface BodyPartInfo {
   name: string
-  hitChance: HitChance
+  hitChance: number
 }
 
 export interface State {
@@ -31,15 +30,13 @@ export interface State {
 }
 
 export class BodyPartSelector implements UIElement, Selector<string> {
-  private readonly selectorState: SelectorState
   public readonly bodyPartSelector: ItemSelector<BodyPartInfo>
 
-  public constructor(public readonly entity: Entity, private readonly state: State) {
-    this.selectorState = { focused: true, firstRow: 0, hovered: 0, selected: undefined }
-    this.bodyPartSelector = new ItemSelector(this.selectorState, this.state.bodyParts)
+  public constructor(private readonly state: State) {
+    this.bodyPartSelector = new ItemSelector(this.state.bodyParts)
   }
 
-  public static build(entity: Entity, bounds: Rectangle, target: Entity, bodyParts: BodyPartInfo[]): BodyPartSelector {
+  public static build(bounds: Rectangle, target: Entity, bodyParts: BodyPartInfo[]): BodyPartSelector {
     const width = Math.floor(bounds.width / 2)
     const bodyPartWindow = new WindowDecoration(new Rectangle(bounds.left, bounds.top, width, bounds.height), 'body parts')
     const descriptionWindow = new WindowDecoration(
@@ -47,7 +44,7 @@ export class BodyPartSelector implements UIElement, Selector<string> {
       'description'
     )
 
-    return new BodyPartSelector(entity, {
+    return new BodyPartSelector({
       bodyParts,
       bodyPartWindow,
       descriptionWindow,
@@ -61,7 +58,7 @@ export class BodyPartSelector implements UIElement, Selector<string> {
   }
 
   public update(world: TlbWorld) {
-    updateSelectorState(world, this.selectorState, this.state.bodyPartWindow.content, this.length)
+    this.bodyPartSelector.update(world, this.state.bodyPartWindow.content)
     this.state.activeEffects = world.getComponent<ActiveEffectsComponent>(this.state.target, 'active-effects')
     this.state.stats = world.getComponent<CharacterStatsComponent>(this.state.target, 'character-stats')
   }
@@ -94,7 +91,7 @@ export class BodyPartSelector implements UIElement, Selector<string> {
         line.name,
         this.state.bodyPartWindow.topLeft.add(new Vector([1, row + 1])),
         primary[1],
-        this.selectorState.hovered === row ? gray[1] : undefined
+        this.bodyPartSelector.hoveredIndex === row ? gray[1] : undefined
       )
       row++
     })
@@ -110,10 +107,7 @@ export class BodyPartSelector implements UIElement, Selector<string> {
       renderBodyPartInfo(renderer, topLeft, hovered.name, this.state.stats!, this.state.activeEffects!)
       row++
 
-      renderPercentage(renderer, topLeft.add(new Vector([0, row])), 'Hit', hovered.hitChance.hitChance)
-      row++
-
-      renderPercentage(renderer, topLeft.add(new Vector([0, row])), 'Crit', hovered.hitChance.critChance)
+      renderPercentage(renderer, topLeft.add(new Vector([0, row])), 'Hit', hovered.hitChance)
     }
   }
 

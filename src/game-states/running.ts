@@ -1,7 +1,6 @@
 import { TlbWorld } from '../tlb'
 import { PositionComponent } from '../components/position'
-import { Vector } from '../spatial'
-import { AbstractState } from './state'
+import { AbstractState, State } from './state'
 import { FeatureComponent } from '../components/feature'
 import { WorldMap, WorldMapResource } from '../resources/world-map'
 import { FovComponent } from '../components/fov'
@@ -13,6 +12,7 @@ import { InventoryComponent, ItemComponent, EquipedItemsComponent } from '../com
 import { Entity } from '../ecs/entity'
 import { ActiveEffectsComponent } from '../components/effects'
 import { features } from '../assets/features'
+import { MainMenu } from './main-menu'
 
 export class Running extends AbstractState {
   public constructor() {
@@ -28,15 +28,10 @@ export class Running extends AbstractState {
   }
 
   public createViewportFocus(world: TlbWorld): void {
-    const spawns = world.components.get('spawn')!
-    if (spawns.size() === 1) {
-      const map: WorldMap = world.getResource<WorldMapResource>('map')
-      spawns.foreach(spawn => {
-        this.spawnPlayer(world, map, spawn)
-      })
-    } else {
-      this.setupAnchor(world)
-    }
+    const map: WorldMap = world.getResource<WorldMapResource>('map')
+    world.components.get('spawn')!.foreach(spawn => {
+      this.spawnPlayer(world, map, spawn)
+    })
     this.createUILayer(world)
   }
 
@@ -44,6 +39,7 @@ export class Running extends AbstractState {
     const position = world.getComponent<PositionComponent>(spawn, 'position')!
     const stats = createCharacterStatsComponent('player')
     const nailgun = world.createEntity().withComponent<ItemComponent>('item', { type: 'nailGun' }).entity
+    const sniperRifle = world.createEntity().withComponent<ItemComponent>('item', { type: 'sniperRifle' }).entity
     const rifle = world.createEntity().withComponent<ItemComponent>('item', { type: 'rifle' }).entity
     const boots = world.createEntity().withComponent<ItemComponent>('item', { type: 'bootsOfStriding' }).entity
     const jacket = world.createEntity().withComponent<ItemComponent>('item', { type: 'leatherJacket' }).entity
@@ -57,25 +53,15 @@ export class Running extends AbstractState {
       .withComponent<FovComponent>('fov', { fov: [] })
       .withComponent<HasActionComponent>('has-action', { actions: ['longMove', 'hit', 'rush', 'endTurn'] })
       .withComponent<CharacterStatsComponent>('character-stats', stats)
-      .withComponent<InventoryComponent>('inventory', { content: [nailgun, rifle, jacket, boots] })
+      .withComponent<InventoryComponent>('inventory', { content: [nailgun, sniperRifle, rifle, jacket, boots] })
       .withComponent<ActiveEffectsComponent>('active-effects', { effects: [] })
       .withComponent<EquipedItemsComponent>('equiped-items', {
         equipment: [{ entity: nailgun, bodyParts: ['leftArm'] }, { entity: jacket, bodyParts: ['torso', 'leftArm', 'rightArm'] }],
       }).entity
     const ui = world.getResource<UIResource>('ui')
-    ui.setOverview(world, player)
-    ui.setInventory(world, player)
-    ui.setLog(world)
-    map.levels[position.level].setCharacter(position.position, player)
-  }
+    ui.createTabs(world, player)
 
-  public setupAnchor(world: TlbWorld): void {
-    const position = new Vector([20, 20])
-    world
-      .createEntity()
-      .withComponent<{}>('free-mode-anchor', {})
-      .withComponent<{}>('viewport-focus', {})
-      .withComponent<PositionComponent>('position', { level: 0, position })
+    map.levels[position.level].setCharacter(position.position, player)
   }
 
   public createUILayer(world: TlbWorld): void {
@@ -90,7 +76,12 @@ export class Running extends AbstractState {
     })
   }
 
-  public update({  }: TlbWorld): void {}
+  public update(world: TlbWorld, pushState: (state: State) => void): void {
+    const player: Entity = world.getStorage('player').first()!
+    if (world.hasComponent(player, 'dead')) {
+      pushState(new MainMenu())
+    }
+  }
 
   public isFrameLocked(): boolean {
     return true

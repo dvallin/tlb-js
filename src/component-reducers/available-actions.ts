@@ -3,7 +3,7 @@ import { Entity } from '../ecs/entity'
 import { TakeTurnComponent } from '../components/rounds'
 import { HasActionComponent } from '../components/action'
 import { EquipedItemsComponent, ItemComponent } from '../components/items'
-import { SelectableAction, ActionGroup } from '../ui/action-selector'
+import { SelectableAction, ActionGroup } from '../ui/tabs/action-selector'
 import { ActionType, actions } from '../assets/actions'
 import { items } from '../assets/items'
 

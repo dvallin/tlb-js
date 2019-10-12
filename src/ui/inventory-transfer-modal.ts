@@ -7,16 +7,9 @@ import { UIElement } from './ui-element'
 import { TlbWorld } from '../tlb'
 
 import { WindowDecoration } from './window-decoration'
-import { HitChance } from '../component-reducers/calculate-hit-chance'
 import { InputResource, Input } from '../resources/input'
-import { KEYS } from 'rot-js'
 import { dropAt } from '../array-utils'
 import { InventoryDescription, createInventoryDescription } from '../component-reducers/inventory-description'
-
-export interface BodyPartInfo {
-  name: string
-  hitChance: HitChance
-}
 
 export interface State {
   leftWindow: WindowDecoration
@@ -35,24 +28,31 @@ export interface State {
 export class InventoryTransferModal implements UIElement {
   public closed: boolean = false
 
-  public constructor(public readonly entity: Entity, private readonly state: State) {}
+  public constructor(private readonly state: State) {}
 
   public render(renderer: Renderer) {
     const { leftWindow, rightWindow, leftInventory, rightInventory, leftActive, hovered } = this.state
-    this.renderInventory(renderer, leftWindow, leftInventory!, leftActive ? hovered : undefined)
-    this.renderInventory(renderer, rightWindow, rightInventory!, leftActive ? undefined : hovered)
+    this.renderInventory(renderer, leftWindow, leftInventory!, leftActive, leftActive ? hovered : undefined)
+    this.renderInventory(renderer, rightWindow, rightInventory!, !leftActive, leftActive ? undefined : hovered)
   }
 
-  public renderInventory(renderer: Renderer, window: WindowDecoration, inventory: InventoryDescription, hovered: number | undefined) {
+  public renderInventory(
+    renderer: Renderer,
+    window: WindowDecoration,
+    inventory: InventoryDescription,
+    active: boolean,
+    hovered: number | undefined
+  ) {
     window.render(renderer)
 
     const inventoryItems = inventory.items || []
 
     let y = 0
     inventoryItems.forEach(item => {
+      const numeric = active ? `${y + 1}` : ''
       renderer.text(
-        `${item.name} (${item.weight})`,
-        window.content.topLeft.add(new Vector([1, y])),
+        `${numeric} ${item.name} (${item.weight})`,
+        window.content.topLeft.add(new Vector([0, y])),
         primary[1],
         hovered === y ? gray[1] : undefined
       )
@@ -75,14 +75,14 @@ export class InventoryTransferModal implements UIElement {
       position = new Vector([input.position.x, input.position.y])
     }
 
-    if (input.keyPressed.has(KEYS.VK_ESCAPE)) {
+    if (input.isActive('cancel')) {
       this.closed = true
     }
 
-    const up = input.keyPressed.has(KEYS.VK_K)
-    const down = input.keyPressed.has(KEYS.VK_J)
-    const right = input.keyPressed.has(KEYS.VK_L)
-    const left = input.keyPressed.has(KEYS.VK_H)
+    const up = input.isActive('up')
+    const down = input.isActive('down')
+    const right = input.isActive('right')
+    const left = input.isActive('left')
     if (up) {
       this.state.hovered--
     }
@@ -103,7 +103,7 @@ export class InventoryTransferModal implements UIElement {
     }
 
     let selected: Entity | undefined = undefined
-    if (input.keyPressed.has(KEYS.VK_RETURN)) {
+    if (input.isActive('accept')) {
       selected = this.state.hovered
     }
     if (position) {
@@ -122,6 +122,11 @@ export class InventoryTransferModal implements UIElement {
         }
         this.state.hovered = delta.y
       }
+    }
+
+    const numeric = input.numericActive()
+    if (numeric !== undefined) {
+      selected = numeric
     }
 
     if (selected !== undefined) {

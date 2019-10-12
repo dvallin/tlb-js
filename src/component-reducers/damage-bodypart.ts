@@ -31,7 +31,7 @@ export function damageBodyPart(
           negated: false,
           global: false,
         },
-        bodyPart: 'torso',
+        bodyParts: ['torso'],
         source: source,
         target: target,
       })
@@ -54,6 +54,7 @@ export function kill(world: TlbWorld, entity: Entity) {
 
     world
       .editEntity(entity)
+      .withComponent('dead', {})
       .removeComponent('take-turn')
       .removeComponent('start-turn')
       .removeComponent('took-turn')

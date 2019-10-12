@@ -40,7 +40,7 @@ describe('attackTarget', () => {
     mockReturnValues(random.decision, true, false)
     const attack: Attack = { kind: 'attack', effects: [damage(3)], range: 2, accuracy: 4 }
 
-    attackTarget(world, random, 0, 1, 'torso', attack)
+    attackTarget(world, random, 0, 1, attack)
 
     expect(random.decision).toHaveBeenCalledWith(1.1)
     expect(random.decision).toHaveBeenCalledWith(0.35)
@@ -57,7 +57,7 @@ describe('attackTarget', () => {
     mockReturnValues(random.decision, true, true)
     const attack: Attack = { kind: 'attack', effects: [damage(3)], range: 2, accuracy: 4 }
 
-    attackTarget(world, random, 0, 1, 'head', attack)
+    attackTarget(world, random, 0, 1, attack)
 
     expect(random.decision).toHaveBeenCalledWith(0.8)
     expect(random.decision).toHaveBeenCalledWith(0.2)
@@ -74,7 +74,7 @@ describe('attackTarget', () => {
     mockReturnValues(random.decision, true, true)
     const attack: Attack = { kind: 'attack', effects: [kill(), confuse(1)], range: 2, accuracy: 4 }
 
-    attackTarget(world, random, 0, 1, 'leftArm', attack)
+    attackTarget(world, random, 0, 1, attack)
 
     expect(random.decision).toHaveBeenCalledWith(1.0)
     expect(random.decision).toHaveBeenCalledWith(0.3)

@@ -8,8 +8,7 @@ import { Vector } from '../spatial'
 import { calculateAvailableActions } from '../component-reducers/available-actions'
 import { SelectedActionComponent, Movement, SelectedAction, Attack } from '../components/action'
 import { Random } from '../random'
-import { CharacterStatsComponent } from '../components/character-stats'
-import { ActionGroup } from '../ui/action-selector'
+import { ActionGroup } from '../ui/tabs/action-selector'
 import { attackTarget } from '../component-reducers/attack-target'
 
 export class AiRoundControl implements TlbSystem {
@@ -137,8 +136,7 @@ export class AiRoundControl implements TlbSystem {
     const targetPosition = world.getComponent<PositionComponent>(target!, 'position')!
     const path = this.queries.ray(world, position.level, position.position, targetPosition.position, {})
     if (path !== undefined && path.cost <= attack.range) {
-      const bodyPart = this.chooseBodyPart(world, target!)
-      attackTarget(world, this.random, entity, target!, bodyPart!, attack)
+      attackTarget(world, this.random, entity, target!, attack)
     }
   }
 
@@ -156,16 +154,6 @@ export class AiRoundControl implements TlbSystem {
       }
     })
     return nearestPlayer
-  }
-
-  public chooseBodyPart(world: TlbWorld, target: Entity): string {
-    const stats = world.getComponent<CharacterStatsComponent>(target, 'character-stats')!
-
-    const aliveBodyParts = Object.keys(stats.current.bodyParts).filter(key => {
-      const bodyPart = stats.current.bodyParts[key]
-      return bodyPart.health > 0
-    })
-    return this.random.pick(aliveBodyParts)
   }
 
   public endTurn(world: TlbWorld, entity: Entity): void {
