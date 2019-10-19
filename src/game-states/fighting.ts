@@ -44,6 +44,9 @@ export class Fighting extends AbstractState {
     const isDead = playerIsDead(world)
     const isStruggling = playerIsStruggling(world)
     const onlyPlayerPlays = turnBasedEntities(world) <= world.components.get('player')!.size()
+    if (isDead || (onlyPlayerPlays && !isStruggling)) {
+      console.log('fight is over', isDead, onlyPlayerPlays, isStruggling)
+    }
     return isDead || (onlyPlayerPlays && !isStruggling)
   }
 

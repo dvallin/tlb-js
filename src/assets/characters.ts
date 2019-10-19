@@ -103,7 +103,7 @@ export function createEmptyNpc(world: TlbWorld, statsType: CharacterStatsType, f
   return world
     .editEntity(character)
     .withComponent('npc', {})
-    .withComponent<AiComponent>('ai', { type: 'rushing', state: 'idle' })
+    .withComponent<AiComponent>('ai', { type: 'rushing', state: 'idle', interest: undefined, distrust: 0, authorized: new Set() })
     .withComponent<InventoryComponent>('inventory', { content: [] })
     .withComponent<EquipedItemsComponent>('equiped-items', { equipment: [] }).entity
 }

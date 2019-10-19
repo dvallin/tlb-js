@@ -17,6 +17,9 @@ import { MovementSelector } from '../ui/tabs/movement-selector'
 import { Queries } from '../renderer/queries'
 import { Path } from '../renderer/astar'
 import { AttackSelector } from '../ui/tabs/attack-selector'
+import { Dialog } from '../assets/dialogs'
+import { DialogModal } from '../ui/dialog-modal'
+import { Random } from '../random'
 
 export interface UI {
   hasElement(position: Vector): boolean
@@ -34,6 +37,11 @@ export interface UI {
   selectedOption(): Entity | undefined
   multipleChoiceModalShowing(): boolean
   hideMultipleChoiceModal(): void
+
+  showDialogModal(world: TlbWorld, random: Random, dialog: Dialog, player: Entity, npc: Entity): void
+  dialogResult(): string | undefined
+  dialogShowing(): boolean
+  hideDialogModal(): void
 
   hideSelectors(): void
 
@@ -58,6 +66,7 @@ export class UIResource implements TlbResource, UI {
 
   private inventoryTransferModal: InventoryTransferModal | undefined = undefined
   private multipleChoiceModal: MultipleChoiceModal | undefined = undefined
+  private dialogModal: DialogModal | undefined = undefined
 
   private tabs: Tabs | undefined = undefined
 
@@ -77,6 +86,11 @@ export class UIResource implements TlbResource, UI {
         if (this.multipleChoiceModal.closed) {
           this.isModal = false
         }
+      } else if (this.dialogModal !== undefined) {
+        this.dialogModal.update(world)
+        if (this.dialogModal.closed) {
+          this.isModal = false
+        }
       }
     }
 
@@ -90,6 +104,8 @@ export class UIResource implements TlbResource, UI {
       this.inventoryTransferModal.render(renderer)
     } else if (this.multipleChoiceModal !== undefined) {
       this.multipleChoiceModal.render(renderer)
+    } else if (this.dialogModal !== undefined) {
+      this.dialogModal.render(renderer)
     }
 
     if (this.tabs !== undefined) {
@@ -150,10 +166,7 @@ export class UIResource implements TlbResource, UI {
     const viewport: Viewport = world.getResource<ViewportResource>('viewport')
     const window = new WindowDecoration(new Rectangle(viewport.boundaries.x / 2 - 20, viewport.boundaries.y / 2 - 20, 40, 10), title)
 
-    this.multipleChoiceModal = new MultipleChoiceModal({
-      window,
-      options,
-    })
+    this.multipleChoiceModal = new MultipleChoiceModal(window, options)
   }
 
   public selectedOption(): number | undefined {
@@ -173,6 +186,32 @@ export class UIResource implements TlbResource, UI {
   public hideMultipleChoiceModal() {
     if (this.multipleChoiceModal !== undefined) {
       this.multipleChoiceModal = undefined
+    }
+  }
+
+  public showDialogModal(world: TlbWorld, random: Random, dialog: Dialog, player: Entity, npc: Entity): void {
+    this.isModal = true
+
+    const viewport: Viewport = world.getResource<ViewportResource>('viewport')
+    const window = new WindowDecoration(new Rectangle(viewport.boundaries.x / 2 - 20, viewport.boundaries.y / 2 - 20, 40, 10), 'dialog')
+
+    this.dialogModal = new DialogModal(world, random, window, dialog, player, npc)
+  }
+
+  public dialogResult(): string | undefined {
+    if (this.dialogModal !== undefined) {
+      return this.dialogModal.result
+    }
+    return undefined
+  }
+
+  public dialogShowing(): boolean {
+    return this.dialogModal !== undefined
+  }
+
+  public hideDialogModal() {
+    if (this.dialogModal !== undefined) {
+      this.dialogModal = undefined
     }
   }
 
@@ -234,8 +273,10 @@ export class UIResource implements TlbResource, UI {
   public hasElement(position: Vector): boolean {
     return (
       (this.tabs !== undefined && this.tabs.contains(position)) ||
-      (this.isModal && this.inventoryTransferModal !== undefined && this.inventoryTransferModal.contains(position)) ||
-      (this.isModal && this.multipleChoiceModal !== undefined && this.multipleChoiceModal.contains(position))
+      (this.isModal &&
+        ((this.inventoryTransferModal !== undefined && this.inventoryTransferModal.contains(position)) ||
+          (this.multipleChoiceModal !== undefined && this.multipleChoiceModal.contains(position)) ||
+          (this.dialogModal !== undefined && this.dialogModal.contains(position))))
     )
   }
 }

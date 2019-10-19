@@ -15,7 +15,7 @@
   "dependencies": {
     "logic-solver": "^2.0.1",
     "random-seed": "^0.3.0",
-    "rot-js": "^2.0.3"
+    "rot-js": "^2.1.1"
   },
   "devDependencies": {
     "@types/jest": "^24.0.18",

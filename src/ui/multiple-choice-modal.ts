@@ -7,12 +7,11 @@ import { UIElement } from './ui-element'
 import { TlbWorld } from '../tlb'
 
 import { WindowDecoration } from './window-decoration'
-import { InputResource, Input } from '../resources/input'
 import { ItemSelector } from './selector'
 
-export interface State {
-  window: WindowDecoration
-  options: { entity: Entity; description: string }[]
+export interface MultipleChoiseOption {
+  entity: Entity
+  description: string
 }
 
 export class MultipleChoiceModal implements UIElement {
@@ -20,20 +19,20 @@ export class MultipleChoiceModal implements UIElement {
 
   public readonly selector: ItemSelector<{ entity: Entity; description: string }>
 
-  public constructor(private readonly state: State) {
-    this.selector = new ItemSelector(this.state.options)
+  public constructor(private readonly window: WindowDecoration, private readonly options: MultipleChoiseOption[]) {
+    this.selector = new ItemSelector(this.options)
   }
 
   public render(renderer: Renderer) {
-    this.state.window.render(renderer)
+    this.window.render(renderer)
 
-    const options = this.state.options || []
+    const options = this.options || []
 
     let y = 0
     options.forEach((option, i) => {
       renderer.text(
         `${i + 1} ${option.description}`,
-        this.state.window.content.topLeft.add(new Vector([0, y])),
+        this.window.content.topLeft.add(new Vector([0, y])),
         primary[1],
         this.selector.hoveredIndex === y ? gray[1] : undefined
       )
@@ -42,18 +41,13 @@ export class MultipleChoiceModal implements UIElement {
   }
 
   public update(world: TlbWorld) {
-    this.selector.update(world, this.state.window.content)
-
-    const input: Input = world.getResource<InputResource>('input')
-    if (input.isActive('accept')) {
-      this.closed = true
-    }
+    this.selector.update(world, this.window.content)
     if (this.selector.selected !== undefined) {
       this.closed = true
     }
   }
 
   public contains(position: Vector): boolean {
-    return this.state.window.containsVector(position)
+    return this.window.containsVector(position)
   }
 }

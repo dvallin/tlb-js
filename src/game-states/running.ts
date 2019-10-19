@@ -38,6 +38,7 @@ export class Running extends AbstractState {
   public spawnPlayer(world: TlbWorld, map: WorldMap, spawn: Entity): void {
     const position = world.getComponent<PositionComponent>(spawn, 'position')!
     const stats = createCharacterStatsComponent('player')
+    const idCard = world.createEntity().withComponent<ItemComponent>('item', { type: 'idCard' }).entity
     const nailgun = world.createEntity().withComponent<ItemComponent>('item', { type: 'nailGun' }).entity
     const sniperRifle = world.createEntity().withComponent<ItemComponent>('item', { type: 'sniperRifle' }).entity
     const rifle = world.createEntity().withComponent<ItemComponent>('item', { type: 'rifle' }).entity
@@ -53,7 +54,7 @@ export class Running extends AbstractState {
       .withComponent<FovComponent>('fov', { fov: [] })
       .withComponent<HasActionComponent>('has-action', { actions: ['longMove', 'hit', 'rush', 'endTurn'] })
       .withComponent<CharacterStatsComponent>('character-stats', stats)
-      .withComponent<InventoryComponent>('inventory', { content: [nailgun, sniperRifle, rifle, jacket, boots] })
+      .withComponent<InventoryComponent>('inventory', { content: [nailgun, sniperRifle, rifle, jacket, boots, idCard] })
       .withComponent<ActiveEffectsComponent>('active-effects', { effects: [] })
       .withComponent<EquipedItemsComponent>('equiped-items', {
         equipment: [{ entity: nailgun, bodyParts: ['leftArm'] }, { entity: jacket, bodyParts: ['torso', 'leftArm', 'rightArm'] }],

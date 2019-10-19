@@ -4,7 +4,7 @@ import { ItemType } from '../assets/items'
 import { ActionType } from '../assets/actions'
 
 export type WearableKind = 'glove' | 'helmet' | 'armor' | 'pants' | 'boots'
-export type ItemKind = 'consumable' | 'weapon' | WearableKind
+export type ItemKind = 'scrap' | 'consumable' | 'weapon' | WearableKind
 
 export interface Item {
   kind: ItemKind
