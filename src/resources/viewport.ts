@@ -82,7 +82,7 @@ export class ViewportResource implements TlbResource, Viewport {
   }
 
   public fromDisplay(p: Position): Vector {
-    return this.topLeft.add(new Vector([p.x, p.y]))
+    return new Vector([this.topLeft.x + p.x, this.topLeft.y + p.y])
   }
 
   public toDisplay(p: Vector, centered: boolean): Position {

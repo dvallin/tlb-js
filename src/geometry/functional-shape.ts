@@ -19,8 +19,7 @@ export class FunctionalShape extends AbstractShape {
     const boundary = Rectangle.centerAt(position.x, position.y, size)
     return new FunctionalShape(p => {
       const d = p.minus(position).abs()
-      const df = d.floor()
-      if (df.x === 0 && df.y === 0) {
+      if (d.fX === 0 && d.fY === 0) {
         return center
       }
       return measure(d)

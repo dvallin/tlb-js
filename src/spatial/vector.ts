@@ -39,8 +39,16 @@ export class Vector {
     return this.coordinates[0]
   }
 
+  public get fX(): number {
+    return Math.floor(this.coordinates[0])
+  }
+
   public get y(): number {
     return this.coordinates[1]
+  }
+
+  public get fY(): number {
+    return Math.floor(this.coordinates[1])
   }
 
   public equals(other: Vector): boolean {
@@ -53,10 +61,6 @@ export class Vector {
 
   public minus(other: Vector): Vector {
     return new Vector([this.x - other.x, this.y - other.y])
-  }
-
-  public floor(): Vector {
-    return new Vector([Math.floor(this.x), Math.floor(this.y)])
   }
 
   public mult(scale: number): Vector {

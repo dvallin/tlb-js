@@ -5,10 +5,14 @@ export class Color {
     return new Color(rot.Color.fromString(hex) as [number, number, number])
   }
 
-  public readonly rgb: string
+  public constructor(public color: [number, number, number]) {}
 
-  public constructor(public color: [number, number, number]) {
-    this.rgb = rot.Color.toRGB(color)
+  private rgb: string | undefined = undefined
+  public toRgb(): string {
+    if (this.rgb === undefined) {
+      this.rgb = rot.Color.toRGB(this.color)
+    }
+    return this.rgb
   }
 
   public brightness(): number {

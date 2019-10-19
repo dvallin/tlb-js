@@ -16,9 +16,9 @@ export class PlayerControl implements TlbSystem {
     if (delta.squaredLength() > 0) {
       const newPosition = position.position.add(delta.mult(speed(stats)))
       const level = world.getResource<WorldMapResource>('map').levels[position.level]
-      if (!level.isBlocking(world, newPosition.floor(), entity)) {
-        level.removeCharacter(position.position.floor())
-        level.setCharacter(newPosition.floor(), entity)
+      if (!level.isBlocking(world, newPosition, entity)) {
+        level.removeCharacter(position.position)
+        level.setCharacter(newPosition, entity)
         world.editEntity(entity).withComponent<PositionComponent>('position', { level: position.level, position: newPosition })
       }
     }

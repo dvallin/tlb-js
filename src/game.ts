@@ -77,7 +77,7 @@ export class Game {
       this.started = Date.now()
     }
 
-    setTimeout(() => this.tick(), msLeft)
+    requestAnimationFrame(() => this.tick())
   }
 
   public get fps(): number {

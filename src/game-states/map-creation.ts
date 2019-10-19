@@ -25,14 +25,14 @@ export class MapCreation extends AbstractState {
     const map = world.getResource<WorldMapResource>('map')
     viewport.addLayer({
       getRenderable: (_world, level, position) => {
-        const entity = map.levels[level].getTile(position.floor())
+        const entity = map.levels[level].getTile(position)
         return { entity, opaque: true, centered: true }
       },
       transformed: true,
     })
     viewport.addLayer({
       getRenderable: (_world, level, position) => {
-        const entity = map.levels[level].getCharacter(position.floor())
+        const entity = map.levels[level].getCharacter(position)
         return { entity, opaque: true, centered: false }
       },
       transformed: true,

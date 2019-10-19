@@ -86,8 +86,8 @@ export function removeAsset(world: TlbWorld, map: WorldMap, entity: Entity): voi
 function removeTile(world: TlbWorld, map: WorldMap, entity: Entity): void {
   const ground = world.getComponent<GroundComponent>(entity, 'ground')!
   const position = world.getComponent<PositionComponent>(entity, 'position')!
-  map.levels[position.level].removeTile(position.position.floor())
-  createFeature(world, map, position.level, position.position.floor(), ground.feature)
+  map.levels[position.level].removeTile(position.position)
+  createFeature(world, map, position.level, position.position, ground.feature)
   world.deleteEntity(entity)
 }
 

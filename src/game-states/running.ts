@@ -69,8 +69,7 @@ export class Running extends AbstractState {
     viewport.addLayer({
       getRenderable: (world, _, position) => {
         const ui = world.getResource<UIResource>('ui')
-        const p = position.floor()
-        return { entity: undefined, opaque: !ui.hasElement(p), centered: true }
+        return { entity: undefined, opaque: !ui.hasElement(position), centered: true }
       },
       transformed: false,
     })

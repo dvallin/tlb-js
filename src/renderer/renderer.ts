@@ -43,7 +43,7 @@ export class RotRenderer implements Renderer {
       forceSquareRatio: true,
       fontSize: 16,
       fontFamily: 'Monaco, monospace',
-      bg: gray[4].rgb,
+      bg: gray[4].toRgb(),
     }
   ): RotRenderer {
     const ambientColor = new Color([200, 120, 120])
@@ -68,8 +68,10 @@ export class RotRenderer implements Renderer {
     const ui: UI = world.getResource<UIResource>('ui')
     ui.render(this)
     world.getStorage<LightingComponent>('lighting')!.foreach(({}, lighting) => {
+      const tmp = lighting.incomingLight
       lighting.incomingLight = lighting.incomingLightInFrame
-      lighting.incomingLightInFrame = new Map()
+      lighting.incomingLightInFrame = tmp
+      lighting.incomingLightInFrame.clear()
     })
     world.components.get('overlay')!.clear()
   }
@@ -91,14 +93,14 @@ export class RotRenderer implements Renderer {
     position: PositionComponent
   ): void {
     const level = world.getResource<WorldMapResource>('map').levels[position.level]
-    const p = position.position.floor()
+    const p = position.position
     if (level.isDiscovered(p)) {
       let lighting = undefined
       if (level.isVisible(p)) {
         lighting = world.getComponent<LightingComponent>(entity, 'lighting')
       }
       const overlay = world.getComponent<OverlayComponent>(entity, 'overlay') || { background: undefined }
-      const displayPosition = viewport.toDisplay(position.position, centered)
+      const displayPosition = viewport.toDisplay(p, centered)
       this.character(
         feature.character,
         displayPosition,
@@ -129,22 +131,22 @@ export class RotRenderer implements Renderer {
   }
 
   public character(character: string, position: Position, fg: Color, bg?: Color): void {
-    const fgRgb = fg.rgb
-    const bgRgb = bg ? bg.rgb : undefined
+    const fgRgb = fg.toRgb()
+    const bgRgb = bg ? bg.toRgb() : undefined
     this.display.draw(position.x, position.y, character[0], fgRgb, bgRgb || null)
   }
 
   public text(text: string, position: Position, fg: Color, bg?: Color): void {
-    const fgRgb = fg.rgb
-    const bgRgb = bg ? bg.rgb : undefined
+    const fgRgb = fg.toRgb()
+    const bgRgb = bg ? bg.toRgb() : undefined
     for (let idx = 0; idx < text.length; idx++) {
       this.display.draw(position.x + idx, position.y, text[idx], fgRgb, bgRgb || null)
     }
   }
 
   public flowText(text: string, position: Position, width: number, fg: Color, bg?: Color): number {
-    const fgTag = `%c{${fg.rgb}}`
-    const bgTag = bg ? `%b{${bg.rgb}}` : ''
+    const fgTag = `%c{${fg.toRgb()}}`
+    const bgTag = bg ? `%b{${bg.toRgb()}}` : ''
     return this.display.drawText(position.x, position.y, `${fgTag}${bgTag}${text}`, width)
   }
 }

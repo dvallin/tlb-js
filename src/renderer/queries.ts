@@ -19,7 +19,7 @@ export interface QueryParameters {
 
 export class Queries {
   public fov(world: TlbWorld, level: number, origin: Vector, callback: (pos: Vector, distance: number) => void) {
-    const originFloor = origin.floor()
+    const originFloor = new Vector([origin.fX, origin.fY])
     const map = world.getResource<WorldMapResource>('map')
     const fov = new FOV.RecursiveShadowcasting((x, y) => !map.levels[level].isLightBlocking(world, new Vector([x, y])), { topology: 8 })
     const seenAlready = new DiscreteSetSpace(map.levels[level].boundary.width)
@@ -34,7 +34,7 @@ export class Queries {
 
   public lighting(world: TlbWorld, level: number, origin: Vector, color: Color, callback: (pos: Vector, color: Color) => void) {
     const map = world.getResource<WorldMapResource>('map')
-    const originFloor = origin.floor()
+    const originFloor = new Vector([origin.fX, origin.fY])
     const fov = new FOV.RecursiveShadowcasting((x, y) => !map.levels[level].isLightBlocking(world, new Vector([x, y])), { topology: 8 })
     const lighting = new Lighting((x, y) => (map.levels[level].isLightBlocking(world, new Vector([x, y])) ? 0.0 : 1.0), { passes: 1 })
     lighting.setLight(originFloor.x, originFloor.y, color.color)
@@ -53,7 +53,7 @@ export class Queries {
     params: Partial<QueryParameters>
   ): void {
     const map = world.getResource<WorldMapResource>('map')
-    const originFloor = origin.floor()
+    const originFloor = new Vector([origin.fX, origin.fY])
     const maximumDepth = params.maximumCost || Number.MAX_SAFE_INTEGER
     const onlyDiscovered = params.onlyDiscovered || false
     bfs(map.levels[level].boundary.width, originFloor, target => FunctionalShape.lN(target, 1, false), visit, (target, depth) => {
@@ -67,8 +67,8 @@ export class Queries {
   public shortestPath(world: TlbWorld, level: number, origin: Vector, target: Vector, params: Partial<QueryParameters>): Path | undefined {
     const map = world.getResource<WorldMapResource>('map')
     const onlyDiscovered = params.onlyDiscovered || false
-    const originFloor = origin.floor()
-    const targetFloor = target.floor()
+    const originFloor = new Vector([origin.fX, origin.fY])
+    const targetFloor = new Vector([target.fX, target.fY])
     const maximumCost = params.maximumCost || Number.MAX_SAFE_INTEGER
     const bestEffort = params.bestEffort || false
     const path = astar(
@@ -96,8 +96,8 @@ export class Queries {
 
   public ray(world: TlbWorld, level: number, origin: Vector, target: Vector, params: Partial<QueryParameters>): Path | undefined {
     const map = world.getResource<WorldMapResource>('map')
-    const originFloor = origin.floor()
-    const targetFloor = target.floor()
+    const originFloor = new Vector([origin.fX, origin.fY])
+    const targetFloor = new Vector([target.fX, target.fY])
     const maximumCost = params.maximumCost || Number.MAX_SAFE_INTEGER
     const path: Vector[] = []
     const success = new LineSegment(targetFloor, originFloor).all(p => {

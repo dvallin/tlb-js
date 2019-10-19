@@ -22,7 +22,7 @@ export class PlayerInteraction implements TlbSystem {
     if (input.isActive('use')) {
       const map: WorldMap = world.getResource<WorldMapResource>('map')
       const position = world.getComponent<PositionComponent>(entity, 'position')!
-      const neighbourhood = FunctionalShape.lN(position.position.floor(), 1, true)
+      const neighbourhood = FunctionalShape.lN(position.position, 1, true)
 
       const triggers = this.findTriggers(world, map, position.level, neighbourhood)
       if (triggers.length === 1) {
