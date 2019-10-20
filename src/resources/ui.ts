@@ -78,6 +78,8 @@ export function runDialog(
   return result
 }
 
+const modalOffsetY = 15
+
 export class UIResource implements TlbResource, UI {
   public readonly kind: ResourceName = 'ui'
 
@@ -121,16 +123,16 @@ export class UIResource implements TlbResource, UI {
   }
 
   public render(renderer: Renderer): void {
+    if (this.tabs !== undefined) {
+      this.tabs.render(renderer)
+    }
+
     if (this.inventoryTransferModal !== undefined) {
       this.inventoryTransferModal.render(renderer)
     } else if (this.multipleChoiceModal !== undefined) {
       this.multipleChoiceModal.render(renderer)
     } else if (this.dialogModal !== undefined) {
       this.dialogModal.render(renderer)
-    }
-
-    if (this.tabs !== undefined) {
-      this.tabs.render(renderer)
     }
   }
 
@@ -144,7 +146,7 @@ export class UIResource implements TlbResource, UI {
   public createTabs(world: TlbWorld, focus: Entity): void {
     const viewport: Viewport = world.getResource<ViewportResource>('viewport')
     const full = new Rectangle(0, viewport.boundaries.y - 12, viewport.boundaries.x, 12)
-    const minimized = new Rectangle(viewport.boundaries.x - 20, 0, 20, 12)
+    const minimized = new Rectangle(viewport.boundaries.x - 20, 0, 20, 9)
     this.tabs = new Tabs(full, minimized)
     this.tabs.add(new LogTab())
     this.tabs.add(new Inventory(focus))
@@ -156,10 +158,13 @@ export class UIResource implements TlbResource, UI {
 
     const viewport: Viewport = world.getResource<ViewportResource>('viewport')
     const leftWindow = new WindowDecoration(
-      new Rectangle(viewport.boundaries.x / 2 - 30, viewport.boundaries.y / 2 - 20, 30, 20),
+      new Rectangle(viewport.boundaries.x / 2 - 30, viewport.boundaries.y / 2 - modalOffsetY, 30, 20),
       sourceTitle
     )
-    const rightWindow = new WindowDecoration(new Rectangle(viewport.boundaries.x / 2, viewport.boundaries.y / 2 - 20, 30, 20), targetTitle)
+    const rightWindow = new WindowDecoration(
+      new Rectangle(viewport.boundaries.x / 2, viewport.boundaries.y / 2 - modalOffsetY, 30, 20),
+      targetTitle
+    )
 
     this.inventoryTransferModal = new InventoryTransferModal({
       left: source,
@@ -185,7 +190,10 @@ export class UIResource implements TlbResource, UI {
     this.isModal = true
 
     const viewport: Viewport = world.getResource<ViewportResource>('viewport')
-    const window = new WindowDecoration(new Rectangle(viewport.boundaries.x / 2 - 20, viewport.boundaries.y / 2 - 20, 40, 10), title)
+    const window = new WindowDecoration(
+      new Rectangle(viewport.boundaries.x / 2 - 20, viewport.boundaries.y / 2 - modalOffsetY, 40, 10),
+      title
+    )
 
     this.multipleChoiceModal = new MultipleChoiceModal(window, options)
   }
@@ -214,7 +222,10 @@ export class UIResource implements TlbResource, UI {
     this.isModal = true
 
     const viewport: Viewport = world.getResource<ViewportResource>('viewport')
-    const window = new WindowDecoration(new Rectangle(viewport.boundaries.x / 2 - 20, viewport.boundaries.y / 2 - 20, 40, 10), 'dialog')
+    const window = new WindowDecoration(
+      new Rectangle(viewport.boundaries.x / 2 - 20, viewport.boundaries.y / 2 - modalOffsetY, 40, 10),
+      'dialog'
+    )
 
     this.dialogModal = new DialogModal(world, random, window, dialogs[dialog], player, npc)
   }
@@ -291,11 +302,11 @@ export class UIResource implements TlbResource, UI {
 
   public hasElement(position: Vector): boolean {
     return (
-      (this.tabs !== undefined && this.tabs.contains(position)) ||
       (this.isModal &&
         ((this.inventoryTransferModal !== undefined && this.inventoryTransferModal.contains(position)) ||
           (this.multipleChoiceModal !== undefined && this.multipleChoiceModal.contains(position)) ||
-          (this.dialogModal !== undefined && this.dialogModal.contains(position))))
+          (this.dialogModal !== undefined && this.dialogModal.contains(position)))) ||
+      (this.tabs !== undefined && this.tabs.contains(position))
     )
   }
 }

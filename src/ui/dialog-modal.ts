@@ -10,6 +10,7 @@ import { WindowDecoration } from './window-decoration'
 import { ItemSelector } from './selector'
 import { Dialog, Answer, AnswerType } from '../assets/dialogs'
 import { Random } from '../random'
+import { Rectangle } from '../geometry/rectangle'
 
 export interface State {}
 
@@ -19,6 +20,7 @@ export class DialogModal implements UIElement {
 
   private currentText: string = ''
   private currentAnswers: Answer[] = []
+  private selectY: number = 0
 
   public selector: ItemSelector<Answer> | undefined
 
@@ -38,12 +40,13 @@ export class DialogModal implements UIElement {
 
     let y = renderer.flowText(this.currentText, this.window.content.topLeft, this.window.width, primary[1]) + 1
     if (this.selector !== undefined) {
+      this.selectY = y
       this.currentAnswers.forEach((answer, i) => {
         renderer.text(
           `${i + 1} ${answer.text}`,
           this.window.content.topLeft.add(new Vector([0, y])),
           primary[1],
-          this.selector!.hoveredIndex === y ? gray[1] : undefined
+          this.selector!.hoveredIndex === i ? gray[1] : undefined
         )
         y++
       })
@@ -54,7 +57,10 @@ export class DialogModal implements UIElement {
     if (this.selector === undefined) {
       this.selector = new ItemSelector(this.currentAnswers)
     }
-    this.selector.update(world, this.window.content)
+    this.selector.update(
+      world,
+      new Rectangle(this.window.content.x, this.window.content.y + this.selectY, this.window.content.width, this.currentAnswers.length)
+    )
     if (this.selector.selected !== undefined) {
       const navigation = this.selector.selected.navigation
       if (typeof navigation === 'number') {

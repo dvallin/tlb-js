@@ -49,9 +49,9 @@ export class InventoryTransferModal implements UIElement {
 
     let y = 0
     inventoryItems.forEach(item => {
-      const numeric = active ? `${y + 1}` : ''
+      const numeric = active ? `${y + 1} ` : ''
       renderer.text(
-        `${numeric} ${item.name} (${item.weight})`,
+        `${numeric}${item.name} (${item.weight})`,
         window.content.topLeft.add(new Vector([0, y])),
         primary[1],
         hovered === y ? gray[1] : undefined

@@ -34,7 +34,7 @@ export class MultipleChoiceModal implements UIElement {
         `${i + 1} ${option.description}`,
         this.window.content.topLeft.add(new Vector([0, y])),
         primary[1],
-        this.selector.hoveredIndex === y ? gray[1] : undefined
+        this.selector.hoveredIndex === i ? gray[1] : undefined
       )
       y++
     })

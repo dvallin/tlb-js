@@ -86,12 +86,12 @@ export class BodyPartSelector implements UIElement, Selector<string> {
   private renderBodyParts(renderer: Renderer) {
     this.state.bodyPartWindow.render(renderer)
     let row = 0
-    this.state.bodyParts.forEach(line => {
+    this.state.bodyParts.forEach((line, i) => {
       renderer.text(
         line.name,
         this.state.bodyPartWindow.topLeft.add(new Vector([1, row + 1])),
         primary[1],
-        this.bodyPartSelector.hoveredIndex === row ? gray[1] : undefined
+        this.bodyPartSelector.hoveredIndex === i ? gray[1] : undefined
       )
       row++
     })
