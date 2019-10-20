@@ -6,7 +6,7 @@ import { ViewportResource, Viewport } from '../resources/viewport'
 
 export class Fighting extends AbstractState {
   public constructor() {
-    super(['start-round', 'player-round-control', 'ai-round-control', 'fov', 'light', 'npc', 'script', 'effect'])
+    super('fighting', ['start-round', 'player-round-control', 'ai-round-control', 'fov', 'light', 'npc', 'script', 'effect'])
   }
 
   private wasGridLocked: boolean = true
@@ -44,9 +44,6 @@ export class Fighting extends AbstractState {
     const isDead = playerIsDead(world)
     const isStruggling = playerIsStruggling(world)
     const onlyPlayerPlays = turnBasedEntities(world) <= world.components.get('player')!.size()
-    if (isDead || (onlyPlayerPlays && !isStruggling)) {
-      console.log('fight is over', isDead, onlyPlayerPlays, isStruggling)
-    }
     return isDead || (onlyPlayerPlays && !isStruggling)
   }
 

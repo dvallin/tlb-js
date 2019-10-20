@@ -1,6 +1,7 @@
 import { TlbWorld, SystemName } from '../tlb'
 
 export interface State {
+  name: string
   start(world: TlbWorld): void
   update(world: TlbWorld, pushState: (state: State) => void): void
   stop(world: TlbWorld): void
@@ -9,7 +10,7 @@ export interface State {
 }
 
 export abstract class AbstractState implements State {
-  public constructor(public readonly usedSystems: SystemName[]) {}
+  public constructor(public readonly name: string, public readonly usedSystems: SystemName[]) {}
 
   public start(world: TlbWorld) {
     world.activeSystems.forEach(s => world.disableSystem(s))

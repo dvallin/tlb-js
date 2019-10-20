@@ -47,6 +47,7 @@ import { TriggersComponent, TriggeredByComponent } from './components/trigger'
 import { EffectComponent, ActiveEffectsComponent } from './components/effects'
 import { InventoryComponent, ItemComponent, EquipedItemsComponent } from './components/items'
 import { StartRound } from './systems/start-round'
+import { DialogComponent } from './components/dialog'
 export type ComponentName =
   | 'active'
   | 'age'
@@ -54,6 +55,7 @@ export type ComponentName =
   | 'asset'
   | 'character-stats'
   | 'dead'
+  | 'dialog'
   | 'effect'
   | 'equiped-items'
   | 'feature'
@@ -110,6 +112,7 @@ export function registerComponents<S, R>(world: World<ComponentName, S, R>): voi
   world.registerComponentStorage('asset', new MapStorage<AssetComponent>())
   world.registerComponentStorage('character-stats', new MapStorage<CharacterStatsComponent>())
   world.registerComponentStorage('dead', new SetStorage())
+  world.registerComponentStorage('dialog', new MapStorage<DialogComponent>())
   world.registerComponentStorage('effect', new MapStorage<EffectComponent>())
   world.registerComponentStorage('feature', new VectorStorage<FeatureComponent>())
   world.registerComponentStorage('fov', new MapStorage<FovComponent>())
@@ -165,6 +168,6 @@ export function registerSystems(
   world.registerSystem('player-round-control', new PlayerRoundControl(queries, new Random(uniform)))
   world.registerSystem('region-creator', new RegionCreator(uniform))
   world.registerSystem('script', new Script())
-  world.registerSystem('trigger', new Trigger(pushState))
+  world.registerSystem('trigger', new Trigger(new Random(uniform), pushState))
   world.registerSystem('start-round', new StartRound(new Random(uniform)))
 }

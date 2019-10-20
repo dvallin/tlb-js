@@ -16,7 +16,7 @@ import { MainMenu } from './main-menu'
 
 export class Running extends AbstractState {
   public constructor() {
-    super(['fov', 'light', 'player-control', 'player-interaction', 'npc', 'trigger', 'free-mode-control', 'effect'])
+    super('running', ['fov', 'light', 'player-control', 'player-interaction', 'npc', 'trigger', 'free-mode-control', 'effect'])
   }
 
   public start(world: TlbWorld): void {

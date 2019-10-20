@@ -7,37 +7,32 @@ import { TriggersComponent, TriggeredByComponent } from '../components/trigger'
 import { InventoryComponent } from '../components/items'
 import { WorldMap, WorldMapResource } from '../resources/world-map'
 import { State } from '../game-states/state'
-import { UIResource, UI } from '../resources/ui'
+import { UIResource, UI, runDialog } from '../resources/ui'
 import { Modal } from '../game-states/modal'
 import { LogResource, Log } from '../resources/log'
+import { DialogComponent } from '../components/dialog'
+import { Random } from '../random'
+import { AiComponent } from '../components/ai'
+import { engage } from '../component-reducers/ai'
 
 export class Trigger implements TlbSystem {
   public readonly components: ComponentName[] = ['active', 'triggers']
 
-  public constructor(public readonly pushState: (state: State) => void) {}
+  public constructor(public readonly random: Random, public readonly pushState: (state: State) => void) {}
 
   public update(world: TlbWorld, entity: Entity): void {
-    const asset = world.getComponent<AssetComponent>(entity, 'asset')
     let handled = true
-    if (asset !== undefined) {
-      switch (asset.type) {
-        case 'door':
-          handled = this.door(world, entity)
-          break
-        case 'loot':
-          handled = this.loot(world, entity, true)
-          break
-        case 'trash':
-        case 'locker':
-        case 'table':
-          handled = this.loot(world, entity, false)
-          break
-        case 'generator':
-          this.log(world, 'clonck')
-          handled = true
-          break
-      }
+
+    const triggers = world.getComponent<TriggersComponent>(entity, 'triggers')!
+    switch (triggers.type) {
+      case 'dialog':
+        handled = this.handleDialog(world, entity, triggers)
+        break
+      case 'asset':
+        handled = this.handleAsset(world, entity, triggers)
+        break
     }
+
     if (handled) {
       world
         .editEntity(entity)
@@ -46,18 +41,58 @@ export class Trigger implements TlbSystem {
     }
   }
 
-  public door(world: TlbWorld, entity: Entity): boolean {
-    const triggers = world.getComponent<TriggersComponent>(entity, 'triggers')!
+  public handleDialog(world: TlbWorld, entity: Entity, triggers: TriggersComponent): boolean {
+    const dialog = world.getComponent<DialogComponent>(triggers.entities[0], 'dialog')!
+    const triggeredBy = world.getComponent<TriggeredByComponent>(entity, 'triggered-by')!
+    const result = runDialog(
+      world.getResource<UIResource>('ui'),
+      world,
+      this.random,
+      dialog.type,
+      triggeredBy.entity,
+      entity,
+      this.pushState
+    )
+    if (result !== undefined) {
+      if (result === 'attack') {
+        const ai = world.getComponent<AiComponent>(entity, 'ai')
+        if (ai !== undefined) {
+          engage(world, entity, ai, this.pushState)
+        }
+      }
+      return true
+    }
+    return false
+  }
+
+  public handleAsset(world: TlbWorld, entity: Entity, triggers: TriggersComponent): boolean {
+    const asset = world.getComponent<AssetComponent>(entity, 'asset')!
+    switch (asset.type) {
+      case 'door':
+        return this.door(world, triggers)
+      case 'loot':
+        return this.loot(world, entity, triggers, true)
+      case 'trash':
+      case 'locker':
+      case 'table':
+        return this.loot(world, entity, triggers, false)
+      case 'generator':
+        this.log(world, 'clonck')
+        return true
+    }
+    return false
+  }
+
+  public door(world: TlbWorld, triggers: TriggersComponent): boolean {
     triggers.entities.forEach(doorPart => this.swapGroundAndFeature(world, doorPart))
     return true
   }
 
-  public loot(world: TlbWorld, entity: Entity, remove: boolean): boolean {
+  public loot(world: TlbWorld, entity: Entity, triggers: TriggersComponent, remove: boolean): boolean {
     const map: WorldMap = world.getResource<WorldMapResource>('map')
     const ui: UI = world.getResource<UIResource>('ui')
     if (!ui.isModal) {
       const triggeredBy = world.getComponent<TriggeredByComponent>(entity, 'triggered-by')!
-      const triggers = world.getComponent<TriggersComponent>(entity, 'triggers')!
       const sourceFeature = world.getComponent<FeatureComponent>(triggers.entities[0], 'feature')!
       const targetFeature = world.getComponent<FeatureComponent>(triggeredBy.entity, 'feature')!
       const targetText = targetFeature.feature().name

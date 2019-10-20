@@ -11,6 +11,8 @@ import { Entity } from '../ecs/entity'
 import { AiComponent } from '../components/ai'
 import { ActionType } from './actions'
 import { ItemType } from './items'
+import { addDialog } from './dialogs'
+import { TriggersComponent } from '../components/trigger'
 
 function humanoidBodyParts(core: number, head: number, limp: number): { [key: string]: BodyPart } {
   return {
@@ -58,14 +60,22 @@ export const characterStats: { [key in CharacterStatsType]: CharacterStats } = c
 
 const characterCreatorsDefinition = {
   player: (world: TlbWorld) => createPlayer(world),
-  eliteGuard: (world: TlbWorld) => createDefaultNpc(world, 'eliteGuard', 'eliteGuard'),
-  guard: (world: TlbWorld) => createDefaultNpc(world, 'guard', 'guard'),
+  eliteGuard: (world: TlbWorld) => {
+    const entity = createDefaultNpc(world, 'some elite guard', 'eliteGuard', 'eliteGuard')
+    addDialog(world, entity, 'guardRandomRemarks')
+    return entity
+  },
+  guard: (world: TlbWorld) => {
+    const entity = createDefaultNpc(world, 'some guard', 'guard', 'guard')
+    addDialog(world, entity, 'guardRandomRemarks')
+    return entity
+  },
 }
 
 export const defaultActions: ActionType[] = ['longMove', 'hit', 'rush', 'endTurn']
 
 export function createPlayer(world: TlbWorld): Entity {
-  const player = createCharacter(world, 'player', 'player', defaultActions)
+  const player = createCharacter(world, 'you', 'player', 'player', defaultActions)
   world
     .editEntity(player)
     .withComponent<{}>('player', {})
@@ -78,8 +88,8 @@ export function createPlayer(world: TlbWorld): Entity {
   return player
 }
 
-export function createDefaultNpc(world: TlbWorld, statsType: CharacterStatsType, featureType: FeatureType): Entity {
-  const npc = createEmptyNpc(world, statsType, featureType, defaultActions)
+export function createDefaultNpc(world: TlbWorld, name: string, statsType: CharacterStatsType, featureType: FeatureType): Entity {
+  const npc = createEmptyNpc(world, name, statsType, featureType, defaultActions)
   equip(world, npc, 'rifle', ['leftArm'])
   return npc
 }
@@ -98,8 +108,14 @@ export function equip(world: TlbWorld, entity: Entity, type: ItemType, bodyParts
   })
 }
 
-export function createEmptyNpc(world: TlbWorld, statsType: CharacterStatsType, featureType: FeatureType, actions: ActionType[]): Entity {
-  const character = createCharacter(world, statsType, featureType, actions)
+export function createEmptyNpc(
+  world: TlbWorld,
+  name: string,
+  statsType: CharacterStatsType,
+  featureType: FeatureType,
+  actions: ActionType[]
+): Entity {
+  const character = createCharacter(world, name, statsType, featureType, actions)
   return world
     .editEntity(character)
     .withComponent('npc', {})
@@ -108,10 +124,17 @@ export function createEmptyNpc(world: TlbWorld, statsType: CharacterStatsType, f
     .withComponent<EquipedItemsComponent>('equiped-items', { equipment: [] }).entity
 }
 
-export function createCharacter(world: TlbWorld, statsType: CharacterStatsType, featureType: FeatureType, actions: ActionType[]): Entity {
+export function createCharacter(
+  world: TlbWorld,
+  name: string,
+  statsType: CharacterStatsType,
+  featureType: FeatureType,
+  actions: ActionType[]
+): Entity {
   return world
     .createEntity()
     .withComponent<HasActionComponent>('has-action', { actions })
+    .withComponent<TriggersComponent>('triggers', { entities: [], type: 'dialog', name })
     .withComponent<FeatureComponent>('feature', { feature: () => features[featureType] })
     .withComponent<FovComponent>('fov', { fov: [] })
     .withComponent<CharacterStatsComponent>('character-stats', createCharacterStatsComponent(statsType))

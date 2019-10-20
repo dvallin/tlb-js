@@ -1,11 +1,16 @@
 import { TlbWorld } from '../tlb'
 import { Entity } from '../ecs/entity'
 import { InventoryComponent, ItemComponent } from '../components/items'
+import { ItemType } from './items'
+import { TriggeredByComponent, TriggersComponent } from '../components/trigger'
+import { DialogComponent } from '../components/dialog'
 
+export type AnswerType = 'close' | 'attack' | 'authorized'
+export type Check = (world: TlbWorld, player: Entity, npc: Entity) => boolean
 export interface Answer {
   text: string
-  navigation: number | string
-  check?: (world: TlbWorld, player: Entity, npc: Entity) => boolean
+  navigation: number | AnswerType
+  check?: Check
 }
 export interface Step {
   text: string[]
@@ -13,6 +18,17 @@ export interface Step {
 }
 export interface Dialog {
   steps: Step[]
+}
+
+function answer(text: string, navigation: number | AnswerType, check?: Check): Answer {
+  return { check, text, navigation }
+}
+function attack(): Answer {
+  return answer('[attack]', 'attack')
+}
+const playerHasItem = (type: ItemType) => (world: TlbWorld, player: Entity) => {
+  const inventory = world.getComponent<InventoryComponent>(player, 'inventory')!.content
+  return inventory.some(i => world.getComponent<ItemComponent>(i, 'item')!.type === type)
 }
 
 const dialogDefinitions = {
@@ -37,6 +53,7 @@ const dialogDefinitions = {
           'Gracious wife, gracious life',
           'im about to nut these loads',
           'May biqueerplatonic people find success in their lives',
+          'I hope hologender people are getting enough time to rest!',
           'Washing my chin',
           'I am still against full luxury automated communism. thats not what i aim for.',
           '#Javascript was a mistake.',
@@ -45,12 +62,22 @@ const dialogDefinitions = {
           "It's a comfortable dusk in the city, and you are a comfortable salmon.",
           'adulthood is having your debit card declined, fashionably',
         ],
-        answers: [
-          {
-            text: 'ok',
-            navigation: 'close',
-          },
+        answers: [answer('ok', 'close')],
+      },
+    ],
+  },
+  guardRandomRemarks: {
+    steps: [
+      {
+        text: [
+          'Do you want to cry now?',
+          'Love a neurogender bitch, oh, it get my dick hard',
+          "You ain't gonna let me fuck you and I feel you",
+          "I'm icy bitch, don't look at my wrist.",
+          'Fuck love. All I got for hoes is hard dick and bubblegum.',
+          'I punched this transhumanist in the ripcage and kicked her in the stomach',
         ],
+        answers: [answer('ok', 'close'), attack()],
       },
     ],
   },
@@ -58,32 +85,22 @@ const dialogDefinitions = {
     steps: [
       {
         text: ['Hey you, stop it right there. This is a restricted area.', 'Identify yourself'],
-        answers: [
-          {
-            text: '[attack]',
-            navigation: 'unauthorized',
-          },
-          {
-            check: (world: TlbWorld, player: Entity) => {
-              const inventory = world.getComponent<InventoryComponent>(player, 'inventory')!.content
-              return inventory.some(i => world.getComponent<ItemComponent>(i, 'item')!.type === 'idCard')
-            },
-            text: '[show id card]',
-            navigation: 1,
-          },
-        ],
+        answers: [attack(), answer('[show id card]', 1, playerHasItem('idCard'))],
       },
       {
         text: ['Ok, you can pass'],
-        answers: [
-          {
-            text: 'ok',
-            navigation: 'authorized',
-          },
-        ],
+        answers: [answer('ok', 'authorized')],
       },
     ],
   },
 }
 export type DialogType = keyof typeof dialogDefinitions
 export const dialogs: { [key in DialogType]: Dialog } = dialogDefinitions
+
+export function addDialog(world: TlbWorld, entity: Entity, type: DialogType): void {
+  const dialog = world
+    .createEntity()
+    .withComponent<TriggeredByComponent>('triggered-by', { entity })
+    .withComponent<DialogComponent>('dialog', { type }).entity
+  world.getComponent<TriggersComponent>(entity, 'triggers')!.entities.push(dialog)
+}

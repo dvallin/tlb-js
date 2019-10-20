@@ -50,23 +50,31 @@ export class PlayerInteraction implements TlbSystem {
     shape.foreach(p => {
       const tile = map.levels[level].getTile(p)
       if (tile !== undefined) {
-        const entity = findTriggerOfTile(world, tile)
-        if (entity !== undefined && !seen.has(entity)) {
-          seen.add(entity)
-          const t = world.getComponent<TriggersComponent>(entity, 'triggers')!
-          triggers.push({ entity, description: t.name })
-        }
+        registerTrigger(world, seen, tile, triggers)
+      }
+      const character = map.levels[level].getCharacter(p)
+      if (character !== undefined) {
+        registerTrigger(world, seen, character, triggers)
       }
     })
     return triggers
   }
 }
 
-function findTriggerOfTile(world: TlbWorld, tile: Entity): Entity | undefined {
-  if (world.getComponent(tile, 'triggers') !== undefined) {
-    return tile
+function registerTrigger(world: TlbWorld, seen: Set<Entity>, owner: Entity, triggers: { entity: Entity; description: string }[]): void {
+  const entity = findTriggerOfEntity(world, owner)
+  if (entity !== undefined && !seen.has(entity)) {
+    seen.add(entity)
+    const t = world.getComponent<TriggersComponent>(entity, 'triggers')!
+    triggers.push({ entity, description: t.name })
   }
-  const triggeredBy = world.getComponent<TriggeredByComponent>(tile, 'triggered-by')
+}
+
+function findTriggerOfEntity(world: TlbWorld, entity: Entity): Entity | undefined {
+  if (world.getComponent(entity, 'triggers') !== undefined) {
+    return entity
+  }
+  const triggeredBy = world.getComponent<TriggeredByComponent>(entity, 'triggered-by')
   if (triggeredBy !== undefined) {
     if (world.getComponent<TriggersComponent>(triggeredBy.entity, 'triggers') !== undefined) {
       return triggeredBy.entity

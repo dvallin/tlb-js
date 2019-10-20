@@ -17,9 +17,11 @@ import { MovementSelector } from '../ui/tabs/movement-selector'
 import { Queries } from '../renderer/queries'
 import { Path } from '../renderer/astar'
 import { AttackSelector } from '../ui/tabs/attack-selector'
-import { Dialog } from '../assets/dialogs'
+import { DialogType, dialogs, AnswerType } from '../assets/dialogs'
 import { DialogModal } from '../ui/dialog-modal'
 import { Random } from '../random'
+import { State } from '../game-states/state'
+import { Modal } from '../game-states/modal'
 
 export interface UI {
   hasElement(position: Vector): boolean
@@ -38,8 +40,8 @@ export interface UI {
   multipleChoiceModalShowing(): boolean
   hideMultipleChoiceModal(): void
 
-  showDialogModal(world: TlbWorld, random: Random, dialog: Dialog, player: Entity, npc: Entity): void
-  dialogResult(): string | undefined
+  showDialogModal(world: TlbWorld, random: Random, dialog: DialogType, player: Entity, npc: Entity): void
+  dialogResult(): AnswerType | undefined
   dialogShowing(): boolean
   hideDialogModal(): void
 
@@ -55,6 +57,25 @@ export interface UI {
   selectedAttack(): Path | undefined
 
   createTabs(world: TlbWorld, focus: Entity): void
+}
+
+export function runDialog(
+  ui: UI,
+  world: TlbWorld,
+  random: Random,
+  dialog: DialogType,
+  player: Entity,
+  npc: Entity,
+  pushState: (state: State) => void
+): AnswerType | undefined {
+  const result = ui.dialogResult()
+  if (!ui.dialogShowing()) {
+    ui.showDialogModal(world, random, dialog, player, npc)
+    pushState(new Modal(world.activeSystemsList()))
+  } else if (result !== undefined) {
+    ui.hideDialogModal()
+  }
+  return result
 }
 
 export class UIResource implements TlbResource, UI {
@@ -189,16 +210,16 @@ export class UIResource implements TlbResource, UI {
     }
   }
 
-  public showDialogModal(world: TlbWorld, random: Random, dialog: Dialog, player: Entity, npc: Entity): void {
+  public showDialogModal(world: TlbWorld, random: Random, dialog: DialogType, player: Entity, npc: Entity): void {
     this.isModal = true
 
     const viewport: Viewport = world.getResource<ViewportResource>('viewport')
     const window = new WindowDecoration(new Rectangle(viewport.boundaries.x / 2 - 20, viewport.boundaries.y / 2 - 20, 40, 10), 'dialog')
 
-    this.dialogModal = new DialogModal(world, random, window, dialog, player, npc)
+    this.dialogModal = new DialogModal(world, random, window, dialogs[dialog], player, npc)
   }
 
-  public dialogResult(): string | undefined {
+  public dialogResult(): AnswerType | undefined {
     if (this.dialogModal !== undefined) {
       return this.dialogModal.result
     }
@@ -243,7 +264,6 @@ export class UIResource implements TlbResource, UI {
       this.hideSelectors()
       this.movementSelector = new MovementSelector(target, queries, movement)
       this.tabs.setFocusTab(this.movementSelector!)
-      console.log('show movement selector')
     }
   }
 
@@ -259,7 +279,6 @@ export class UIResource implements TlbResource, UI {
       this.hideSelectors()
       this.attackSelector = new AttackSelector(target, queries, range)
       this.tabs.setFocusTab(this.attackSelector!)
-      console.log('show attack selector')
     }
   }
 

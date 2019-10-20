@@ -8,14 +8,14 @@ import { TlbWorld } from '../tlb'
 
 import { WindowDecoration } from './window-decoration'
 import { ItemSelector } from './selector'
-import { Dialog, Answer } from '../assets/dialogs'
+import { Dialog, Answer, AnswerType } from '../assets/dialogs'
 import { Random } from '../random'
 
 export interface State {}
 
 export class DialogModal implements UIElement {
   public closed: boolean = false
-  public result: string | undefined = undefined
+  public result: AnswerType | undefined = undefined
 
   private currentText: string = ''
   private currentAnswers: Answer[] = []

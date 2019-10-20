@@ -4,7 +4,7 @@ import { PositionComponent } from '../components/position'
 
 export class MainMenu extends AbstractState {
   public constructor() {
-    super(['free-mode-control'])
+    super('main-menu', ['free-mode-control'])
   }
 
   public start(world: TlbWorld) {

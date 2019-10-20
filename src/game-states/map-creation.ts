@@ -15,7 +15,7 @@ export class MapCreation extends AbstractState {
   private startRegion: Entity | undefined
 
   public constructor() {
-    super(['region-creator'])
+    super('map-creation', ['region-creator'])
   }
 
   public start(world: TlbWorld): void {

@@ -12,13 +12,15 @@ import { characterCreators, createEmptyNpc, defaultActions, take, equip } from '
 import { AssetType } from './assets'
 import { ItemType } from './items'
 import { RegionsType } from '../components/region'
+import { addDialog } from './dialogs'
 
 function restriction(restriction: Partial<StructureRestriction>): Partial<StructureRestriction> {
   return restriction
 }
 
 const boss1: CharacterCreator = world => {
-  const boss = createEmptyNpc(world, 'boss', 'eliteGuard', defaultActions)
+  const boss = createEmptyNpc(world, 'overseer', 'boss', 'eliteGuard', defaultActions)
+  addDialog(world, boss, 'guardRandomRemarks')
   take(world, boss, 'rifle')
   take(world, boss, 'bootsOfStriding')
   equip(world, boss, 'nailGun', ['leftArm'])
