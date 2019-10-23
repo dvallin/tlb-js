@@ -8,5 +8,4 @@ export interface AiComponent {
 
   interest: Entity | undefined
   distrust: number
-  authorized: Set<Entity>
 }

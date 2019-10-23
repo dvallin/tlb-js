@@ -35,7 +35,7 @@ export class Queries {
   public lighting(world: TlbWorld, level: number, origin: Vector, color: Color, callback: (pos: Vector, color: Color) => void) {
     const map = world.getResource<WorldMapResource>('map')
     const originFloor = new Vector([origin.fX, origin.fY])
-    const fov = new FOV.RecursiveShadowcasting((x, y) => !map.levels[level].isLightBlocking(world, new Vector([x, y])), { topology: 8 })
+    const fov = new FOV.PreciseShadowcasting((x, y) => !map.levels[level].isLightBlocking(world, new Vector([x, y])), { topology: 8 })
     const lighting = new Lighting((x, y) => (map.levels[level].isLightBlocking(world, new Vector([x, y])) ? 0.0 : 1.0), { passes: 1 })
     lighting.setLight(originFloor.x, originFloor.y, color.color)
     lighting.setFOV(fov)

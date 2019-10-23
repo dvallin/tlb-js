@@ -162,7 +162,7 @@ export function registerSystems(
   world.registerSystem('fov', new Fov(queries))
   world.registerSystem('free-mode-control', new FreeModeControl())
   world.registerSystem('light', new Light(queries))
-  world.registerSystem('npc', new Npc(new Random(uniform), pushState))
+  world.registerSystem('npc', new Npc(queries, new Random(uniform), pushState))
   world.registerSystem('player-control', new PlayerControl())
   world.registerSystem('player-interaction', new PlayerInteraction(pushState))
   world.registerSystem('player-round-control', new PlayerRoundControl(queries, new Random(uniform)))

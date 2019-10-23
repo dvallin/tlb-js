@@ -9,6 +9,7 @@ export interface RegionComponent {
   level: number
   shape: Shape
   entry: Vector | undefined
+  authorized: Set<Entity>
 }
 
 export interface Connection {

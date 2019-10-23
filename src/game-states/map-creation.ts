@@ -45,6 +45,7 @@ export class MapCreation extends AbstractState {
         shape: new Rectangle(0, 0, 50, 50),
         level: 0,
         entry: undefined,
+        authorized: new Set(),
       })
       .withComponent('active', {}).entity
   }

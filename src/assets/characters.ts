@@ -79,6 +79,7 @@ export function createPlayer(world: TlbWorld): Entity {
   world
     .editEntity(player)
     .withComponent<{}>('player', {})
+    .withComponent<FovComponent>('fov', { fov: [] })
     .withComponent<{}>('viewport-focus', {})
 
   take(world, player, 'rifle')
@@ -119,7 +120,7 @@ export function createEmptyNpc(
   return world
     .editEntity(character)
     .withComponent('npc', {})
-    .withComponent<AiComponent>('ai', { type: 'rushing', state: 'idle', interest: undefined, distrust: 0, authorized: new Set() })
+    .withComponent<AiComponent>('ai', { type: 'rushing', state: 'idle', interest: undefined, distrust: 0 })
     .withComponent<InventoryComponent>('inventory', { content: [] })
     .withComponent<EquipedItemsComponent>('equiped-items', { equipment: [] }).entity
 }
@@ -136,7 +137,6 @@ export function createCharacter(
     .withComponent<HasActionComponent>('has-action', { actions })
     .withComponent<TriggersComponent>('triggers', { entities: [], type: 'dialog', name })
     .withComponent<FeatureComponent>('feature', { feature: () => features[featureType] })
-    .withComponent<FovComponent>('fov', { fov: [] })
     .withComponent<CharacterStatsComponent>('character-stats', createCharacterStatsComponent(statsType))
     .withComponent<ActiveEffectsComponent>('active-effects', { effects: [] }).entity
 }
