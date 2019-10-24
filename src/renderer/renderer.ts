@@ -10,7 +10,6 @@ import { getFeature, Feature } from '../components/feature'
 import { PositionComponent } from '../components/position'
 import { Entity } from '../ecs/entity'
 import { WorldMapResource } from '../resources/world-map'
-import { LightingComponent } from '../components/light'
 import { OverlayComponent } from '../components/overlay'
 import { UI, UIResource } from '../resources/ui'
 import { Vector } from '../spatial'
@@ -67,12 +66,6 @@ export class RotRenderer implements Renderer {
     })
     const ui: UI = world.getResource<UIResource>('ui')
     ui.render(this)
-    world.getStorage<LightingComponent>('lighting')!.foreach(({}, lighting) => {
-      const tmp = lighting.incomingLight
-      lighting.incomingLight = lighting.incomingLightInFrame
-      lighting.incomingLightInFrame = tmp
-      lighting.incomingLightInFrame.clear()
-    })
     world.components.get('overlay')!.clear()
   }
 
@@ -95,31 +88,15 @@ export class RotRenderer implements Renderer {
     const level = world.getResource<WorldMapResource>('map').levels[position.level]
     const p = position.position
     if (level.isDiscovered(p)) {
-      let lighting = undefined
-      if (level.isVisible(p)) {
-        lighting = world.getComponent<LightingComponent>(entity, 'lighting')
-      }
+      const color = level.isVisible(p) ? feature.diffuse : this.computeColor(this.ambientColor, feature.diffuse)
       const overlay = world.getComponent<OverlayComponent>(entity, 'overlay') || { background: undefined }
       const displayPosition = viewport.toDisplay(p, centered)
-      this.character(
-        feature.character,
-        displayPosition,
-        this.computeColor(this.ambientColor, feature.diffuse, lighting),
-        overlay.background
-      )
+      this.character(feature.character, displayPosition, color, overlay.background)
     }
   }
 
-  public computeColor(ambientLight: Color, diffuse: Color, lighting: LightingComponent | undefined): Color {
-    if (lighting === undefined) {
-      return diffuse.multiply(ambientLight)
-    } else {
-      let totalLight = ambientLight
-      lighting.incomingLight.forEach(incoming => {
-        totalLight = totalLight.add(incoming)
-      })
-      return diffuse.multiply(totalLight)
-    }
+  public computeColor(ambientLight: Color, diffuse: Color): Color {
+    return diffuse.multiply(ambientLight)
   }
 
   public eventToPosition(e: TouchEvent | MouseEvent): Position | undefined {

@@ -1,16 +1,16 @@
 import { Action, Movement, Status, Attack } from '../components/action'
-import { Effect, damage, confuse, stun, immobilize, defend } from '../components/effects'
+import { Effect, damage, confuse, stun, immobilize, defend, kill, heal, negateEffects } from '../components/effects'
 
 function movement(range: number): Movement {
-  return { kind: 'movement', range }
+  return { kind: 'movement', range, target: 'self' }
 }
 
 function attack(range: number, accuracy: number, effects: Effect[]): Attack {
-  return { kind: 'attack', range, accuracy, effects }
+  return { kind: 'attack', range, accuracy, effects, target: 'enemy' }
 }
 
 function status(effects: Effect[]): Status {
-  return { kind: 'status', effects }
+  return { kind: 'status', effects, target: 'self' }
 }
 
 const actionsDefinition = {
@@ -31,14 +31,6 @@ const actionsDefinition = {
     },
     subActions: [movement(3)],
   },
-  consume: {
-    name: 'consume',
-    cost: {
-      actions: 1,
-      movement: 0,
-    },
-    subActions: [],
-  },
   longMove: {
     name: 'move',
     cost: {
@@ -46,6 +38,22 @@ const actionsDefinition = {
       movement: 2,
     },
     subActions: [movement(5)],
+  },
+  healLimp: {
+    name: 'healLimp',
+    cost: {
+      actions: 1,
+      movement: 0,
+    },
+    subActions: [status([heal(), negateEffects()])],
+  },
+  kill: {
+    name: 'kill',
+    cost: {
+      actions: 1,
+      movement: 0,
+    },
+    subActions: [status([kill()])],
   },
   hit: {
     name: 'hit',

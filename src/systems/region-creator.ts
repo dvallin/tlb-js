@@ -1,5 +1,4 @@
 import { createFeatureFromType } from '../components/feature'
-import { createLight } from '../components/light'
 import { RegionComponent, StructureComponent } from '../components/region'
 import { Entity } from '../ecs/entity'
 import { Intersection } from '../geometry/intersection'
@@ -7,7 +6,6 @@ import { Rectangle } from '../geometry/rectangle'
 import { Shape } from '../geometry/shape'
 import { Random } from '../random'
 import { Distribution, Exponential } from '../random/distributions'
-import { Color } from '../renderer/color'
 import { WorldMap, WorldMapResource } from '../resources/world-map'
 import { Vector } from '../spatial'
 import { directions } from '../spatial/direction'
@@ -205,13 +203,6 @@ export class RegionCreator implements TlbSystem {
       map.levels[level].setStructure(p, entity)
     })
 
-    const color = new Color([
-      this.uniform.integerBetween(100, 255),
-      this.uniform.integerBetween(100, 255),
-      this.uniform.integerBetween(100, 255),
-    ])
-    createLight(world, map, level, corridor.shape.bounds().center, color)
-
     corridor.exits.forEach(c => this.renderCorridors(world, map, level, region, c))
   }
 
@@ -232,13 +223,6 @@ export class RegionCreator implements TlbSystem {
       createFeatureFromType(world, map, level, p, 'room')
       map.levels[level].setStructure(p, entity)
     })
-
-    const color = new Color([
-      this.uniform.integerBetween(100, 255),
-      this.uniform.integerBetween(100, 255),
-      this.uniform.integerBetween(100, 255),
-    ])
-    createLight(world, map, level, room.shape.bounds().center, color)
 
     const doors = this.findPossibleDoors(world, map, level, room.shape.bounds())
 

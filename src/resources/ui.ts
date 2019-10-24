@@ -10,7 +10,7 @@ import { Entity } from '../ecs/entity'
 import { WindowDecoration } from '../ui/window-decoration'
 import { InventoryTransferModal } from '../ui/inventory-transfer-modal'
 import { Inventory } from '../ui/tabs/inventory'
-import { MultipleChoiceModal } from '../ui/multiple-choice-modal'
+import { MultipleChoiceModal, MultipleChoiceOption } from '../ui/multiple-choice-modal'
 import { Tabs } from '../ui/tabs'
 import { LogTab } from '../ui/tabs/log'
 import { MovementSelector } from '../ui/tabs/movement-selector'
@@ -22,6 +22,7 @@ import { DialogModal } from '../ui/dialog-modal'
 import { Random } from '../random'
 import { State } from '../game-states/state'
 import { Modal } from '../game-states/modal'
+import { MultipleChoiceSelector } from '../ui/tabs/multiple-choice-tab'
 
 export interface UI {
   hasElement(position: Vector): boolean
@@ -35,8 +36,8 @@ export interface UI {
   inventoryTransferModalShowing(): boolean
   hideInventoryTransferModal(): void
 
-  showMultipleChoiceModal(world: TlbWorld, title: string, options: { entity: Entity; description: string }[]): void
-  selectedOption(): Entity | undefined
+  showMultipleChoiceModal(world: TlbWorld, title: string, options: MultipleChoiceOption[]): void
+  selectedModalOption(): Entity | undefined
   multipleChoiceModalShowing(): boolean
   hideMultipleChoiceModal(): void
 
@@ -55,6 +56,9 @@ export interface UI {
 
   showAttackSelector(target: Entity, queries: Queries, range: number): void
   selectedAttack(): Path | undefined
+
+  showMultipleChoiceSelector(options: MultipleChoiceOption[]): void
+  selectedOption(): Entity | undefined
 
   createTabs(world: TlbWorld, focus: Entity): void
 }
@@ -96,6 +100,7 @@ export class UIResource implements TlbResource, UI {
   private actionSelector: ActionSelector | undefined = undefined
   private movementSelector: MovementSelector | undefined = undefined
   private attackSelector: AttackSelector | undefined = undefined
+  private multipleChoiceSelector: MultipleChoiceSelector | undefined = undefined
 
   public update(world: TlbWorld): void {
     if (this.isModal) {
@@ -198,7 +203,7 @@ export class UIResource implements TlbResource, UI {
     this.multipleChoiceModal = new MultipleChoiceModal(window, options)
   }
 
-  public selectedOption(): number | undefined {
+  public selectedModalOption(): number | undefined {
     if (this.multipleChoiceModal !== undefined) {
       const s = this.multipleChoiceModal.selector.selected
       if (s !== undefined) {
@@ -251,6 +256,7 @@ export class UIResource implements TlbResource, UI {
     this.movementSelector = undefined
     this.actionSelector = undefined
     this.attackSelector = undefined
+    this.multipleChoiceSelector = undefined
     if (this.tabs !== undefined) {
       this.tabs.reset()
     }
@@ -296,6 +302,21 @@ export class UIResource implements TlbResource, UI {
   public selectedAttack(): Path | undefined {
     if (this.attackSelector !== undefined) {
       return this.attackSelector.selected
+    }
+    return undefined
+  }
+
+  public showMultipleChoiceSelector(options: MultipleChoiceOption[]): void {
+    if (this.tabs !== undefined && this.multipleChoiceSelector === undefined) {
+      this.hideSelectors()
+      this.multipleChoiceSelector = new MultipleChoiceSelector(options)
+      this.tabs.setFocusTab(this.multipleChoiceSelector!)
+    }
+  }
+
+  public selectedOption(): Entity | undefined {
+    if (this.multipleChoiceSelector !== undefined) {
+      return this.multipleChoiceSelector.selected
     }
     return undefined
   }

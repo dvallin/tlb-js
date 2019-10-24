@@ -1,11 +1,10 @@
-import { DiscreteSpace, Vector, Space, StackedSpace, DiscreteStackedSpace } from '../spatial'
+import { DiscreteSpace, Vector, Space } from '../spatial'
 import { Entity } from '../ecs/entity'
 import { ResourceName, TlbResource, TlbWorld } from '../tlb'
 import { FeatureComponent } from '../components/feature'
 import { Shape } from '../geometry/shape'
 import { SetSpace, DiscreteSetSpace } from '../spatial/set-space'
 import { FovComponent } from '../components/fov'
-import { FunctionalShape } from '../geometry/functional-shape'
 import { PositionComponent } from '../components/position'
 import { Rectangle } from '../geometry/rectangle'
 
@@ -19,8 +18,6 @@ export class Level {
   public visible: SetSpace
   public readonly discovered: SetSpace
 
-  public lights: StackedSpace<Entity>
-
   public constructor(width: number) {
     this.boundary = new Rectangle(0, 0, width, width)
 
@@ -30,8 +27,6 @@ export class Level {
 
     this.visible = new DiscreteSetSpace(width)
     this.discovered = new DiscreteSetSpace(width)
-
-    this.lights = new DiscreteStackedSpace(width)
   }
 
   public setTile(position: Vector, entity: Entity): void {
@@ -59,10 +54,6 @@ export class Level {
   }
   public removeCharacter(position: Vector): Entity | undefined {
     return this.characters.remove(position)
-  }
-
-  public addLight(position: Vector, entity: Entity): void {
-    this.lights.addAll(FunctionalShape.l2(position, 6, true), entity)
   }
 
   public isDiscovered(position: Vector): boolean {
@@ -168,7 +159,6 @@ export class WorldMapResource implements TlbResource, WorldMap {
   }
 
   public update(world: TlbWorld): void {
-    const visibleLights = new Set<Entity>()
     world.components.get('player')!.foreach(player => {
       const position = world.getComponent<PositionComponent>(player, 'position')
       if (position !== undefined) {
@@ -179,17 +169,8 @@ export class WorldMapResource implements TlbResource, WorldMap {
           fov.fov.forEach(p => {
             level.visible.set(p.position)
             level.discovered.set(p.position)
-            level.lights.get(p.position).forEach(v => visibleLights.add(v))
           })
         }
-      }
-    })
-    world.components.get('light')!.foreach(l => {
-      const light = world.editEntity(l)
-      if (visibleLights.has(l)) {
-        light.withComponent('active', {})
-      } else {
-        light.removeComponent('active')
       }
     })
   }

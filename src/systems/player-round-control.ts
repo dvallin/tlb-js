@@ -13,6 +13,11 @@ import { ActionGroup } from '../ui/tabs/action-selector'
 import { Random } from '../random'
 import { attackTarget } from '../component-reducers/attack-target'
 import { EffectComponent } from '../components/effects'
+import { CharacterStatsComponent } from '../components/character-stats'
+import { MultipleChoiceOption } from '../ui/multiple-choice-modal'
+import { ItemComponent } from '../components/items'
+import { consumeItem } from '../component-reducers/consume-item'
+import { items } from '../assets/items'
 
 export class PlayerRoundControl implements TlbSystem {
   public readonly components: ComponentName[] = ['take-turn', 'player', 'position']
@@ -26,7 +31,7 @@ export class PlayerRoundControl implements TlbSystem {
     if (!isInAnimation) {
       const turnIsOver = takeTurn.actions + takeTurn.movements === 0
       if (!turnIsOver) {
-        const availableActions = calculateAvailableActions(world, entity, takeTurn)
+        const availableActions = calculateAvailableActions(world, entity, takeTurn, true)
         this.doTurn(world, entity, takeTurn, availableActions)
       } else {
         this.endTurn(world, entity)
@@ -101,7 +106,7 @@ export class PlayerRoundControl implements TlbSystem {
       case 'movement':
         return this.move(world, entity, subAction)
       case 'status':
-        return this.status(world, entity, subAction)
+        return this.status(world, entity, subAction, selectedAction.selection!.entity)
     }
   }
 
@@ -155,14 +160,32 @@ export class PlayerRoundControl implements TlbSystem {
     return true
   }
 
-  public status(world: TlbWorld, entity: Entity, status: Status): boolean {
-    status.effects.forEach(effect => {
-      world.createEntity().withComponent<EffectComponent>('effect', {
-        source: entity,
-        target: entity,
-        effect,
+  public status(world: TlbWorld, entity: Entity, status: Status, item: Entity): boolean {
+    const stats = world.getComponent<CharacterStatsComponent>(entity, 'character-stats')!
+    const ui = world.getResource<UIResource>('ui')
+    let index: number | undefined = 0
+    if (status.effects.find(e => !e.global)) {
+      const options: MultipleChoiceOption[] = Object.keys(stats.current.bodyParts).map((key, i) => ({ entity: i, description: key }))
+      ui.showMultipleChoiceSelector(options)
+      index = ui.selectedOption()
+    }
+    if (index !== undefined) {
+      const bodyPart = Object.keys(stats.current.bodyParts)[index]
+      status.effects.forEach(effect => {
+        const bodyParts = effect.global ? undefined : [bodyPart]
+        world.createEntity().withComponent<EffectComponent>('effect', {
+          source: entity,
+          target: entity,
+          effect,
+          bodyParts,
+        })
       })
-    })
-    return true
+      const itemComponent = world.getComponent<ItemComponent>(item, 'item')
+      if (itemComponent !== undefined && items[itemComponent.type].kind === 'consumable') {
+        consumeItem(world, entity, item)
+      }
+      return true
+    }
+    return false
   }
 }

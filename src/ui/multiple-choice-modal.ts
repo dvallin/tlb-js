@@ -9,8 +9,8 @@ import { TlbWorld } from '../tlb'
 import { WindowDecoration } from './window-decoration'
 import { ItemSelector } from './selector'
 
-export interface MultipleChoiseOption {
-  entity: Entity
+export interface MultipleChoiceOption {
+  entity: Entity | number
   description: string
 }
 
@@ -19,7 +19,7 @@ export class MultipleChoiceModal implements UIElement {
 
   public readonly selector: ItemSelector<{ entity: Entity; description: string }>
 
-  public constructor(private readonly window: WindowDecoration, private readonly options: MultipleChoiseOption[]) {
+  public constructor(private readonly window: WindowDecoration, private readonly options: MultipleChoiceOption[]) {
     this.selector = new ItemSelector(this.options)
   }
 

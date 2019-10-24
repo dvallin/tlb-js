@@ -32,7 +32,7 @@ export class PlayerInteraction implements TlbSystem {
         this.pushState(new Modal(world.activeSystemsList()))
       }
     } else if (ui.multipleChoiceModalShowing()) {
-      trigger = ui.selectedOption()
+      trigger = ui.selectedModalOption()
       ui.hideMultipleChoiceModal()
     }
 

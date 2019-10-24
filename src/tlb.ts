@@ -9,13 +9,11 @@ import { CharacterStatsComponent } from './components/character-stats'
 import { FeatureComponent } from './components/feature'
 import { FovComponent } from './components/fov'
 import { GroundComponent } from './components/ground'
-import { LightingComponent, LightComponent } from './components/light'
 import { PositionComponent } from './components/position'
 import { RegionComponent, StructureComponent } from './components/region'
 
 import { Fov } from './systems/fov'
 import { FreeModeControl } from './systems/free-mode-control'
-import { Light } from './systems/light'
 import { Npc } from './systems/npc'
 import { PlayerControl } from './systems/player-control'
 import { PlayerInteraction } from './systems/player-interaction'
@@ -65,8 +63,6 @@ export type ComponentName =
   | 'has-action'
   | 'inventory'
   | 'item'
-  | 'light'
-  | 'lighting'
   | 'npc'
   | 'overlay'
   | 'player'
@@ -91,7 +87,6 @@ export type SystemName =
   | 'fov'
   | 'free-mode-control'
   | 'info-popup'
-  | 'light'
   | 'npc'
   | 'player-control'
   | 'player-interaction'
@@ -123,8 +118,6 @@ export function registerComponents<S, R>(world: World<ComponentName, S, R>): voi
   world.registerComponentStorage('structure', new MapStorage<StructureComponent>())
   world.registerComponentStorage('equiped-items', new MapStorage<EquipedItemsComponent>())
   world.registerComponentStorage('item', new MapStorage<ItemComponent>())
-  world.registerComponentStorage('light', new MapStorage<LightComponent>())
-  world.registerComponentStorage('lighting', new MapStorage<LightingComponent>())
   world.registerComponentStorage('npc', new SetStorage())
   world.registerComponentStorage('overlay', new MapStorage<OverlayComponent>())
   world.registerComponentStorage('player', new SingletonStorage<{}>())
@@ -161,7 +154,6 @@ export function registerSystems(
   world.registerSystem('effect', new ApplyEffects())
   world.registerSystem('fov', new Fov(queries))
   world.registerSystem('free-mode-control', new FreeModeControl())
-  world.registerSystem('light', new Light(queries))
   world.registerSystem('npc', new Npc(queries, new Random(uniform), pushState))
   world.registerSystem('player-control', new PlayerControl())
   world.registerSystem('player-interaction', new PlayerInteraction(pushState))

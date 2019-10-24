@@ -1,12 +1,12 @@
 import { Entity } from '../ecs/entity'
 import { bodyPartType } from './character-stats'
 
-export type effect = 'damage' | 'kill' | 'stun' | 'bleed' | 'confuse' | 'defend' | 'immobilize'
+export type effect = 'damage' | 'kill' | 'stun' | 'bleed' | 'confuse' | 'defend' | 'immobilize' | 'negate' | 'heal'
 
 export interface Effect {
   type: effect
   global: boolean
-  negated: boolean
+  negative: boolean
 
   restricted?: bodyPartType[]
   duration?: number
@@ -28,25 +28,37 @@ export interface EffectComponent {
 }
 
 export function damage(value: number, restricted: bodyPartType[] = ['torso']): Effect {
-  return { type: 'damage', global: false, negated: false, value, restricted }
+  return { type: 'damage', global: false, negative: true, value, restricted }
 }
 
 export function confuse(duration: number): Effect {
-  return { type: 'confuse', global: true, negated: false, duration }
+  return { type: 'confuse', global: true, negative: true, duration }
 }
 
 export function defend(value: number, duration: number): Effect {
-  return { type: 'defend', global: true, negated: false, duration, value }
+  return { type: 'defend', global: true, negative: false, duration, value }
 }
 
 export function stun(duration: number): Effect {
-  return { type: 'stun', global: true, negated: false, duration }
+  return { type: 'stun', global: true, negative: true, duration }
 }
 
 export function immobilize(duration: number): Effect {
-  return { type: 'immobilize', global: true, negated: false, duration }
+  return { type: 'immobilize', global: true, negative: true, duration }
+}
+
+export function bleed(): Effect {
+  return { type: 'bleed', global: true, negative: true }
 }
 
 export function kill(): Effect {
-  return { type: 'kill', global: true, negated: false }
+  return { type: 'kill', global: true, negative: true }
+}
+
+export function negateEffects(): Effect {
+  return { type: 'negate', global: true, negative: false }
+}
+
+export function heal(): Effect {
+  return { type: 'heal', global: false, negative: false }
 }

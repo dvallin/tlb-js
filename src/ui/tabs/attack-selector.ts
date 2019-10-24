@@ -14,13 +14,10 @@ import { Queries } from '../../renderer/queries'
 import { Entity } from '../../ecs/entity'
 import { PositionComponent } from '../../components/position'
 import { OverlayComponent } from '../../components/overlay'
-import { FeatureComponent, FeatureProvider } from '../../components/feature'
 
 export class AttackSelectorFullView implements TabView, Selector<Path> {
   private isSelected: boolean = false
   private path: Path | undefined
-
-  private enemies: { feature: FeatureProvider }[] = []
 
   public constructor(
     public readonly content: Rectangle,
@@ -29,11 +26,7 @@ export class AttackSelectorFullView implements TabView, Selector<Path> {
     private readonly range: number
   ) {}
 
-  public render(renderer: Renderer) {
-    this.enemies.forEach(enemy => {
-      renderer.text(enemy.feature().name, this.content.topLeft, primary[0])
-    })
-  }
+  public render(_renderer: Renderer) {}
 
   public get selected(): Path | undefined {
     if (this.isSelected) {
@@ -65,7 +58,6 @@ export class AttackSelectorFullView implements TabView, Selector<Path> {
           const hasEnemy = target !== undefined && target !== this.target
           if (hasEnemy) {
             world.editEntity(target!).withComponent<OverlayComponent>('overlay', { background: primary[3] })
-            this.enemies.push(world.getComponent<FeatureComponent>(target!, 'feature')!)
           } else {
             const tile = level.getTile(p)!
             world.editEntity(tile).withComponent<OverlayComponent>('overlay', { background: primary[1] })

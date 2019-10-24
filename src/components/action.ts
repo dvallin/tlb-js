@@ -14,11 +14,13 @@ export interface Cost {
 
 export interface Movement {
   kind: 'movement'
+  target: 'self'
   range: number
 }
 
 export interface Attack {
   kind: 'attack'
+  target: 'enemy'
   effects: Effect[]
   range: number
   accuracy: number
@@ -26,6 +28,7 @@ export interface Attack {
 
 export interface Status {
   kind: 'status'
+  target: 'self'
   effects: Effect[]
 }
 

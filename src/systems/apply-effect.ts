@@ -14,14 +14,16 @@ export class ApplyEffects implements TlbSystem {
     const effectComponent = world.getComponent<EffectComponent>(entity, 'effect')!
     switch (effectComponent.effect.type) {
       case 'damage':
-        if (effectComponent.effect.negated) {
-          this.applyHeal(world, effectComponent)
-        } else {
-          this.applyDamage(world, effectComponent)
-        }
+        this.applyDamage(world, effectComponent)
         break
       case 'kill':
         kill(world, effectComponent.target)
+        break
+      case 'negate':
+        this.removeAllNegativeEffects(world, effectComponent)
+        break
+      case 'heal':
+        this.applyHeal(world, effectComponent)
         break
       default:
         this.applyStatusEffect(world, effectComponent)
@@ -61,7 +63,7 @@ export class ApplyEffects implements TlbSystem {
           }
         })
 
-        const defense = defensiveEffects.reduce((a, b) => a + b.value! * (b.negated ? -1 : 1), 0)
+        const defense = defensiveEffects.reduce((a, b) => a + b.value!, 0)
         const value = Math.max(0, effect.value! - defense)
         log.effectApplied(world, effectComponent, bodyPart)
         damageBodyPart(world, source, target, stats, bodyPart!, value)
@@ -71,14 +73,23 @@ export class ApplyEffects implements TlbSystem {
 
   public applyHeal(world: TlbWorld, effectComponent: EffectComponent) {
     const stats = world.getComponent<CharacterStatsComponent>(effectComponent.target, 'character-stats')
-    const { effect } = effectComponent
-
     if (stats !== undefined) {
       const log: Log = world.getResource<LogResource>('log')
       effectComponent.bodyParts!.forEach(bodyPart => {
-        healBodyPart(stats, bodyPart, effect.value!)
+        healBodyPart(stats, bodyPart)
         log.effectApplied(world, effectComponent, bodyPart)
       })
+    }
+  }
+
+  public removeAllNegativeEffects(world: TlbWorld, effectComponent: EffectComponent) {
+    const activeEffects = world.getComponent<ActiveEffectsComponent>(effectComponent.target, 'active-effects')!
+    if (effectComponent.bodyParts !== undefined) {
+      effectComponent.bodyParts.forEach(bodyPart => {
+        activeEffects.effects = activeEffects.effects.filter(e => e.bodyPart === undefined || e.bodyPart !== bodyPart || !e.effect.negative)
+      })
+    } else {
+      activeEffects.effects = activeEffects.effects.filter(e => !e.effect.negative)
     }
   }
 

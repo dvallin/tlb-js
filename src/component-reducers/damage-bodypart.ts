@@ -4,7 +4,7 @@ import { WorldMap, WorldMapResource } from '../resources/world-map'
 import { Log, LogResource } from '../resources/log'
 import { PositionComponent } from '../components/position'
 import { TlbWorld } from '../tlb'
-import { EffectComponent } from '../components/effects'
+import { EffectComponent, bleed } from '../components/effects'
 import { InventoryComponent } from '../components/items'
 import { characterStats } from '../assets/characters'
 import { createAsset } from '../components/asset'
@@ -27,11 +27,7 @@ export function damageBodyPart(
       kill(world, target)
     } else {
       world.createEntity().withComponent<EffectComponent>('effect', {
-        effect: {
-          type: 'bleed',
-          negated: false,
-          global: false,
-        },
+        effect: bleed(),
         bodyParts: ['torso'],
         source: source,
         target: target,
@@ -40,10 +36,10 @@ export function damageBodyPart(
   }
 }
 
-export function healBodyPart(stats: CharacterStatsComponent, bodyPartName: string, damage: number): void {
+export function healBodyPart(stats: CharacterStatsComponent, bodyPartName: string): void {
   const bodyPart = stats.current.bodyParts[bodyPartName]
   const maximum = characterStats[stats.type].bodyParts[bodyPartName]
-  bodyPart.health = Math.max(bodyPart.health + damage, maximum.health)
+  bodyPart.health = maximum.health
 }
 
 export function kill(world: TlbWorld, entity: Entity) {

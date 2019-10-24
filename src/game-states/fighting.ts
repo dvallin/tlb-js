@@ -6,7 +6,7 @@ import { ViewportResource, Viewport } from '../resources/viewport'
 
 export class Fighting extends AbstractState {
   public constructor() {
-    super('fighting', ['start-round', 'player-round-control', 'ai-round-control', 'fov', 'light', 'npc', 'script', 'effect'])
+    super('fighting', ['start-round', 'player-round-control', 'ai-round-control', 'fov', 'npc', 'script', 'effect'])
   }
 
   private wasGridLocked: boolean = true

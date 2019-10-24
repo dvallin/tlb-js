@@ -1,8 +1,7 @@
-import { FOV, Lighting } from 'rot-js'
+import { FOV } from 'rot-js'
 import { TlbWorld } from '../tlb'
 import { WorldMapResource } from '../resources/world-map'
 import { Vector } from '../spatial'
-import { Color } from './color'
 import { bfs } from './bfs'
 import { FunctionalShape } from '../geometry/functional-shape'
 import { astar, Path } from './astar'
@@ -29,19 +28,6 @@ export class Queries {
         seenAlready.set(position)
         callback(position, distance)
       }
-    })
-  }
-
-  public lighting(world: TlbWorld, level: number, origin: Vector, color: Color, callback: (pos: Vector, color: Color) => void) {
-    const map = world.getResource<WorldMapResource>('map')
-    const originFloor = new Vector([origin.fX, origin.fY])
-    const fov = new FOV.PreciseShadowcasting((x, y) => !map.levels[level].isLightBlocking(world, new Vector([x, y])), { topology: 8 })
-    const lighting = new Lighting((x, y) => (map.levels[level].isLightBlocking(world, new Vector([x, y])) ? 0.0 : 1.0), { passes: 1 })
-    lighting.setLight(originFloor.x, originFloor.y, color.color)
-    lighting.setFOV(fov)
-    lighting.setOptions({ range: 6 })
-    lighting.compute((x: number, y: number, c: [number, number, number]) => {
-      callback(new Vector([x, y]), new Color(c))
     })
   }
 

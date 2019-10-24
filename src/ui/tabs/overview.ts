@@ -4,11 +4,9 @@ import { Entity } from '../../ecs/entity'
 import { TlbWorld } from '../../tlb'
 import { CharacterStatsComponent } from '../../components/character-stats'
 import { TakeTurnComponent } from '../../components/rounds'
-import { LightingComponent } from '../../components/light'
 import { primary } from '../../renderer/palettes'
 import { KeyboardCommand } from '../../resources/input'
 import { Rectangle } from '../../geometry/rectangle'
-import { calculateBrightness } from '../../component-reducers/brigthness'
 import { FeatureComponent, FeatureProvider } from '../../components/feature'
 import { ActiveEffectsComponent } from '../../components/effects'
 import { renderBodyPartInfo } from '../render-helpers'
@@ -23,7 +21,6 @@ export interface State {
   enemies: {
     feature?: FeatureProvider
   }[]
-  lighting?: LightingComponent
 }
 
 export class OverviewView implements TabView {
@@ -76,12 +73,6 @@ export class OverviewView implements TabView {
         }
       })
     }
-
-    if (this.state.lighting !== undefined) {
-      const brightness = calculateBrightness(this.state.lighting)
-      renderer.text(`brightness: ${brightness}`, this.content.topLeft.add(delta), primary[1])
-      delta = delta.add(down)
-    }
   }
 
   public update(world: TlbWorld): void {
@@ -97,7 +88,6 @@ export class OverviewView implements TabView {
     })
     this.state.activeEffects = world.getComponent<ActiveEffectsComponent>(this.state.focus, 'active-effects')
     this.state.stats = world.getComponent<CharacterStatsComponent>(this.state.focus, 'character-stats')
-    this.state.lighting = world.getComponent<LightingComponent>(this.state.focus, 'lighting')
   }
 }
 

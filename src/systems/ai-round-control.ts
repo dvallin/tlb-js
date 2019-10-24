@@ -26,7 +26,7 @@ export class AiRoundControl implements TlbSystem {
       if (!turnIsOver) {
         const selectedAction = world.getComponent<SelectedActionComponent>(entity, 'selected-action')
         if (selectedAction === undefined) {
-          const availableActions = calculateAvailableActions(world, entity, takeTurn)
+          const availableActions = calculateAvailableActions(world, entity, takeTurn, false)
           this.selectAction(world, entity, availableActions)
         } else {
           this.takeAction(world, entity, takeTurn, selectedAction)
