@@ -5,9 +5,9 @@ import { Vector } from '../spatial'
 import { bfs } from './bfs'
 import { FunctionalShape } from '../geometry/functional-shape'
 import { astar, Path } from './astar'
-import { LineSegment } from '../geometry/line-segment'
 import { Entity } from '../ecs/entity'
 import { DiscreteSetSpace } from '../spatial/set-space'
+import { digitalLine } from './digital-line'
 
 export interface QueryParameters {
   onlyDiscovered: boolean
@@ -85,15 +85,10 @@ export class Queries {
     const originFloor = new Vector([origin.fX, origin.fY])
     const targetFloor = new Vector([target.fX, target.fY])
     const maximumCost = params.maximumCost || Number.MAX_SAFE_INTEGER
-    const path: Vector[] = []
-    const success = new LineSegment(targetFloor, originFloor).all(p => {
-      path.push(p)
-      return !map.levels[level].isLightBlocking(world, p, false)
-    })
-    if (success) {
-      let cost = path.length - 1
-      if (path.length - 1 <= maximumCost) {
-        return { path: path.slice(0, path.length - 1), cost: cost }
+    if (targetFloor.minus(originFloor).length() <= maximumCost) {
+      const path = digitalLine(originFloor, targetFloor, p => map.levels[level].isLightBlocking(world, p, false))
+      if (path !== undefined) {
+        return { path: path.slice(1, path.length), cost: path.length - 1 }
       }
     }
     return undefined

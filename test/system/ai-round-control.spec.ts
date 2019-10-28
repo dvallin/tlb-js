@@ -1,234 +1,152 @@
 import { AiRoundControl } from '../../src/systems/ai-round-control'
-import { TlbWorld } from '../../src/tlb'
-import { World } from '../../src/ecs/world'
-import { mockComponent, mockReturnValue, mockQueries, mockRandom, mockImplementation, mockReturnValues } from '../mocks'
-import { Storage } from '../../src/ecs/storage'
-import { HasActionComponent, SelectedActionComponent } from '../../src/components/action'
-import { EquipedItemsComponent } from '../../src/components/items'
-import { PositionComponent } from '../../src/components/position'
+import { registerComponents, TlbWorld } from '../../src/tlb'
+import { mockLog, mockQueries, mockReturnValue } from '../mocks'
+import { ViewportResource } from '../../src/resources/viewport'
+import { WorldMapResource } from '../../src/resources/world-map'
 import { Vector } from '../../src/spatial'
-import { Random } from '../../src/random'
-import { Queries } from '../../src/renderer/queries'
+import { characterCreators } from '../../src/assets/characters'
+import { Entity } from '../../src/ecs/entity'
+import { World } from '../../src/ecs/world'
 import { TakeTurnComponent } from '../../src/components/rounds'
+import { Random } from '../../src/random'
+import { Uniform } from '../../src/random/distributions'
+import { placeCharacter } from '../../src/component-reducers/place-character'
+import { Queries } from '../../src/renderer/queries'
+import { Path } from '../../src/renderer/astar'
+import { SelectedActionComponent } from '../../src/components/action'
 import { actions } from '../../src/assets/actions'
+import { EffectComponent } from '../../src/components/effects'
 
 describe('AiRoundControl', () => {
   let world: TlbWorld
-
-  const availableActions = [
-    {
-      entity: 2,
-      description: 'someBoots',
-      name: 'someBoots',
-      items: [{ action: actions.hitAndRun, available: true }],
-    },
-    {
-      entity: 2,
-      description: 'someWeapon',
-      name: 'someWeapon',
-      items: [{ action: actions.shoot, available: true }],
-    },
-  ]
-
-  let scripts: Storage<{}>
-  let takeTurns: Storage<{}>
-  let hasAction: Storage<HasActionComponent>
-  let equipment: Storage<EquipedItemsComponent>
-  let selectedAction: Storage<SelectedActionComponent>
-  let position: Storage<PositionComponent>
-  let system: AiRoundControl
-  let random: Random
+  let guard: Entity
+  let player: Entity
+  let control: AiRoundControl
   let queries: Queries
   beforeEach(() => {
     world = new World()
+    registerComponents(world)
+
+    world.registerResource(new ViewportResource(new Vector([4, 4])))
+    world.registerResource(new WorldMapResource(4))
+    mockLog(world)
+
     queries = mockQueries()
-    random = mockRandom()
-    system = new AiRoundControl(queries, random)
+    control = new AiRoundControl(queries, new Random(new Uniform('12')))
 
-    scripts = mockComponent(world, 'script')
-    takeTurns = mockComponent(world, 'take-turn')
-    hasAction = mockComponent(world, 'has-action')
-    equipment = mockComponent(world, 'equiped-items')
-    selectedAction = mockComponent(world, 'selected-action')
-    position = mockComponent(world, 'position')
-
-    mockReturnValue<HasActionComponent>(hasAction.get, { actions: ['endTurn', 'hit'] })
-    mockReturnValue<EquipedItemsComponent>(equipment.get, { equipment: [] })
+    guard = characterCreators.guard(world)
+    placeCharacter(world, guard, 0, new Vector([0, 0]))
+    world.editEntity(guard).withComponent<TakeTurnComponent>('take-turn', { actions: 5, movements: 4 })
   })
 
-  describe('update', () => {
-    beforeEach(() => {
-      system.selectAction = jest.fn()
-      system.takeAction = jest.fn()
-      system.endTurn = jest.fn()
-    })
+  describe('action selection', () => {
+    describe('standing next to player', () => {
+      beforeEach(() => {
+        player = characterCreators.player(world)
+        placeCharacter(world, player, 0, new Vector([1, 0]))
+      })
 
-    it('does nothing if is scripting', () => {
-      mockReturnValue(scripts.get, {})
-      mockReturnValue(takeTurns.get, {})
+      it('ends turn if cannot hit player', () => {
+        control.update(world, guard)
 
-      system.update(world, 0)
+        expect(world.hasComponent(guard, 'take-turn')).toBeFalsy()
+        expect(world.hasComponent(guard, 'took-turn')).toBeTruthy()
+      })
 
-      expect(system.selectAction).not.toHaveBeenCalled()
-      expect(system.takeAction).not.toHaveBeenCalled()
-      expect(system.endTurn).not.toHaveBeenCalled()
-    })
+      it('selects attack action against player', () => {
+        mockReturnValue<Path>(queries.ray, { path: [new Vector([1, 0])], cost: 1 })
 
-    it('selects action if actions are available but not yet selected', () => {
-      mockReturnValue(takeTurns.get, { movements: 1, actions: 0 })
+        control.update(world, guard)
 
-      system.update(world, 0)
-
-      expect(system.selectAction).toHaveBeenCalled()
-    })
-
-    it('takes action if one has been selected', () => {
-      mockReturnValue(takeTurns.get, { movements: 1, actions: 0 })
-      mockReturnValue(selectedAction.get, {})
-
-      system.update(world, 0)
-
-      expect(system.takeAction).toHaveBeenCalled()
-    })
-
-    it('ends turn if no actions are available', () => {
-      mockReturnValue(takeTurns.get, { movements: 0, actions: 0 })
-
-      system.update(world, 0)
-
-      expect(system.endTurn).toHaveBeenCalled()
-    })
-  })
-
-  describe('selectAction', () => {
-    beforeEach(() => {
-      system.endTurn = jest.fn()
-      system.findTarget = jest.fn()
-      mockImplementation(random.pick, (a: object[]) => a[0])
-    })
-
-    it('ends turn if no target is found', () => {
-      mockReturnValue(position.get, { position: new Vector([1, 2]) })
-      mockReturnValue(system.findTarget, undefined)
-
-      system.selectAction(world, 0, [])
-
-      expect(system.endTurn).toHaveBeenCalled()
-    })
-
-    it('tries to get closer if that is possible', () => {
-      const aiPosition = { position: new Vector([1, 2]) }
-      const targetPosition = { position: new Vector([3, 4]) }
-      mockReturnValues(position.get, aiPosition, targetPosition)
-      mockReturnValue(system.findTarget, 1)
-
-      system.selectAction(world, 0, availableActions)
-
-      expect(selectedAction.insert).toHaveBeenCalledWith(0, {
-        target: 1,
-        currentSubAction: 0,
-        selection: { action: availableActions[0].items[0].action, entity: 2 },
-        skippedActions: 0,
+        const selectedAction = world.getComponent<SelectedActionComponent>(guard, 'selected-action')!
+        expect(selectedAction.target).toEqual(player)
+        expect(selectedAction.selection!.action.subActions.some(e => e.kind === 'attack')).toBeTruthy()
       })
     })
 
-    it('ends turn if it has no line of sight and cannot get closer', () => {
-      const aiPosition = { position: new Vector([3, 3]) }
-      const targetPosition = { position: new Vector([3, 4]) }
-      mockReturnValues(position.get, aiPosition, targetPosition)
-      mockReturnValue(system.findTarget, 1)
+    describe('standing some tiles away from player', () => {
+      beforeEach(() => {
+        player = characterCreators.player(world)
+        placeCharacter(world, player, 0, new Vector([3, 0]))
+      })
 
-      system.selectAction(world, 0, availableActions)
+      it('selects movement action towards player', () => {
+        mockReturnValue<Path>(queries.ray, { path: [new Vector([1, 0])], cost: 1 })
 
-      expect(system.endTurn).toHaveBeenCalled()
-    })
+        control.update(world, guard)
 
-    it('tries to move closer if that is possible', () => {
-      const aiPosition = { position: new Vector([3, 3]) }
-      const targetPosition = { position: new Vector([3, 4]) }
-      mockReturnValue(queries.ray, { cost: 0 })
-      mockReturnValues(position.get, aiPosition, targetPosition)
-      mockReturnValue(system.findTarget, 1)
-
-      system.selectAction(world, 0, availableActions)
-
-      // hit and run contains movement
-      expect(selectedAction.insert).toHaveBeenCalledWith(0, {
-        target: 1,
-        currentSubAction: 0,
-        selection: { action: availableActions[0].items[0].action, entity: 2 },
-        skippedActions: 0,
+        const selectedAction = world.getComponent<SelectedActionComponent>(guard, 'selected-action')!
+        expect(selectedAction.target).toEqual(player)
+        expect(selectedAction.selection!.action.subActions.some(e => e.kind === 'movement')).toBeTruthy()
       })
     })
   })
 
-  describe('takeAction', () => {
-    let takeTurn: TakeTurnComponent
-    let action: SelectedActionComponent
+  describe('attack action', () => {
     beforeEach(() => {
-      takeTurn = {
-        movements: 10,
-        actions: 10,
-      }
-      action = {
-        target: 1,
-        currentSubAction: -1,
-        selection: { action: availableActions[0].items[0].action, entity: 2 },
-        skippedActions: 0,
-      }
-      system.move = jest.fn()
-      system.attack = jest.fn()
+      player = characterCreators.player(world)
+      placeCharacter(world, player, 0, new Vector([1, 0]))
     })
 
-    it('calls attack if that is the current action', () => {
-      action.currentSubAction = 0
+    it('applies effects and increases subaction', () => {
+      const selection = { entity: 42, action: actions.hit }
+      world
+        .editEntity(guard)
+        .withComponent<SelectedActionComponent>('selected-action', { skippedActions: 0, currentSubAction: 0, selection, target: player })
+      mockReturnValue<Path>(queries.ray, { path: [new Vector([1, 0])], cost: 1 })
 
-      system.takeAction(world, 0, takeTurn, action)
+      control.update(world, guard)
 
-      expect(system.attack).toHaveBeenCalled()
-      expect(action.currentSubAction).toEqual(1)
-    })
-
-    it('calls attack if that is the current action', () => {
-      action.currentSubAction = 1
-
-      system.takeAction(world, 0, takeTurn, action)
-
-      expect(system.move).toHaveBeenCalled()
-      expect(action.currentSubAction).toEqual(2)
-    })
-
-    it('consumes action cost and resets selected action', () => {
-      action.currentSubAction = 2
-
-      system.takeAction(world, 0, takeTurn, action)
-
-      expect(takeTurn).toEqual({ movements: 7, actions: 7 })
-      expect(selectedAction.remove).toHaveBeenCalledWith(0)
-    })
-
-    it('consumes all action cost if action demands it', () => {
-      action.currentSubAction = 2
-      action.selection!.action = actions.endTurn
-
-      system.takeAction(world, 0, takeTurn, action)
-
-      expect(takeTurn).toEqual({ movements: 0, actions: 0 })
-      expect(selectedAction.remove).toHaveBeenCalledWith(0)
+      expect(world.getStorage<EffectComponent>('effect').size()).toEqual(1)
+      world.getStorage<EffectComponent>('effect').foreach((_, effect) => {
+        expect(effect.source).toEqual(guard)
+        expect(effect.target).toEqual(player)
+      })
+      expect(world.getComponent<SelectedActionComponent>(guard, 'selected-action')!.currentSubAction).toEqual(1)
     })
   })
 
-  describe('move', () => {
-    it('adds shortest path to script', () => {
-      const sourcePosition = new Vector([2, 3])
-      const targetPosition = new Vector([4, 5])
-      const path = [new Vector([3, 4])]
-      mockReturnValues(position.get, { position: sourcePosition }, { position: targetPosition })
-      mockReturnValue(queries.shortestPath, { path })
+  describe('move action', () => {
+    beforeEach(() => {
+      player = characterCreators.player(world)
+      placeCharacter(world, player, 0, new Vector([1, 0]))
+    })
 
-      system.move(world, 0, 1, { kind: 'movement', range: 3 })
+    it('creates script and increases subaction', () => {
+      const selection = { entity: 42, action: actions.longMove }
+      world
+        .editEntity(guard)
+        .withComponent<SelectedActionComponent>('selected-action', { skippedActions: 0, currentSubAction: 0, selection, target: player })
+      mockReturnValue<Path>(queries.shortestPath, { path: [new Vector([1, 0])], cost: 1 })
 
-      expect(scripts.insert).toHaveBeenCalledWith(0, { path })
+      control.update(world, guard)
+
+      expect(world.hasComponent(guard, 'script')).toBeTruthy()
+      expect(world.getComponent<SelectedActionComponent>(guard, 'selected-action')!.currentSubAction).toEqual(1)
+    })
+  })
+
+  describe('AP and MP consumption', () => {
+    it('actions credited', () => {
+      const selection = { entity: 42, action: actions.hitAndRun }
+      world
+        .editEntity(guard)
+        .withComponent<SelectedActionComponent>('selected-action', { skippedActions: 1, currentSubAction: 2, selection })
+
+      control.update(world, guard)
+
+      expect(world.getComponent<TakeTurnComponent>(guard, 'take-turn')).toEqual({ actions: 2, movements: 1 })
+    })
+
+    it('cost all actions are fully credited', () => {
+      const selection = { entity: 42, action: actions.rush }
+      world
+        .editEntity(guard)
+        .withComponent<SelectedActionComponent>('selected-action', { skippedActions: 0, currentSubAction: 1, selection })
+
+      control.update(world, guard)
+
+      expect(world.getComponent<TakeTurnComponent>(guard, 'take-turn')).toEqual({ actions: 0, movements: 0 })
     })
   })
 })

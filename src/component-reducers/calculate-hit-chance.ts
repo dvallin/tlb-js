@@ -14,7 +14,5 @@ export function calculateHitChance(world: TlbWorld, entity: Entity, target: Enti
 
   const baseChance = stats.current.aim + attack.accuracy
   const distancePenalty = normalizedDistance < 5 ? 0 : normalizedDistance < 7 ? 2 : 3
-  console.log(`(10 * ${distance} - 1)  / ${attack.range}`)
-  console.log(`${stats.current.aim} + ${attack.accuracy} - ${distancePenalty}`)
   return (baseChance - distancePenalty) / 10
 }

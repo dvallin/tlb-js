@@ -41,8 +41,10 @@ describe('Vector', () => {
 
   describe('floor', () => {
     it('rounds down', () => {
-      expect(new Vector([1, 1.9]).floor()).toEqual(new Vector([1, 1]))
-      expect(new Vector([-2, -2.9]).floor()).toEqual(new Vector([-2, -3]))
+      expect(new Vector([1, 1.9]).fX).toEqual(1)
+      expect(new Vector([1, 1.9]).fY).toEqual(1)
+      expect(new Vector([-2, -2.9]).fX).toEqual(-2)
+      expect(new Vector([-2, -2.9]).fY).toEqual(-3)
     })
   })
 

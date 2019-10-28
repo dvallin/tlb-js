@@ -29,7 +29,7 @@ const charactersStatsDefinition = {
   player: {
     bodyParts: humanoidBodyParts(14, 5, 5),
     strength: 5,
-    movement: 3,
+    movement: 4,
     actions: 4,
     aim: 10,
   },
@@ -75,14 +75,16 @@ const characterCreatorsDefinition = {
 export const defaultActions: ActionType[] = ['longMove', 'hit', 'rush', 'endTurn']
 
 export function createPlayer(world: TlbWorld): Entity {
-  const player = createCharacter(world, 'you', 'player', 'player', defaultActions)
+  const player = createCharacter(world, 'player', 'player', defaultActions)
   world
     .editEntity(player)
     .withComponent<{}>('player', {})
     .withComponent<FovComponent>('fov', { fov: [] })
     .withComponent<{}>('viewport-focus', {})
 
+  take(world, player, 'idCard')
   take(world, player, 'rifle')
+  take(world, player, 'sniperRifle')
   take(world, player, 'bootsOfStriding')
   equip(world, player, 'nailGun', ['leftArm'])
   equip(world, player, 'leatherJacket', ['torso', 'leftArm', 'rightArm'])
@@ -116,26 +118,20 @@ export function createEmptyNpc(
   featureType: FeatureType,
   actions: ActionType[]
 ): Entity {
-  const character = createCharacter(world, name, statsType, featureType, actions)
+  const character = createCharacter(world, statsType, featureType, actions)
   return world
     .editEntity(character)
     .withComponent('npc', {})
-    .withComponent<AiComponent>('ai', { type: 'rushing', state: 'idle', interest: undefined, distrust: 0 })
-    .withComponent<InventoryComponent>('inventory', { content: [] })
-    .withComponent<EquipedItemsComponent>('equiped-items', { equipment: [] }).entity
+    .withComponent<TriggersComponent>('triggers', { entities: [], type: 'dialog', name })
+    .withComponent<AiComponent>('ai', { type: 'rushing', state: 'idle', interest: undefined, distrust: 0 }).entity
 }
 
-export function createCharacter(
-  world: TlbWorld,
-  name: string,
-  statsType: CharacterStatsType,
-  featureType: FeatureType,
-  actions: ActionType[]
-): Entity {
+export function createCharacter(world: TlbWorld, statsType: CharacterStatsType, featureType: FeatureType, actions: ActionType[]): Entity {
   return world
     .createEntity()
     .withComponent<HasActionComponent>('has-action', { actions })
-    .withComponent<TriggersComponent>('triggers', { entities: [], type: 'dialog', name })
+    .withComponent<InventoryComponent>('inventory', { content: [] })
+    .withComponent<EquipedItemsComponent>('equiped-items', { equipment: [] })
     .withComponent<FeatureComponent>('feature', { feature: () => features[featureType] })
     .withComponent<CharacterStatsComponent>('character-stats', createCharacterStatsComponent(statsType))
     .withComponent<ActiveEffectsComponent>('active-effects', { effects: [] }).entity

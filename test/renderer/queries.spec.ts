@@ -4,7 +4,6 @@ import { TlbWorld } from '../../src/tlb'
 import { WorldMap } from '../../src/resources/world-map'
 import { World } from '../../src/ecs/world'
 import { mockMap, mockImplementation3 } from '../mocks'
-import { Color } from '../../src/renderer/color'
 
 describe('Queries', () => {
   let world: TlbWorld
@@ -37,30 +36,5 @@ describe('Queries', () => {
     expect(callback).toHaveBeenCalledWith(new Vector([0, 3]), 2)
     expect(callback).toHaveBeenCalledWith(new Vector([1, 3]), 2)
     expect(callback).toHaveBeenCalledWith(new Vector([2, 3]), 2)
-  })
-
-  it('calculates lighting', () => {
-    const callback = jest.fn()
-    mockImplementation3(map.levels[0].isLightBlocking, (_a: TlbWorld, position: Vector, _c: boolean) => {
-      return position.key !== '1,1' && position.key !== '1,2'
-    })
-
-    new Queries().lighting(world, 0, new Vector([1.1, 1.1]), new Color([123, 123, 123]), callback)
-
-    expect(callback).toHaveBeenCalledTimes(12)
-    // non-light blocking
-    expect(callback).toHaveBeenCalledWith(new Vector([1, 1]), new Color([123, 123, 123]))
-    expect(callback).toHaveBeenCalledWith(new Vector([1, 2]), new Color([103, 103, 103]))
-    // visible light blocking
-    expect(callback).toHaveBeenCalledWith(new Vector([0, 0]), new Color([103, 103, 103]))
-    expect(callback).toHaveBeenCalledWith(new Vector([1, 0]), new Color([103, 103, 103]))
-    expect(callback).toHaveBeenCalledWith(new Vector([2, 0]), new Color([103, 103, 103]))
-    expect(callback).toHaveBeenCalledWith(new Vector([0, 1]), new Color([103, 103, 103]))
-    expect(callback).toHaveBeenCalledWith(new Vector([2, 1]), new Color([103, 103, 103]))
-    expect(callback).toHaveBeenCalledWith(new Vector([0, 2]), new Color([103, 103, 103]))
-    expect(callback).toHaveBeenCalledWith(new Vector([2, 2]), new Color([103, 103, 103]))
-    expect(callback).toHaveBeenCalledWith(new Vector([0, 3]), new Color([82, 82, 82]))
-    expect(callback).toHaveBeenCalledWith(new Vector([1, 3]), new Color([82, 82, 82]))
-    expect(callback).toHaveBeenCalledWith(new Vector([2, 3]), new Color([82, 82, 82]))
   })
 })

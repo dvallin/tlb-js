@@ -97,10 +97,11 @@ const dialogDefinitions = {
 export type DialogType = keyof typeof dialogDefinitions
 export const dialogs: { [key in DialogType]: Dialog } = dialogDefinitions
 
-export function addDialog(world: TlbWorld, entity: Entity, type: DialogType): void {
+export function addDialog(world: TlbWorld, entity: Entity, type: DialogType): Entity {
   const dialog = world
     .createEntity()
     .withComponent<TriggeredByComponent>('triggered-by', { entity })
     .withComponent<DialogComponent>('dialog', { type }).entity
   world.getComponent<TriggersComponent>(entity, 'triggers')!.entities.push(dialog)
+  return dialog
 }

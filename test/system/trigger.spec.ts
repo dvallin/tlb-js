@@ -1,64 +1,69 @@
-import { TlbWorld } from '../../src/tlb'
-import { World } from '../../src/ecs/world'
-import { mockComponent, mockReturnValue, mockImplementation } from '../mocks'
-import { Storage } from '../../src/ecs/storage'
-import { AssetComponent } from '../../src/components/asset'
-import { FeatureComponent } from '../../src/components/feature'
-import { GroundComponent } from '../../src/components/ground'
-import { Trigger } from '../../src/systems/trigger'
+import { registerComponents, TlbWorld } from '../../src/tlb'
 import { Entity } from '../../src/ecs/entity'
-import { TriggersComponent } from '../../src/components/trigger'
-import { features } from '../../src/assets/features'
+import { World } from '../../src/ecs/world'
+import { characterCreators } from '../../src/assets/characters'
+import { Trigger } from '../../src/systems/trigger'
+import { Uniform } from '../../src/random/distributions'
+import { Random } from '../../src/random'
+import { addDialog, AnswerType } from '../../src/assets/dialogs'
+import { mockUi, mockReturnValue, callArgument } from '../mocks'
+import { UI } from '../../src/resources/ui'
+import { State } from '../../src/game-states/state'
+import { TriggeredByComponent } from '../../src/components/trigger'
 
 describe('Trigger', () => {
   let world: TlbWorld
-
-  let actives: Storage<{}>
-  let assets: Storage<AssetComponent>
-  let triggers: Storage<TriggersComponent>
-  let featuresStorage: Storage<FeatureComponent>
-  let grounds: Storage<GroundComponent>
-  let triggeredBy: Storage<{}>
+  let player: Entity
+  let guard: Entity
+  let ui: UI
+  let pushState: () => void
   beforeEach(() => {
     world = new World()
+    registerComponents(world)
+    ui = mockUi(world)
 
-    actives = mockComponent(world, 'active')
-    assets = mockComponent<AssetComponent>(world, 'asset')
-    triggers = mockComponent<TriggersComponent>(world, 'triggers')
-    featuresStorage = mockComponent<FeatureComponent>(world, 'feature')
-    grounds = mockComponent<GroundComponent>(world, 'ground')
-    triggeredBy = mockComponent<{}>(world, 'triggered-by')
+    player = characterCreators.player(world)
+    guard = characterCreators.guard(world)
+    world.editEntity(player).withComponent('start-turn', {})
+    pushState = jest.fn()
   })
 
-  it('deactives current entity', () => {
-    new Trigger(jest.fn()).update(world, 42)
-    expect(actives.remove).toHaveBeenCalledWith(42)
-  })
+  describe('dialog triggers', () => {
+    it('opens a dialog modal', () => {
+      addDialog(world, guard, 'randomRemarks')
+      world.editEntity(guard).withComponent<TriggeredByComponent>('triggered-by', { entity: player })
 
-  it('removes triggered by flag', () => {
-    new Trigger(jest.fn()).update(world, 42)
-    expect(triggeredBy.remove).toHaveBeenCalledWith(42)
-  })
+      const trigger = new Trigger(new Random(new Uniform('1')), pushState)
+      trigger.update(world, guard)
 
-  describe('door trigger', () => {
-    beforeEach(() => {
-      mockReturnValue<AssetComponent>(assets.get, { type: 'door' })
+      expect(ui.showDialogModal).toHaveBeenCalled()
+      expect((callArgument(pushState, 0, 0) as State).name).toEqual('modal')
     })
 
-    it('swaps ground and feature of all triggers', () => {
-      mockReturnValue<TriggersComponent>(triggers.get, { entities: [1, 2] })
+    it('closes dialog', () => {
+      mockReturnValue<boolean>(ui.dialogShowing, true)
+      mockReturnValue<AnswerType>(ui.dialogResult, 'close')
+      addDialog(world, guard, 'randomRemarks')
+      world.editEntity(guard).withComponent<TriggeredByComponent>('triggered-by', { entity: player })
 
-      const featureComponents: FeatureComponent[] = [{ feature: () => features['door'] }, { feature: () => features['corridor'] }]
-      const groundComponents: GroundComponent[] = [{ feature: () => features['corridor'] }, { feature: () => features['door'] }]
-      mockImplementation(featuresStorage.get, (e: Entity) => featureComponents[e - 1])
-      mockImplementation(grounds.get, (e: Entity) => groundComponents[e - 1])
+      const trigger = new Trigger(new Random(new Uniform('1')), pushState)
+      trigger.update(world, guard)
 
-      new Trigger(jest.fn()).update(world, 0)
+      expect(world.hasComponent(guard, 'active')).toBeFalsy()
+      expect(world.hasComponent(guard, 'triggered-by')).toBeFalsy()
+    })
 
-      expect(featureComponents[0].feature()).toEqual(features['corridor'])
-      expect(featureComponents[1].feature()).toEqual(features['door'])
-      expect(groundComponents[0].feature()).toEqual(features['door'])
-      expect(groundComponents[1].feature()).toEqual(features['corridor'])
+    it('handles attack result', () => {
+      mockReturnValue<boolean>(ui.dialogShowing, true)
+      mockReturnValue<AnswerType>(ui.dialogResult, 'attack')
+      addDialog(world, guard, 'randomRemarks')
+      world.editEntity(guard).withComponent<TriggeredByComponent>('triggered-by', { entity: player })
+
+      const trigger = new Trigger(new Random(new Uniform('1')), pushState)
+      trigger.update(world, guard)
+
+      expect(world.hasComponent(guard, 'wait-turn')).toBeTruthy()
+      expect(world.hasComponent(player, 'start-turn')).toBeTruthy()
     })
   })
 })

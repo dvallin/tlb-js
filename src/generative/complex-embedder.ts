@@ -70,7 +70,7 @@ export function spawnOptional<T>(type: T, t?: number): Spawn<T> {
   return { types: [type], occurrence: optional(t) }
 }
 
-interface ComplexEmbedding {
+export interface ComplexEmbedding {
   structure: StructureDescription
   embedding: Entity
   blocking: boolean
@@ -86,15 +86,22 @@ interface Graph<T> {
   E: [number, number][]
 }
 
-export function embedComplexes(world: TlbWorld, random: Random, region: Entity, complexes: ComplexDescription[]): ComplexEmbedding[] {
+export function embedComplexes(
+  world: TlbWorld,
+  random: Random,
+  region: Entity,
+  complexes: ComplexDescription[]
+): ComplexEmbedding[] | undefined {
   const G = buildG(world, region, [])
 
   const requiredComplexes = complexes
     .filter(c => c.occurrence.minimum > 0)
     .map(c => ({ occurrence: occur(c.occurrence.minimum), template: c.template }))
   const H = buildH(requiredComplexes)
-
   const successfulEmbeddings = calculateEmbedding(G, H)
+  if (successfulEmbeddings.length === 0) {
+    return undefined
+  }
 
   const optionalComplexes: ComplexDescription[] = []
   complexes.forEach(c => {
@@ -139,7 +146,7 @@ function buildG(world: TlbWorld, region: Entity, knownEmbeddings: ComplexEmbeddi
     }
 
     structure.connections.forEach(c => {
-      const w = availableStructuresLookup.get(c.other)!
+      const w = availableStructuresLookup.get(c)!
       const e = createEdge(v, w)
       if (e !== undefined) {
         E.push(e)

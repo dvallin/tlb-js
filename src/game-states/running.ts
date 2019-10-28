@@ -1,18 +1,12 @@
 import { TlbWorld } from '../tlb'
 import { PositionComponent } from '../components/position'
 import { AbstractState, State } from './state'
-import { FeatureComponent } from '../components/feature'
 import { WorldMap, WorldMapResource } from '../resources/world-map'
-import { FovComponent } from '../components/fov'
-import { CharacterStatsComponent, createCharacterStatsComponent } from '../components/character-stats'
 import { ViewportResource, Viewport } from '../resources/viewport'
 import { UIResource } from '../resources/ui'
-import { HasActionComponent } from '../components/action'
-import { InventoryComponent, ItemComponent, EquipedItemsComponent } from '../components/items'
 import { Entity } from '../ecs/entity'
-import { ActiveEffectsComponent } from '../components/effects'
-import { features } from '../assets/features'
 import { MainMenu } from './main-menu'
+import { characterCreators } from '../assets/characters'
 
 export class Running extends AbstractState {
   public constructor() {
@@ -37,28 +31,12 @@ export class Running extends AbstractState {
 
   public spawnPlayer(world: TlbWorld, map: WorldMap, spawn: Entity): void {
     const position = world.getComponent<PositionComponent>(spawn, 'position')!
-    const stats = createCharacterStatsComponent('player')
-    const idCard = world.createEntity().withComponent<ItemComponent>('item', { type: 'idCard' }).entity
-    const nailgun = world.createEntity().withComponent<ItemComponent>('item', { type: 'nailGun' }).entity
-    const sniperRifle = world.createEntity().withComponent<ItemComponent>('item', { type: 'sniperRifle' }).entity
-    const rifle = world.createEntity().withComponent<ItemComponent>('item', { type: 'rifle' }).entity
-    const boots = world.createEntity().withComponent<ItemComponent>('item', { type: 'bootsOfStriding' }).entity
-    const jacket = world.createEntity().withComponent<ItemComponent>('item', { type: 'leatherJacket' }).entity
-
-    const player = world
-      .createEntity()
-      .withComponent<{}>('player', {})
+    const player = characterCreators.player(world)
+    world
+      .editEntity(player)
+      .withComponent('position', { ...position })
       .withComponent<{}>('viewport-focus', {})
-      .withComponent<PositionComponent>('position', { ...position })
-      .withComponent<FeatureComponent>('feature', { feature: () => features['player'] })
-      .withComponent<FovComponent>('fov', { fov: [] })
-      .withComponent<HasActionComponent>('has-action', { actions: ['longMove', 'hit', 'rush', 'endTurn'] })
-      .withComponent<CharacterStatsComponent>('character-stats', stats)
-      .withComponent<InventoryComponent>('inventory', { content: [nailgun, sniperRifle, rifle, jacket, boots, idCard] })
-      .withComponent<ActiveEffectsComponent>('active-effects', { effects: [] })
-      .withComponent<EquipedItemsComponent>('equiped-items', {
-        equipment: [{ entity: nailgun, bodyParts: ['leftArm'] }, { entity: jacket, bodyParts: ['torso', 'leftArm', 'rightArm'] }],
-      }).entity
+
     const ui = world.getResource<UIResource>('ui')
     ui.createTabs(world, player)
 

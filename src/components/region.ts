@@ -12,16 +12,11 @@ export interface RegionComponent {
   authorized: Set<Entity>
 }
 
-export interface Connection {
-  position: Vector
-  other: Entity
-}
-
 export type StructureType = 'room' | 'hub' | 'corridor'
 
 export interface StructureComponent {
   region: Entity
   kind: StructureType
   shape: Shape
-  connections: Connection[]
+  connections: Entity[]
 }

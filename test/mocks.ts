@@ -4,7 +4,7 @@ import { Renderer } from '../src/renderer/renderer'
 import { ComponentName, TlbWorld, ResourceName } from '../src/tlb'
 import { Random } from '../src/random'
 import { Queries } from '../src/renderer/queries'
-import { Space, StackedSpace, Vector } from '../src/spatial'
+import { Space, Vector } from '../src/spatial'
 import { Entity } from '../src/ecs/entity'
 import { SetSpace } from '../src/spatial/set-space'
 import { Rectangle } from '../src/geometry/rectangle'
@@ -34,9 +34,6 @@ function mockSpace<T>(): Space<T> {
 function mockSetSpace(): SetSpace {
   return { has: jest.fn(), set: jest.fn(), setAll: jest.fn(), remove: jest.fn() }
 }
-function mockStackedSpace<T>(): StackedSpace<T> {
-  return { get: jest.fn(), set: jest.fn(), add: jest.fn(), addAll: jest.fn(), retain: jest.fn() }
-}
 
 export function mockMap(world: TlbWorld): WorldMapResource {
   const level: Level = {
@@ -46,7 +43,6 @@ export function mockMap(world: TlbWorld): WorldMapResource {
     structures: mockSpace<Entity>(),
     visible: mockSetSpace(),
     discovered: mockSetSpace(),
-    lights: mockStackedSpace<Entity>(),
 
     setStructure: jest.fn(),
     getStructure: jest.fn(),
@@ -58,8 +54,6 @@ export function mockMap(world: TlbWorld): WorldMapResource {
     setCharacter: jest.fn(),
     getCharacter: jest.fn(),
     removeCharacter: jest.fn(),
-
-    addLight: jest.fn(),
 
     isDiscovered: jest.fn(),
     isVisible: jest.fn(),
@@ -89,22 +83,17 @@ export function mockMap(world: TlbWorld): WorldMapResource {
 export function mockInput(world: TlbWorld): Input {
   const input = {
     kind: 'input' as ResourceName,
+    update: jest.fn(),
+
     position: { x: 0, y: 0 },
     mouseDown: false,
     mousePressed: false,
     mouseReleased: false,
-    keyDown: new Set(),
-    keyPressed: new Set(),
-    keyReleased: new Set(),
-    mouseEvent: undefined,
-    keyEvents: [],
-    eventToPosition: jest.fn(),
-    update: jest.fn(),
-    handleKeyboardEvents: jest.fn(),
-    handleMouseEvent: jest.fn(),
-    createMovementDelta: jest.fn(),
+
     numericActive: jest.fn(),
     isActive: jest.fn(),
+
+    createMovementDelta: jest.fn(),
   }
   world.registerResource(input)
   return input
@@ -125,9 +114,15 @@ export function mockUi(world: TlbWorld): UI {
     hideInventoryTransferModal: jest.fn(),
 
     showMultipleChoiceModal: jest.fn(),
-    selectedOption: jest.fn(),
+    selectedModalOption: jest.fn(),
     multipleChoiceModalShowing: jest.fn(),
     hideMultipleChoiceModal: jest.fn(),
+
+    showDialogModal: jest.fn(),
+    dialogResult: jest.fn(),
+    dialogShowing: jest.fn(),
+    hideDialogModal: jest.fn(),
+
     hideSelectors: jest.fn(),
 
     showActionSelector: jest.fn(),
@@ -138,6 +133,9 @@ export function mockUi(world: TlbWorld): UI {
 
     showAttackSelector: jest.fn(),
     selectedAttack: jest.fn(),
+
+    showMultipleChoiceSelector: jest.fn(),
+    selectedOption: jest.fn(),
 
     createTabs: jest.fn(),
   }
@@ -189,7 +187,6 @@ export function mockLog(world: TlbWorld): Log {
 export function mockQueries(): Queries {
   return {
     fov: jest.fn(),
-    lighting: jest.fn(),
     explore: jest.fn(),
     shortestPath: jest.fn(),
     ray: jest.fn(),

@@ -136,8 +136,12 @@ export function registerComponents<S, R>(world: World<ComponentName, S, R>): voi
   world.registerComponentStorage('wait-turn', new SetStorage())
 }
 
-export function registerResources(world: World<ComponentName, SystemName, ResourceName>, renderer: Renderer): void {
-  world.registerResource(new WorldMapResource(256))
+export function registerResources(
+  world: World<ComponentName, SystemName, ResourceName>,
+  renderer: Renderer,
+  worldWidth: number = 256
+): void {
+  world.registerResource(new WorldMapResource(worldWidth))
   world.registerResource(new ViewportResource(renderer.boundaries))
   world.registerResource(new InputResource(e => renderer.eventToPosition(e)))
   world.registerResource(new UIResource())

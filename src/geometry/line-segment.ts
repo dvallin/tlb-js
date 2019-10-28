@@ -2,6 +2,7 @@ import { AbstractShape } from './shape'
 import { Vector } from '../spatial'
 import { Rectangle } from './rectangle'
 import { bresenham } from '../renderer/bresenham'
+import { skip, head } from '../iter-utils'
 
 export class LineSegment extends AbstractShape {
   public constructor(public readonly from: Vector, public readonly to: Vector) {
@@ -30,39 +31,25 @@ export class LineSegment extends AbstractShape {
   }
 
   public grow(cells: number = 1): LineSegment {
-    const fromIter = bresenham(this.from, this.direction.mult(-1), true)
-    const toIter = bresenham(this.to, this.direction, true)
-    let from: Vector = fromIter()!
-    let to: Vector = toIter()!
-    for (let i = 0; i < cells; i++) {
-      from = fromIter()!
-      to = toIter()!
-    }
-    return new LineSegment(from, to)
+    return new LineSegment(
+      head(skip(bresenham(this.from, this.direction.mult(-1), true), cells))!,
+      head(skip(bresenham(this.to, this.direction, true), cells))!
+    )
   }
 
   public shrink(cells: number = 1): LineSegment {
-    const fromIter = bresenham(this.from, this.direction, true)
-    const toIter = bresenham(this.to, this.direction.mult(-1), true)
-    let from: Vector = fromIter()!
-    let to: Vector = toIter()!
-    for (let i = 0; i < cells; i++) {
-      from = fromIter()!
-      to = toIter()!
-    }
-    return new LineSegment(from, to)
+    return new LineSegment(
+      head(skip(bresenham(this.from, this.direction, true), cells))!,
+      head(skip(bresenham(this.to, this.direction.mult(-1), true), cells))!
+    )
   }
 
   public all(f: (p: Vector) => boolean): boolean {
-    const iter = bresenham(this.from, this.direction, false)
-    while (true) {
-      const p = iter()
-      if (p === undefined) {
-        return true
-      }
+    for (const p of bresenham(this.from, this.direction, false)) {
       if (!f(p)) {
         return false
       }
     }
+    return true
   }
 }

@@ -49,14 +49,6 @@ export function kill(world: TlbWorld, entity: Entity) {
     const map: WorldMap = world.getResource<WorldMapResource>('map')
     map.levels[position.level].removeCharacter(position.position)
 
-    world
-      .editEntity(entity)
-      .withComponent('dead', {})
-      .removeComponent('take-turn')
-      .removeComponent('start-turn')
-      .removeComponent('took-turn')
-      .removeComponent('wait-turn')
-
     const positionFloor = new Vector([position.position.fX, position.position.fY])
     const loot = createAsset(world, map, position.level, positionFloor, 'up', 'loot')
     world.editEntity(loot).withComponent<InventoryComponent>('inventory', { ...inventory })
@@ -64,4 +56,12 @@ export function kill(world: TlbWorld, entity: Entity) {
     const log: Log = world.getResource<LogResource>('log')
     log.died(world, entity)
   }
+
+  world
+    .editEntity(entity)
+    .withComponent('dead', {})
+    .removeComponent('take-turn')
+    .removeComponent('start-turn')
+    .removeComponent('took-turn')
+    .removeComponent('wait-turn')
 }

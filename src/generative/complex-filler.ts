@@ -13,7 +13,7 @@ import { features } from '../assets/features'
 import { ItemType } from '../assets/items'
 import { ItemComponent, InventoryComponent } from '../components/items'
 import { Rectangle } from '../geometry/rectangle'
-import { PositionComponent, centeredPosition } from '../components/position'
+import { placeCharacter } from '../component-reducers/place-character'
 
 export function fill(world: TlbWorld, map: WorldMap, level: number, entity: Entity, random: Random, description: StructureDescription) {
   const structure = world.getComponent<StructureComponent>(entity, 'structure')!
@@ -123,8 +123,7 @@ function placeCharacterRandomly(
     const isFree = canPlace(world, map, level, position)
     if (isFree) {
       const character = creator(world)
-      map.levels[level].setCharacter(position, character)
-      world.editEntity(character).withComponent<PositionComponent>('position', centeredPosition(level, position))
+      placeCharacter(world, character, level, position)
       placedCharacters.push(character)
     }
     return isFree

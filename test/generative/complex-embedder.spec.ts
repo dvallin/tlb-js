@@ -13,7 +13,6 @@ import { Rectangle } from '../../src/geometry/rectangle'
 import { Random } from '../../src/random'
 import { Uniform } from '../../src/random/distributions'
 import { indices } from '../../src/array-utils'
-import { Vector } from '../../src/spatial'
 import { Entity } from '../../src/ecs/entity'
 import { AssetType } from '../../src/assets/assets'
 
@@ -37,7 +36,7 @@ function room(world: TlbWorld, connections: Entity[], kind: StructureType = 'roo
   return world.createEntity().withComponent<StructureComponent>('structure', {
     kind,
     shape: new Rectangle(0, 0, 2, 2),
-    connections: connections.map(other => ({ other, position: new Vector([0, 0]) })),
+    connections,
     region: 42,
   }).entity
 }
@@ -62,7 +61,7 @@ describe('embedComplexes', () => {
     ]
 
     // when
-    const embedding = embedComplexes(world, random, 42, complexes)
+    const embedding = embedComplexes(world, random, 42, complexes)!
 
     // then
     expect(embedding.length).toEqual(2)
@@ -94,7 +93,7 @@ describe('embedComplexes', () => {
     const embedding = embedComplexes(world, random, 42, complexes)
 
     // then
-    expect(embedding.length).toEqual(0)
+    expect(embedding).toBeUndefined()
   })
 
   it('allows connections between rooms', () => {
@@ -116,7 +115,7 @@ describe('embedComplexes', () => {
     ]
 
     // when
-    const embedding = embedComplexes(world, random, 42, complexes)
+    const embedding = embedComplexes(world, random, 42, complexes)!
 
     // then
     expect(embedding.length).toEqual(2)
@@ -142,7 +141,7 @@ describe('embedComplexes', () => {
     ]
 
     // when
-    const embedding = embedComplexes(world, random, 42, complexes)
+    const embedding = embedComplexes(world, random, 42, complexes)!
 
     // then
     const blocking = complexes[0].template.structures[0].description
@@ -177,7 +176,7 @@ describe('embedComplexes', () => {
     const embedding = embedComplexes(world, random, 42, complexes)
 
     // then
-    expect(embedding.length).toEqual(0)
+    expect(embedding).toBeUndefined()
   })
 
   it('matches exactly on the right room kinds', () => {
@@ -200,7 +199,7 @@ describe('embedComplexes', () => {
     ]
 
     // when
-    const embedding = embedComplexes(world, random, 42, complexes)
+    const embedding = embedComplexes(world, random, 42, complexes)!
 
     // then
     expect(embedding.length).toEqual(2)
@@ -231,7 +230,7 @@ describe('embedComplexes', () => {
     const embedding = embedComplexes(world, random, 42, complexes)
 
     // then
-    expect(embedding.length).toEqual(0)
+    expect(embedding).toBeUndefined()
   })
 
   it('embeds the exact node at a possible node', () => {
@@ -256,7 +255,7 @@ describe('embedComplexes', () => {
     ]
 
     // when
-    const embedding = embedComplexes(world, random, 42, complexes)
+    const embedding = embedComplexes(world, random, 42, complexes)!
 
     // then
     expect(embedding.length).toEqual(2)

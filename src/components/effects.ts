@@ -35,8 +35,8 @@ export function confuse(duration: number): Effect {
   return { type: 'confuse', global: true, negative: true, duration }
 }
 
-export function defend(value: number, duration: number): Effect {
-  return { type: 'defend', global: true, negative: false, duration, value }
+export function defend(value: number, duration: number, global: boolean = true): Effect {
+  return { type: 'defend', global, negative: false, duration, value }
 }
 
 export function stun(duration: number): Effect {
