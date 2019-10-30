@@ -1,0 +1,18 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ActionSelectorFullView displays action groups 1`] = `
+"1 name1  name1      
+2 name2  desc1      "
+`;
+
+exports[`ActionSelectorFullView displays action groups 2`] = `
+"1 name1             
+2 name2             "
+`;
+
+exports[`ActionSelectorFullView displays actions 1`] = `
+"1 hit    hit        
+
+         cost: 2AP 0MP
+          attack 3  "
+`;

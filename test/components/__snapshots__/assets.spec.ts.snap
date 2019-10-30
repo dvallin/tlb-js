@@ -1,5 +1,5 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`createAssetFromPosition throws error on blocking ground 1`] = `"cannot build asset on missing or blocking ground"`;
+exports[`createAssetFromPosition throws error on blocking ground 1`] = `"cannot build asset on missing ground at -1,0"`;
 
-exports[`createAssetFromPosition throws error on missing ground 1`] = `"cannot build asset on missing ground at 0,0"`;
+exports[`createAssetFromPosition throws error on missing ground 1`] = `"cannot build asset on missing ground at -1,0"`;

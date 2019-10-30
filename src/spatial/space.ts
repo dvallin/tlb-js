@@ -1,6 +1,5 @@
 import { Vector } from './vector'
 import { Shape } from '../geometry/shape'
-import { Tree, get, insert, remove } from './tree'
 
 export interface Space<A> {
   get(pos: Vector): A | undefined
@@ -10,14 +9,18 @@ export interface Space<A> {
 }
 
 export class DiscreteSpace<A> implements Space<A> {
-  private readonly objects: Tree<A> = { values: [] }
+  private readonly objects: A[]
+
+  public constructor(public readonly width: number) {
+    this.objects = new Array(width * width)
+  }
 
   public get(pos: Vector): A | undefined {
-    return get(this.objects, pos.coordinates)
+    return this.objects[pos.index(this.width)]
   }
 
   public set(pos: Vector, object: A): void {
-    insert(this.objects, pos.coordinates, object)
+    this.objects[pos.index(this.width)] = object
   }
 
   public setAll(shape: Shape, object: A): void {
@@ -25,26 +28,9 @@ export class DiscreteSpace<A> implements Space<A> {
   }
 
   public remove(pos: Vector): A | undefined {
-    return remove(this.objects, pos.coordinates)
-  }
-}
-
-export class SubSpace<A> implements Space<A> {
-  public constructor(public readonly space: Space<A>, public readonly transform: (pos: Vector) => Vector) {}
-
-  public get(pos: Vector): A | undefined {
-    return this.space.get(this.transform(pos))
-  }
-
-  public set(pos: Vector, object: A): void {
-    return this.space.set(this.transform(pos), object)
-  }
-
-  public setAll(shape: Shape, object: A): void {
-    shape.foreach(pos => this.set(pos, object))
-  }
-
-  public remove(pos: Vector): A | undefined {
-    return this.space.remove(this.transform(pos))
+    const index = pos.index(this.width)
+    const oldValue = this.objects[index]
+    delete this.objects[index]
+    return oldValue
   }
 }

@@ -11,6 +11,7 @@ export class Game {
   public frames: number = 0
   public renderTime: number = 0
   public started: number = 0
+  public currentState: number = -1
   public states: State[] = []
 
   public rayCaster = new Queries()
@@ -33,7 +34,10 @@ export class Game {
   }
 
   private tick(): void {
-    const state = this.states[this.states.length - 1]
+    if (this.currentState != this.states.length - 1) {
+      this.enterState()
+    }
+    const state = this.states[this.currentState]
     let msLeft = 1000 / this.targetFps
 
     // update all resources (io, clipping, etc...) and render afterwards
@@ -44,7 +48,7 @@ export class Game {
     msLeft -= renderDelta
     this.renderTime += renderDelta
 
-    state.update(this.world)
+    state.update(this.world, s => this.pushState(s))
     while (true) {
       const start = Date.now()
       this.world.updateSystems()
@@ -57,13 +61,14 @@ export class Game {
       }
     }
 
-    if (state.isDone(this.world)) {
+    if (this.currentState < this.states.length - 1) {
+      state.stop(this.world)
+    } else if (state.isDone(this.world)) {
       state.stop(this.world)
       this.states.pop()
       if (this.states.length === 0) {
         return
       }
-      this.enterState()
     }
 
     this.frames++
@@ -77,7 +82,7 @@ export class Game {
       this.started = Date.now()
     }
 
-    setTimeout(() => this.tick(), msLeft)
+    requestAnimationFrame(() => this.tick())
   }
 
   public get fps(): number {
@@ -98,10 +103,10 @@ export class Game {
 
   private pushState(state: State): void {
     this.states.push(state)
-    this.enterState()
   }
 
   private enterState(): void {
-    this.states[this.states.length - 1].start(this.world)
+    this.currentState = this.states.length - 1
+    this.states[this.currentState].start(this.world)
   }
 }

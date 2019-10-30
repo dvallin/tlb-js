@@ -1,13 +1,9 @@
 import { Vector } from '../../src/spatial/vector'
-import { DiscreteSetSpace, SetSpace, SubSetSpace } from '../../src/spatial/set-space'
+import { DiscreteSetSpace, SetSpace } from '../../src/spatial/set-space'
 import { Rectangle } from '../../src/geometry/rectangle'
 
-describe('DiscreteStackedSpace', () => {
-  testSetSpace(new Vector([0, 2]), () => new DiscreteSetSpace())
-})
-
-describe('SubStackedSpace', () => {
-  testSetSpace(new Vector([0]), () => new SubSetSpace(new DiscreteSetSpace(), (v: Vector) => new Vector([v.x, 2])))
+describe('DiscreteSetSpace', () => {
+  testSetSpace(new Vector([0, 2]), () => new DiscreteSetSpace(10))
 })
 
 function testSetSpace(position: Vector, spaceBuilder: () => SetSpace): void {

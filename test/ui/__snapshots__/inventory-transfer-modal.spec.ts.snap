@@ -1,0 +1,27 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`InventoryTransferModal displays two inventories 1`] = `
+"      /player/      /guard/
+ 1 id card (0) rifle (5)
+ 2 rifle (5)        
+ 3 sniper rifle (6) 
+ 4 boots of striding (3)
+ 5 nail gun (5)     
+ 6 leather jacket (3)
+
+
+        22/25       5/25"
+`;
+
+exports[`InventoryTransferModal highlights right inventory 1`] = `
+"      /player/      /guard/
+ id card (0)   1 rifle (5)
+ rifle (5)          
+ sniper rifle (6)   
+ boots of striding (3)
+ nail gun (5)       
+ leather jacket (3) 
+
+
+        22/25       5/25"
+`;

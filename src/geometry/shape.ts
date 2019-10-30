@@ -6,7 +6,7 @@ export interface Shape {
   containsVector(p: Vector): boolean
   contains(s: Shape): boolean
   equals(s: Shape): boolean
-  foreach(f: (p: Vector) => void): void
+  foreach(f: (p: Vector, i: number) => void): void
   all(f: (p: Vector) => boolean): boolean
   some(predicate: (p: Vector) => boolean): boolean
   translate(t: Vector): Shape
@@ -29,9 +29,11 @@ export abstract class AbstractShape implements Shape {
     return this.contains(s) && s.contains(this)
   }
 
-  public foreach(f: (position: Vector) => void): void {
+  public foreach(f: (position: Vector, i: number) => void): void {
+    let i = 0
     this.all(p => {
-      f(p)
+      f(p, i)
+      i++
       return true
     })
   }

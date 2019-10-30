@@ -1,9 +1,22 @@
 import { AbstractShape } from './shape'
 import { Vector } from '../spatial'
+import { Direction } from '../spatial/direction'
 
 export class Rectangle extends AbstractShape {
   public static fromBounds(left: number, right: number, top: number, bottom: number): Rectangle {
     return new Rectangle(left, top, right - left + 1, bottom - top + 1)
+  }
+
+  public static footprint(position: Vector, direction: Direction, size: Vector): Rectangle {
+    const up: Vector = Vector.fromDirection(direction).abs()
+    const right: Vector = Vector.fromDirection(direction)
+      .perpendicular()
+      .abs()
+    const cx = Math.floor(size.x / 2)
+    const cy = Math.floor(size.y / 2)
+    const topLeft = position.add(right.mult(-cx)).add(up.mult(-cy))
+    const bottomRight = topLeft.add(right.mult(size.x - 1)).add(up.mult(size.y - 1))
+    return Rectangle.fromBounds(topLeft.x, bottomRight.x, topLeft.y, bottomRight.y)
   }
 
   public static centerAt(x: number, y: number, size: number): Rectangle {
@@ -52,6 +65,19 @@ export class Rectangle extends AbstractShape {
     return new Vector([Math.floor(cx), Math.floor(cy)])
   }
 
+  public centerOf(direction: Direction): Vector {
+    switch (direction) {
+      case 'up':
+        return this.centerTop
+      case 'right':
+        return this.centerRight
+      case 'down':
+        return this.centerBottom
+      case 'left':
+        return this.centerLeft
+    }
+  }
+
   public get centerLeft(): Vector {
     const cy = (this.top + this.bottom) / 2
     return new Vector([this.left, Math.floor(cy)])
@@ -78,6 +104,15 @@ export class Rectangle extends AbstractShape {
       Math.max(this.right, other.right),
       Math.min(this.top, other.top),
       Math.max(this.bottom, other.bottom)
+    )
+  }
+
+  public intersect(other: Rectangle): Rectangle {
+    return Rectangle.fromBounds(
+      Math.max(this.left, other.left),
+      Math.min(this.right, other.right),
+      Math.max(this.top, other.top),
+      Math.min(this.bottom, other.bottom)
     )
   }
 

@@ -17,7 +17,7 @@ describe('Viewport', () => {
   beforeEach(() => {
     world = new World()
     map = mockMap(world)
-    mockImplementation(map.tiles.get, (vector: Vector) => (vector.key === '1,1' ? 42 : undefined))
+    mockImplementation(map.levels[0].tiles.get, (vector: Vector) => (vector.key === '1,1' ? 42 : undefined))
     mockInput(world)
 
     world.registerComponentStorage('viewport-focus', new MapStorage<{}>())
@@ -32,14 +32,14 @@ describe('Viewport', () => {
       viewport.focus = jest.fn()
       world
         .createEntity()
-        .withComponent<PositionComponent>('position', { position: new Vector([1, 2]) })
+        .withComponent<PositionComponent>('position', { level: 0, position: new Vector([1, 2]) })
         .withComponent('viewport-focus', {}).entity
 
       // when
       viewport.update(world)
 
       // then
-      expect(viewport.focus).toHaveBeenCalledWith(new Vector([1, 2]))
+      expect(viewport.focus).toHaveBeenCalledWith(0, new Vector([1, 2]))
     })
   })
 
@@ -81,7 +81,7 @@ describe('Viewport', () => {
     })
 
     function focusAndCheck(point: Vector, topLeft: Vector) {
-      viewport.focus(point)
+      viewport.focus(0, point)
       expect(viewport.topLeft).toEqual(topLeft)
     }
   })

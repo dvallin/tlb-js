@@ -1,7 +1,6 @@
 import { TlbWorld } from '../tlb'
 import { Input, InputResource } from '../resources/input'
 import { Vector } from '../spatial'
-import { KEYS } from 'rot-js'
 import { Rectangle } from '../geometry/rectangle'
 
 export interface Selector<T> {
@@ -17,18 +16,20 @@ export interface SelectorState {
   hovered: number
 }
 
-export interface CollapsibleGroup<T> {
-  collapsed: boolean
-  items: (T & { available: boolean })[]
-}
-
 export class ItemSelector<T> implements Selector<T> {
-  public constructor(private readonly state: SelectorState, private items: T[]) {}
+  public constructor(
+    private items: T[],
+    private readonly state: SelectorState = { focused: true, firstRow: 0, hovered: 0, selected: undefined }
+  ) {}
+
+  public setItems(items: T[]) {
+    this.items = items
+  }
 
   public get selected(): T | undefined {
     if (this.state.selected !== undefined) {
       const { selected } = this.state
-      return this.itemAtLine(selected)
+      return this.itemAtIndex(selected)
     }
     return undefined
   }
@@ -36,106 +37,37 @@ export class ItemSelector<T> implements Selector<T> {
   public get hovered(): T | undefined {
     if (this.state.hovered !== undefined) {
       const { hovered } = this.state
-      return this.itemAtLine(hovered)
+      return this.itemAtIndex(hovered)
     }
     return undefined
+  }
+
+  public get selectedIndex(): number | undefined {
+    return this.state.selected
+  }
+
+  public get hoveredIndex(): number | undefined {
+    return this.state.hovered
   }
 
   public get length(): number {
     return this.items.length
   }
 
-  private itemAtLine(line: number): T | undefined {
+  public itemAtIndex(line: number): T | undefined {
     return this.items[line]
   }
-}
 
-export type CollapsibleGroupValue<S, T> = S & CollapsibleGroup<T>
-
-export class CollapsibleGroupSelector<S, T> implements Selector<S> {
-  public constructor(private readonly state: SelectorState, private groups: CollapsibleGroupValue<S, T>[]) {}
-
-  public get selected(): CollapsibleGroupValue<S, T> | undefined {
-    if (this.state.selected !== undefined) {
-      const { selected } = this.state
-      return this.groupAtLine(selected)
-    }
-    return undefined
+  public update(world: TlbWorld, content: Rectangle): void {
+    updateSelectorState(world, this.state, content, this.length)
   }
 
-  public get hovered(): CollapsibleGroupValue<S, T> | undefined {
-    if (this.state.hovered !== undefined) {
-      const { hovered } = this.state
-      return this.groupAtLine(hovered)
-    }
-    return undefined
-  }
-
-  public get length(): number {
-    return this.groups.length
-  }
-
-  private groupAtLine(line: number): CollapsibleGroupValue<S, T> | undefined {
-    for (const group of this.groups) {
-      if (line === 0) {
-        return group
-      }
-      line -= 1
-      if (group.collapsed) {
-        continue
-      }
-      line -= group.items.length
-    }
-    return undefined
+  public isItemVisible(content: Rectangle, index: number): boolean {
+    return isLineVisible(this.state, content, index)
   }
 }
 
-export class CollapsibleGroupItemSelector<S, T> implements Selector<{ group: S; item: T }> {
-  public constructor(private readonly state: SelectorState, private groups: CollapsibleGroupValue<S, T>[]) {}
-
-  public get selected(): { group: S; item: T } | undefined {
-    if (this.state.selected !== undefined) {
-      return this.itemAtLine(this.state.selected)
-    }
-    return undefined
-  }
-
-  public get hovered(): { group: S; item: T } | undefined {
-    if (this.state.hovered !== undefined) {
-      return this.itemAtLine(this.state.hovered)
-    }
-    return undefined
-  }
-
-  public get length(): number {
-    return this.groups.map(g => (g.collapsed ? 0 : g.items.length)).reduce((a, b) => a + b, 0)
-  }
-
-  private itemAtLine(line: number): { group: S; item: T } | undefined {
-    for (const group of this.groups) {
-      line -= 1
-      if (group.collapsed) {
-        continue
-      }
-      if (line < 0) {
-        return undefined
-      } else if (line >= group.items.length) {
-        line -= group.items.length
-      } else {
-        const item = group.items[line]
-        if (item !== undefined && item.available) {
-          return {
-            group,
-            item: group.items[line],
-          }
-        }
-      }
-    }
-    return undefined
-  }
-}
-
-export function updateSelectorState(world: TlbWorld, current: SelectorState, content: Rectangle, availableRows: number): boolean {
+export function updateSelectorState(world: TlbWorld, current: SelectorState, content: Rectangle, availableRows: number): void {
   const input: Input = world.getResource<InputResource>('input')
   let position: Vector | undefined
   if (input.position) {
@@ -144,8 +76,8 @@ export function updateSelectorState(world: TlbWorld, current: SelectorState, con
   } else {
     current.focused = false
   }
-  const up = input.keyPressed.has(KEYS.VK_K)
-  const down = input.keyPressed.has(KEYS.VK_J)
+  const up = input.isActive('up')
+  const down = input.isActive('down')
   if (up) {
     current.hovered--
   }
@@ -163,7 +95,6 @@ export function updateSelectorState(world: TlbWorld, current: SelectorState, con
   }
 
   current.selected = undefined
-  let collapseSelected = false
   if (position && content.containsVector(position)) {
     const delta = position.minus(content.topLeft)
     current.hovered = delta.y + current.firstRow
@@ -172,10 +103,14 @@ export function updateSelectorState(world: TlbWorld, current: SelectorState, con
     }
   }
 
-  if (input.keyPressed.has(KEYS.VK_RETURN)) {
+  if (input.isActive('accept')) {
     current.selected = current.hovered
   }
-  return collapseSelected
+
+  const numericPressed = input.numericActive()
+  if (numericPressed !== undefined) {
+    current.selected = numericPressed
+  }
 }
 
 export function isLineVisible(current: SelectorState, content: Rectangle, index: number): boolean {

@@ -4,7 +4,10 @@ import { UIResource, UI } from '../resources/ui'
 
 export class Modal extends AbstractState {
   public constructor(systems: SystemName[]) {
-    super(systems.filter(s => s !== 'free-mode-control' && s !== 'player-control' && s !== 'player-round-control'))
+    super(
+      'modal',
+      systems.filter(s => s !== 'free-mode-control' && s !== 'player-control' && s !== 'player-round-control' && s !== 'player-interaction')
+    )
   }
 
   public update(_world: TlbWorld): void {}

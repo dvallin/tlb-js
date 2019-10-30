@@ -1,5 +1,7 @@
 export type Direction = 'up' | 'right' | 'down' | 'left'
 
+export const directions: Direction[] = ['up', 'right', 'down', 'left']
+
 export function leftOf(direction: Direction): Direction {
   switch (direction) {
     case 'up':

@@ -1,46 +1,30 @@
 import { Vector } from '../spatial'
 
-export function bresenham(from: Vector, direction: Vector, overshoot: boolean = false): () => Vector | undefined {
-  let delta = { x: Math.abs(direction.x), y: Math.abs(direction.y) }
-  const sign = { x: Math.sign(direction.x), y: Math.sign(direction.y) }
-
-  let swap = false
-  if (delta.y > delta.x) {
-    delta = { x: delta.y, y: delta.x }
-    swap = true
-  }
-
-  let d = 2.0 * delta.y - delta.x
-  let index = 0
-  const current = { x: from.x, y: from.y }
-  let done = false
-
-  return () => {
-    if (done) {
-      return undefined
-    }
-
-    const result = new Vector([current.x, current.y])
-    if (overshoot || index < delta.x) {
-      while (d > 0) {
-        d -= 2 * delta.x
-        if (swap) {
-          current.x += sign.x
-        } else {
-          current.y += sign.y
-        }
+export function* bresenham(from: Vector, to: Vector, overshoot: boolean = false, initialEps: number = 0): Iterable<Vector> {
+  const dx = to.x - from.x
+  const dy = to.y - from.y
+  const adx = Math.abs(dx)
+  const ady = Math.abs(dy)
+  const sx = dx > 0 ? 1 : -1
+  const sy = dy > 0 ? 1 : -1
+  var eps = initialEps
+  if (adx > ady) {
+    for (let x = from.x, y = from.y; overshoot || sx < 0 ? x >= to.x : x <= to.x; x += sx) {
+      yield new Vector([x, y])
+      eps += ady
+      if (eps << 1 >= adx) {
+        y += sy
+        eps -= adx
       }
-      d += 2 * delta.y
-      if (swap) {
-        current.y += sign.y
-      } else {
-        current.x += sign.x
-      }
-    } else {
-      done = true
     }
-
-    index += 1
-    return result
+  } else {
+    for (let x = from.x, y = from.y; sy < 0 ? y >= to.y : y <= to.y; y += sy) {
+      yield new Vector([x, y])
+      eps += adx
+      if (eps << 1 >= ady) {
+        x += sx
+        eps -= ady
+      }
+    }
   }
 }

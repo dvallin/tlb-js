@@ -1,0 +1,33 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`FullInventoryView displays description of selection 1`] = `
+"                    
+actions: headshot, shoot
+
+
+
+
+
+1 equip             "
+`;
+
+exports[`FullInventoryView displays inventory 1`] = `
+"1 id card           
+2 rifle             
+3 sniper rifle      
+4 boots of striding 
+5 nail gun          
+6 leather jacket    
+
+weight: 22/25       "
+`;
+
+exports[`MinimizedInventoryView displays inventory 1`] = `
+"id card             
+rifle               
+sniper rifle        
+boots of striding   
+nail gun            
+leather jacket      
+inventory (22/25)   "
+`;

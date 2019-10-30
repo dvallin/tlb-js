@@ -9,8 +9,7 @@ import { TlbWorld } from '../tlb'
 import { getFeature, Feature } from '../components/feature'
 import { PositionComponent } from '../components/position'
 import { Entity } from '../ecs/entity'
-import { WorldMap, WorldMapResource } from '../resources/world-map'
-import { LightingComponent } from '../components/light'
+import { WorldMapResource } from '../resources/world-map'
 import { OverlayComponent } from '../components/overlay'
 import { UI, UIResource } from '../resources/ui'
 import { Vector } from '../spatial'
@@ -43,11 +42,12 @@ export class RotRenderer implements Renderer {
       forceSquareRatio: true,
       fontSize: 16,
       fontFamily: 'Monaco, monospace',
-      bg: gray[4].rgb,
+      bg: gray[4].toRgb(),
     }
   ): RotRenderer {
-    const ambientColor = new Color([120, 120, 120])
+    const ambientColor = new Color([200, 120, 120])
     const display = new Display(displayOptions)
+
     root.appendChild(display.getContainer() as Node)
     return new RotRenderer(display, ambientColor)
   }
@@ -66,10 +66,6 @@ export class RotRenderer implements Renderer {
     })
     const ui: UI = world.getResource<UIResource>('ui')
     ui.render(this)
-    world.getStorage<LightingComponent>('lighting')!.foreach(({}, lighting) => {
-      lighting.incomingLight = lighting.incomingLightInFrame
-      lighting.incomingLightInFrame = new Map()
-    })
     world.components.get('overlay')!.clear()
   }
 
@@ -89,34 +85,18 @@ export class RotRenderer implements Renderer {
     feature: Feature,
     position: PositionComponent
   ): void {
-    const map: WorldMap = world.getResource<WorldMapResource>('map')
-    const p = position.position.floor()
-    if (map.isDiscovered(p)) {
-      let lighting = undefined
-      if (map.isVisible(p)) {
-        lighting = world.getComponent<LightingComponent>(entity, 'lighting')
-      }
+    const level = world.getResource<WorldMapResource>('map').levels[position.level]
+    const p = position.position
+    if (level.isDiscovered(p)) {
+      const color = level.isVisible(p) ? feature.diffuse : this.computeColor(this.ambientColor, feature.diffuse)
       const overlay = world.getComponent<OverlayComponent>(entity, 'overlay') || { background: undefined }
-      const displayPosition = viewport.toDisplay(position.position, centered)
-      this.character(
-        feature.character,
-        displayPosition,
-        this.computeColor(this.ambientColor, feature.diffuse, lighting),
-        overlay.background
-      )
+      const displayPosition = viewport.toDisplay(p, centered)
+      this.character(feature.character, displayPosition, color, overlay.background)
     }
   }
 
-  public computeColor(ambientLight: Color, diffuse: Color, lighting: LightingComponent | undefined): Color {
-    if (lighting === undefined) {
-      return diffuse.multiply(ambientLight)
-    } else {
-      let totalLight = ambientLight
-      lighting.incomingLight.forEach(incoming => {
-        totalLight = totalLight.add(incoming)
-      })
-      return diffuse.multiply(totalLight)
-    }
+  public computeColor(ambientLight: Color, diffuse: Color): Color {
+    return diffuse.multiply(ambientLight)
   }
 
   public eventToPosition(e: TouchEvent | MouseEvent): Position | undefined {
@@ -128,22 +108,22 @@ export class RotRenderer implements Renderer {
   }
 
   public character(character: string, position: Position, fg: Color, bg?: Color): void {
-    const fgRgb = fg.rgb
-    const bgRgb = bg ? bg.rgb : undefined
+    const fgRgb = fg.toRgb()
+    const bgRgb = bg ? bg.toRgb() : undefined
     this.display.draw(position.x, position.y, character[0], fgRgb, bgRgb || null)
   }
 
   public text(text: string, position: Position, fg: Color, bg?: Color): void {
-    const fgRgb = fg.rgb
-    const bgRgb = bg ? bg.rgb : undefined
+    const fgRgb = fg.toRgb()
+    const bgRgb = bg ? bg.toRgb() : undefined
     for (let idx = 0; idx < text.length; idx++) {
       this.display.draw(position.x + idx, position.y, text[idx], fgRgb, bgRgb || null)
     }
   }
 
   public flowText(text: string, position: Position, width: number, fg: Color, bg?: Color): number {
-    const fgTag = `%c{${fg.rgb}}`
-    const bgTag = bg ? `%b{${bg.rgb}}` : ''
+    const fgTag = `%c{${fg.toRgb()}}`
+    const bgTag = bg ? `%b{${bg.toRgb()}}` : ''
     return this.display.drawText(position.x, position.y, `${fgTag}${bgTag}${text}`, width)
   }
 }

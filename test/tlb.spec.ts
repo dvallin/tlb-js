@@ -20,7 +20,7 @@ describe('registerResources', () => {
 
     registerSystems(world, mockQueries(), jest.fn())
 
-    expect(world.registerSystem).toHaveBeenCalledTimes(14)
+    expect(world.registerSystem).toHaveBeenCalledTimes(12)
   })
 })
 

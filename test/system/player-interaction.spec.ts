@@ -1,88 +1,85 @@
-import { TlbWorld } from '../../src/tlb'
-import { World } from '../../src/ecs/world'
-import { mockComponent, mockMap, mockInput, callArgument, mockReturnValue, mockImplementation } from '../mocks'
-import { PositionComponent } from '../../src/components/position'
-import { Input } from '../../src/resources/input'
-import { KEYS } from 'rot-js'
 import { PlayerInteraction } from '../../src/systems/player-interaction'
-import { Storage } from '../../src/ecs/storage'
+import { World } from '../../src/ecs/world'
+import { TlbWorld, registerComponents } from '../../src/tlb'
+import { Entity } from '../../src/ecs/entity'
+import { mockInput, mockImplementation, mockUi, callArgument, mockReturnValue } from '../mocks'
+import { WorldMapResource, WorldMap } from '../../src/resources/world-map'
+import { characterCreators } from '../../src/assets/characters'
+import { Input, KeyboardCommand } from '../../src/resources/input'
+import { placeCharacter } from '../../src/component-reducers/place-character'
 import { Vector } from '../../src/spatial'
-import { FunctionalShape } from '../../src/geometry/functional-shape'
-import { Shape } from '../../src/geometry/shape'
-import { WorldMap } from '../../src/resources/world-map'
+import { createFeatureFromType } from '../../src/components/feature'
+import { createAssetFromShape } from '../../src/components/asset'
 import { Rectangle } from '../../src/geometry/rectangle'
-import { TriggeredByComponent } from '../../src/components/trigger'
+import { UI } from '../../src/resources/ui'
+import { State } from '../../src/game-states/state'
 
 describe('PlayerInteraction', () => {
   let world: TlbWorld
-
+  let player: Entity
   let input: Input
+  let system: PlayerInteraction
   let map: WorldMap
-  let actives: Storage<{}>
-  let triggers: Storage<{}>
-  let triggeredBy: Storage<TriggeredByComponent>
+  let pushState: () => void
+  let ui: UI
   beforeEach(() => {
     world = new World()
-    map = mockMap(world)
+    registerComponents(world)
+
+    world.registerResource(new WorldMapResource(4))
+    map = world.getResource<WorldMapResource>('map')
+    map.levels[0].boundary.foreach(p => createFeatureFromType(world, 0, p, 'corridor'))
+
+    ui = mockUi(world)
     input = mockInput(world)
+    pushState = jest.fn()
 
-    const positions = mockComponent<PositionComponent>(world, 'position')
-    mockReturnValue(positions.get, { position: new Vector([1.2, 1.3]) })
+    player = characterCreators.player(world)
+    placeCharacter(world, player, 0, new Vector([0, 0]))
 
-    actives = mockComponent<PositionComponent>(world, 'active')
-    triggers = mockComponent<PositionComponent>(world, 'triggers')
-    triggeredBy = mockComponent<TriggeredByComponent>(world, 'triggered-by')
+    system = new PlayerInteraction(pushState)
   })
 
-  describe('when E key is hit', () => {
-    beforeEach(() => {
-      input.keyPressed.add(KEYS.VK_E)
-    })
+  it('activates direct triggers', () => {
+    const guard = characterCreators.guard(world)
+    placeCharacter(world, guard, 0, new Vector([0, 1]))
 
-    it('searches for triggers', () => {
-      const playerInteraction = new PlayerInteraction()
-      playerInteraction.findTrigger = jest.fn()
+    mockImplementation<KeyboardCommand, boolean>(input.isActive, k => k === 'use')
+    system.update(world, player)
 
-      playerInteraction.update(world, 0)
-
-      const searchShape = callArgument<Shape>(playerInteraction.findTrigger, 0, 2)
-      const expectedShape = FunctionalShape.lN(new Vector([1, 1]), 1, true)
-      expect(searchShape.equals(expectedShape)).toBeTruthy()
-    })
-
-    it('activates triggers', () => {
-      const playerInteraction = new PlayerInteraction()
-      playerInteraction.findTrigger = jest.fn().mockReturnValue(42)
-
-      playerInteraction.update(world, 0)
-
-      expect(actives.insert).toHaveBeenCalledWith(42, {})
-    })
+    expect(world.hasComponent(guard, 'active')).toBeTruthy()
   })
 
-  describe('findTrigger', () => {
-    beforeEach(() => {
-      mockImplementation(map.getTile, (p: Vector) => (p.key === '1,1' ? 42 : undefined))
-    })
+  it('activates reverse triggers', () => {
+    const door = createAssetFromShape(world, 0, new Rectangle(1, 1, 1, 1), 'door')
 
-    it('finds triggers', () => {
-      const playerInteraction = new PlayerInteraction()
-      mockImplementation(triggers.get, entity => (entity === 42 ? {} : undefined))
-      mockReturnValue(triggeredBy.get, undefined)
+    mockImplementation<KeyboardCommand, boolean>(input.isActive, k => k === 'use')
+    system.update(world, player)
 
-      const trigger = playerInteraction.findTrigger(world, map, new Rectangle(0, 0, 2, 2))
+    expect(world.hasComponent(door, 'active')).toBeTruthy()
+  })
 
-      expect(trigger).toEqual(42)
-    })
+  it('shows a dialog for multiple triggers and pushes modal state', () => {
+    const guard = characterCreators.guard(world)
+    placeCharacter(world, guard, 0, new Vector([0, 1]))
+    createAssetFromShape(world, 0, new Rectangle(1, 1, 1, 1), 'door')
 
-    it('finds triggers behind triggeredBy relationships', () => {
-      const playerInteraction = new PlayerInteraction()
-      mockImplementation(triggers.get, entity => (entity === 43 ? {} : undefined))
-      mockReturnValue(triggeredBy.get, { entity: 43 })
+    mockImplementation<KeyboardCommand, boolean>(input.isActive, k => k === 'use')
+    system.update(world, player)
 
-      const trigger = playerInteraction.findTrigger(world, map, new Rectangle(0, 0, 2, 2))
+    expect(ui.showMultipleChoiceModal).toHaveBeenCalled()
+    expect((callArgument(pushState, 0, 0) as State).name).toEqual('modal')
+  })
 
-      expect(trigger).toEqual(43)
-    })
+  it('triggers multiple choice modals result', () => {
+    const guard = characterCreators.guard(world)
+    placeCharacter(world, guard, 0, new Vector([0, 1]))
+    createAssetFromShape(world, 0, new Rectangle(1, 1, 1, 1), 'door')
+
+    mockReturnValue<boolean>(ui.multipleChoiceModalShowing, true)
+    mockReturnValue<Entity>(ui.selectedModalOption, guard)
+    system.update(world, player)
+
+    expect(world.hasComponent(guard, 'active')).toBeTruthy()
   })
 })

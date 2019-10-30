@@ -3,8 +3,8 @@ import { gray } from '../../src/renderer/palettes'
 
 describe('Color', () => {
   it('calculates the rgb value', () => {
-    expect(new Color([0, 0, 0]).rgb).toEqual('rgb(0,0,0)')
-    expect(new Color([128, 255, 257]).rgb).toEqual('rgb(128,255,255)')
+    expect(new Color([0, 0, 0]).toRgb()).toEqual('rgb(0,0,0)')
+    expect(new Color([128, 255, 257]).toRgb()).toEqual('rgb(128,255,255)')
   })
 
   it('adds colors', () => {

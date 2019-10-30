@@ -1,12 +1,14 @@
-import { CharacterStatsComponent, characterStats } from '../components/character-stats'
+import { CharacterStatsComponent } from '../components/character-stats'
 import { Entity } from '../ecs/entity'
 import { WorldMap, WorldMapResource } from '../resources/world-map'
 import { Log, LogResource } from '../resources/log'
 import { PositionComponent } from '../components/position'
 import { TlbWorld } from '../tlb'
-import { EffectComponent } from '../components/effects'
+import { EffectComponent, bleed } from '../components/effects'
 import { InventoryComponent } from '../components/items'
-import { createLoot } from '../components/asset'
+import { characterStats } from '../assets/characters'
+import { createAsset } from '../components/asset'
+import { Vector } from '../spatial'
 
 export function damageBodyPart(
   world: TlbWorld,
@@ -25,12 +27,8 @@ export function damageBodyPart(
       kill(world, target)
     } else {
       world.createEntity().withComponent<EffectComponent>('effect', {
-        effect: {
-          type: 'bleed',
-          negated: false,
-          global: false,
-        },
-        bodyPart: 'torso',
+        effect: bleed(),
+        bodyParts: ['torso'],
         source: source,
         target: target,
       })
@@ -38,10 +36,10 @@ export function damageBodyPart(
   }
 }
 
-export function healBodyPart(stats: CharacterStatsComponent, bodyPartName: string, damage: number): void {
+export function healBodyPart(stats: CharacterStatsComponent, bodyPartName: string): void {
   const bodyPart = stats.current.bodyParts[bodyPartName]
   const maximum = characterStats[stats.type].bodyParts[bodyPartName]
-  bodyPart.health = Math.max(bodyPart.health + damage, maximum.health)
+  bodyPart.health = maximum.health
 }
 
 export function kill(world: TlbWorld, entity: Entity) {
@@ -49,19 +47,21 @@ export function kill(world: TlbWorld, entity: Entity) {
     const position = world.getComponent<PositionComponent>(entity, 'position')!
     const inventory = world.getComponent<InventoryComponent>(entity, 'inventory')!
     const map: WorldMap = world.getResource<WorldMapResource>('map')
-    map.removeCharacter(position.position.floor())
+    map.levels[position.level].removeCharacter(position.position)
 
-    world
-      .editEntity(entity)
-      .removeComponent('take-turn')
-      .removeComponent('start-turn')
-      .removeComponent('took-turn')
-      .removeComponent('wait-turn')
-
-    const loot = createLoot(world, map, position.position.floor())
+    const positionFloor = new Vector([position.position.fX, position.position.fY])
+    const loot = createAsset(world, map, position.level, positionFloor, 'up', 'loot')
     world.editEntity(loot).withComponent<InventoryComponent>('inventory', { ...inventory })
 
     const log: Log = world.getResource<LogResource>('log')
     log.died(world, entity)
   }
+
+  world
+    .editEntity(entity)
+    .withComponent('dead', {})
+    .removeComponent('take-turn')
+    .removeComponent('start-turn')
+    .removeComponent('took-turn')
+    .removeComponent('wait-turn')
 }

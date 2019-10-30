@@ -19,7 +19,7 @@ export class SetStorage implements Storage<{}> {
     return this.data.size
   }
 
-  public insert(entity: Entity, {  }: {}): void {
+  public insert(entity: Entity, _: {}): void {
     this.data.add(entity)
   }
 

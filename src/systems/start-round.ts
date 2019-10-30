@@ -1,15 +1,13 @@
 import { ComponentName, TlbSystem, TlbWorld } from '../tlb'
 import { Entity } from '../ecs/entity'
-import { Random } from '../random'
-import { CharacterStatsComponent, characterStats } from '../components/character-stats'
+import { CharacterStatsComponent } from '../components/character-stats'
 import { ActiveEffectsComponent } from '../components/effects'
 import { damageBodyPart } from '../component-reducers/damage-bodypart'
 import { TakeTurnComponent } from '../components/rounds'
+import { characterStats } from '../assets/characters'
 
 export class StartRound implements TlbSystem {
-  public readonly components: ComponentName[] = ['start-turn', 'position']
-
-  public constructor(public readonly random: Random) {}
+  public readonly components: ComponentName[] = ['start-turn']
 
   public update(world: TlbWorld, entity: Entity): void {
     const stats = world.getComponent<CharacterStatsComponent>(entity, 'character-stats')!
@@ -42,7 +40,6 @@ export class StartRound implements TlbSystem {
       }
     })
 
-    let totalArms = 0
     let totalLegs = 0
     let arms = 0
     let legs = 0
@@ -56,7 +53,6 @@ export class StartRound implements TlbSystem {
           }
           break
         case 'arm':
-          totalArms++
           if (bodyPart.health > 0) {
             arms++
           }
@@ -64,31 +60,35 @@ export class StartRound implements TlbSystem {
       }
     })
 
-    let movementMultiplier
-    if (legs > 0) {
-      movementMultiplier = legs / totalLegs
-    } else {
-      movementMultiplier = arms / totalArms / 3
-    }
-
-    let actionMultiplier = arms > 0 ? 1.0 : 0.3
-
     stats.current.aim = canAim ? characterStats[stats.type].aim : 0
 
+    let movementOverride: number | undefined
+    if (legs === 0) {
+      // put your arms to good use then
+      movementOverride = arms > 0 ? 1 : 0
+    } else if (legs < totalLegs) {
+      // loosing legs does not make you faster
+      movementOverride = Math.ceil(stats.current.movement / 2)
+    }
     if (!canMove) {
-      movementMultiplier = 0
+      movementOverride = 0
     }
 
+    let actionOverride: number | undefined
+    if (arms === 0) {
+      // use your teeth, i guess?
+      actionOverride = 1
+    }
     if (!canAttack) {
-      actionMultiplier = 0
+      actionOverride = 0
     }
 
     world
       .editEntity(entity)
       .removeComponent('start-turn')
       .withComponent<TakeTurnComponent>('take-turn', {
-        movements: Math.ceil(movementMultiplier * stats.current.movement),
-        actions: Math.ceil(actionMultiplier * stats.current.actions),
+        movements: movementOverride !== undefined ? movementOverride : stats.current.movement,
+        actions: actionOverride !== undefined ? actionOverride : stats.current.actions,
       })
   }
 }

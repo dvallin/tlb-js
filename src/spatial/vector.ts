@@ -15,19 +15,11 @@ export class Vector {
   }
 
   public static interpolate(a: Vector, b: Vector, alpha: number): Vector {
-    Vector.assertHasSameDimensions(a, b)
     return a.add(b.minus(a).mult(alpha))
   }
+  public readonly coordinates: [number, number]
 
-  public static assertHasSameDimensions(v1: Vector, v2: Vector): void {
-    if (v1.dimensions !== v2.dimensions) {
-      throw new Error('dimension mismatch')
-    }
-  }
-
-  public readonly coordinates: number[]
-
-  public constructor(coords: number[]) {
+  public constructor(coords: [number, number]) {
     this.coordinates = coords
   }
 
@@ -35,8 +27,8 @@ export class Vector {
     return this.coordinates.join(',')
   }
 
-  public get dimensions(): number {
-    return this.coordinates.length
+  public index(width: number): number {
+    return (Math.floor(this.x) % width) + Math.floor(this.y) * width
   }
 
   public get center(): Vector {
@@ -47,95 +39,48 @@ export class Vector {
     return this.coordinates[0]
   }
 
+  public get fX(): number {
+    return Math.floor(this.coordinates[0])
+  }
+
   public get y(): number {
     return this.coordinates[1]
   }
 
-  public get z(): number {
-    return this.coordinates[2]
-  }
-
-  public at(index: number): number {
-    return this.coordinates[index]
+  public get fY(): number {
+    return Math.floor(this.coordinates[1])
   }
 
   public equals(other: Vector): boolean {
-    if (other.dimensions !== this.dimensions) {
-      return false
-    }
-    for (let i = 0; i < this.dimensions; i++) {
-      if (this.at(i) !== other.at(i)) {
-        return false
-      }
-    }
-    return true
+    return this.x === other.x && this.y === other.y
   }
 
   public add(other: Vector): Vector {
-    Vector.assertHasSameDimensions(this, other)
-    const result = new Array(this.dimensions)
-    for (let i = 0; i < this.dimensions; i++) {
-      result[i] = this.at(i) + other.at(i)
-    }
-    return new Vector(result)
+    return new Vector([this.x + other.x, this.y + other.y])
   }
 
   public minus(other: Vector): Vector {
-    Vector.assertHasSameDimensions(this, other)
-    const result = new Array(this.dimensions)
-    for (let i = 0; i < this.dimensions; i++) {
-      result[i] = this.at(i) - other.at(i)
-    }
-    return new Vector(result)
-  }
-
-  public floor(): Vector {
-    const result = new Array(this.dimensions)
-    for (let i = 0; i < this.dimensions; i++) {
-      result[i] = Math.floor(this.coordinates[i])
-    }
-    return new Vector(result)
+    return new Vector([this.x - other.x, this.y - other.y])
   }
 
   public mult(scale: number): Vector {
-    const result = new Array(this.dimensions)
-    for (let i = 0; i < this.dimensions; i++) {
-      result[i] = this.at(i) * scale
-    }
-    return new Vector(result)
+    return new Vector([this.x * scale, this.y * scale])
   }
 
   public abs(): Vector {
-    const result = new Array(this.dimensions)
-    for (let i = 0; i < this.dimensions; i++) {
-      result[i] = Math.abs(this.at(i))
-    }
-    return new Vector(result)
+    return new Vector([Math.abs(this.x), Math.abs(this.y)])
   }
 
   public bounds(other: Vector): boolean {
-    Vector.assertHasSameDimensions(this, other)
-    for (let i = 0; i < this.dimensions; i++) {
-      if (Math.abs(other.at(i)) >= Math.abs(this.at(i))) {
-        return false
-      }
-    }
-    return true
+    return Math.abs(other.x) < Math.abs(this.x) && Math.abs(other.y) < Math.abs(this.y)
   }
 
   public perpendicular(): Vector {
-    if (this.dimensions !== 2) {
-      throw new Error('wrong dimension')
-    }
     return new Vector([-this.y, this.x])
   }
 
   public squaredLength(): number {
-    let l = 0
-    for (let i = 0; i < this.dimensions; i++) {
-      l += this.at(i) * this.at(i)
-    }
-    return l
+    return this.x * this.x + this.y * this.y
   }
 
   public length(): number {
@@ -143,19 +88,11 @@ export class Vector {
   }
 
   public l1(): number {
-    let l = 0
-    for (let i = 0; i < this.dimensions; i++) {
-      l += Math.abs(this.at(i))
-    }
-    return l
+    return Math.abs(this.x) + Math.abs(this.y)
   }
 
   public lN(): number {
-    let l = 0
-    for (let i = 0; i < this.dimensions; i++) {
-      l = Math.max(l, Math.abs(this.at(i)))
-    }
-    return l
+    return Math.max(Math.abs(this.x), Math.abs(this.y))
   }
 
   public normalize(): Vector {
@@ -163,11 +100,6 @@ export class Vector {
   }
 
   public isNan(): boolean {
-    for (let i = 0; i < this.dimensions; i++) {
-      if (Number.isNaN(this.at(i))) {
-        return true
-      }
-    }
-    return false
+    return Number.isNaN(this.x) || Number.isNaN(this.y)
   }
 }

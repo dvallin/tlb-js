@@ -35,6 +35,10 @@ export class Random {
     return array[this.integerBetween(0, array.length - 1)]
   }
 
+  public pickIndex<T>(array: T[]): number {
+    return this.integerBetween(0, array.length - 1)
+  }
+
   public shuffle<T>(array: T[]): void {
     for (let i = array.length - 1; i >= 0; i--) {
       const j = this.integerBetween(0, i)

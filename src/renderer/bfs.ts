@@ -3,12 +3,13 @@ import { Shape } from '../geometry/shape'
 import { DiscreteSetSpace } from '../spatial/set-space'
 
 export function bfs(
+  width: number,
   origin: Vector,
   neighbourhood: (target: Vector) => Shape,
   visit: (target: Vector, depth: number) => boolean,
   canVisit: (target: Vector, depth: number) => boolean
 ): void {
-  const visited: DiscreteSetSpace = new DiscreteSetSpace()
+  const visited: DiscreteSetSpace = new DiscreteSetSpace(width)
   visited.set(origin)
   let currentDepth: number = 1
   let currentLayer: Vector[] = []

@@ -8,10 +8,12 @@ import { Attack } from '../components/action'
 export interface Log {
   getEntries(offset: number, limit: number): string[]
 
-  effectApplied(world: TlbWorld, effect: EffectComponent): void
+  text(text: string): void
+
+  effectApplied(world: TlbWorld, effect: EffectComponent, bodyPart?: string): void
   died(world: TlbWorld, entity: Entity): void
   missed(world: TlbWorld, entity: Entity): void
-  attack(world: TlbWorld, source: Entity, target: Entity, bodyPart: string, attack: Attack): void
+  attack(world: TlbWorld, source: Entity, target: Entity, attack: Attack): void
 }
 
 export class LogResource implements TlbResource, Log {
@@ -29,25 +31,32 @@ export class LogResource implements TlbResource, Log {
     return this.entries.slice(start, end)
   }
 
-  public effectApplied(world: TlbWorld, effectComponent: EffectComponent): void {
+  public effectApplied(world: TlbWorld, effectComponent: EffectComponent, bodyPart?: string): void {
     const { effect } = effectComponent
     const source = this.getName(world, effectComponent.source)
     const target = this.getName(world, effectComponent.target)
-
     const verb = this.verbify(source, effect.type)
-    const objectName = this.objectify(target)
-
-    this.entries.push(`${source} ${verb} ${objectName} ${effectComponent.bodyPart} (${effect.value})`)
+    if (!effect.global) {
+      const objectName = this.owner(target)
+      const valueString = effect.value !== undefined ? `(${effect.value})` : ''
+      this.entries.push(`${source} ${verb} ${objectName} ${bodyPart} ${valueString}`)
+    } else {
+      this.entries.push(`${source} ${verb} ${target}`)
+    }
   }
 
-  public attack(world: TlbWorld, source: Entity, target: Entity, bodyPart: string, attack: Attack): void {
+  public text(text: string): void {
+    this.entries.push(text)
+  }
+
+  public attack(world: TlbWorld, source: Entity, target: Entity, attack: Attack): void {
     const sourceName = this.getName(world, source)
     const targetName = this.getName(world, target)
 
     let verb = this.verbify(sourceName, 'try')
-    const objectName = this.objectify(targetName)
+    const objectName = targetName
 
-    this.entries.push(`${sourceName} ${verb} to ${attack.kind} ${objectName} ${bodyPart}`)
+    this.entries.push(`${sourceName} ${verb} to ${attack.kind} ${objectName}`)
   }
 
   public died(world: TlbWorld, entity: Entity): void {
@@ -78,7 +87,7 @@ export class LogResource implements TlbResource, Log {
     return verb
   }
 
-  public objectify(target: string): string {
+  public owner(target: string): string {
     if (target === 'you') {
       return 'your'
     }

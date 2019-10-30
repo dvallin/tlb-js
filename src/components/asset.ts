@@ -1,67 +1,81 @@
 import { Vector } from '../spatial'
 import { TlbWorld } from '../tlb'
 import { Entity } from '../ecs/entity'
-import { WorldMap } from '../resources/world-map'
+import { WorldMap, WorldMapResource } from '../resources/world-map'
 import { Shape } from '../geometry/shape'
 
-import { FeatureType, FeatureComponent, features, createFeature } from './feature'
+import { FeatureComponent, createFeature, Feature, FeatureProvider } from './feature'
 import { GroundComponent } from './ground'
 import { PositionComponent } from './position'
 import { Rectangle } from '../geometry/rectangle'
-import { TriggeredByComponent, TriggersComponent } from './trigger'
+import { TriggersComponent } from './trigger'
 
-export type AssetType = 'door' | 'locker' | 'trash' | 'loot'
+import { AssetType, assets } from '../assets/assets'
+import { FeatureType } from '../assets/features'
+import { Direction } from '../spatial/direction'
+import { InventoryComponent } from './items'
+
 export interface AssetComponent {
   type: AssetType
 }
 
+export type Cover = 'full' | 'partial' | 'none'
 export interface Asset {
-  size: number | undefined
+  name: string
+  size: Vector
+  cover: Cover
+  hasInventory: boolean
+  feature: (index: number) => Feature
 }
 
-export const assets = {
-  door: {},
-  locker: { size: 1 },
-  trash: { size: 1 },
+export interface PlacedAsset {
+  type: AssetType
+  tiles: { position: Vector; feature: FeatureType }[]
 }
 
-export function createLocker(world: TlbWorld, map: WorldMap, position: Vector): Entity {
-  const entity = createAsset(world, 'locker')
-  putTile(world, map, position, entity, 'locker')
-  return entity
+export function shapeOfAsset(type: AssetType, position: Vector, direction: Direction): Shape {
+  const asset = assets[type]
+  return Rectangle.footprint(position, direction, asset.size)
 }
 
-export function createTrash(world: TlbWorld, map: WorldMap, position: Vector): Entity {
-  const entity = createAsset(world, 'trash')
-  putTile(world, map, position, entity, 'trash')
-  return entity
-}
-
-export function createLoot(world: TlbWorld, map: WorldMap, position: Vector): Entity {
-  const entity = createAsset(world, 'loot')
-  putTile(world, map, position, entity, 'loot')
-  return entity
-}
-
-export function createDoor(world: TlbWorld, map: WorldMap, shape: Shape): Entity {
-  const entity = createAsset(world, 'door')
-  shape.foreach(position => {
-    putTile(world, map, position, entity, 'door')
+export function createAsset(
+  world: TlbWorld,
+  map: WorldMap,
+  level: number,
+  position: Vector,
+  direction: Direction,
+  type: AssetType
+): Entity {
+  const asset = assets[type]
+  const entity = world
+    .createEntity()
+    .withComponent<AssetComponent>('asset', { type })
+    .withComponent<TriggersComponent>('triggers', { name: asset.name, type: 'asset', entities: [] }).entity
+  if (asset.hasInventory) {
+    world.editEntity(entity).withComponent<InventoryComponent>('inventory', { content: [] })
+  }
+  shapeOfAsset(type, position, direction).foreach((p, i) => {
+    const tile = putTile(world, map, level, p, () => asset.feature(i))
+    addTrigger(world, tile, entity)
   })
   return entity
 }
 
-export function createAssetFromPosition(world: TlbWorld, map: WorldMap, position: Vector, type: AssetType): Entity {
-  switch (type) {
-    case 'door':
-      return createDoor(world, map, new Rectangle(position.x, position.y, 1, 1))
-    case 'locker':
-      return createLocker(world, map, position)
-    case 'trash':
-      return createTrash(world, map, position)
-    case 'loot':
-      return createLoot(world, map, position)
+export function createAssetFromShape(world: TlbWorld, level: number, shape: Shape, type: AssetType): Entity {
+  const asset = assets[type]
+  const entity = world
+    .createEntity()
+    .withComponent<AssetComponent>('asset', { type })
+    .withComponent<TriggersComponent>('triggers', { name: asset.name, type: 'asset', entities: [] }).entity
+  if (asset.hasInventory) {
+    world.editEntity(entity).withComponent<InventoryComponent>('inventory', { content: [] })
   }
+  const map: WorldMap = world.getResource<WorldMapResource>('map')
+  shape.foreach((p, i) => {
+    const tile = putTile(world, map, level, p, () => asset.feature(i))
+    addTrigger(world, tile, entity)
+  })
+  return entity
 }
 
 export function removeAsset(world: TlbWorld, map: WorldMap, entity: Entity): void {
@@ -70,42 +84,39 @@ export function removeAsset(world: TlbWorld, map: WorldMap, entity: Entity): voi
   world.deleteEntity(entity)
 }
 
-function createAsset(world: TlbWorld, type: AssetType): Entity {
-  return world
-    .createEntity()
-    .withComponent<AssetComponent>('asset', { type })
-    .withComponent<TriggersComponent>('triggers', { entities: [] }).entity
-}
-
 function removeTile(world: TlbWorld, map: WorldMap, entity: Entity): void {
   const ground = world.getComponent<GroundComponent>(entity, 'ground')!
   const position = world.getComponent<PositionComponent>(entity, 'position')!
-  map.removeTile(position.position.floor())
-  createFeature(world, map, position.position.floor(), ground.feature)
+  map.levels[position.level].removeTile(position.position)
+  createFeature(world, position.level, position.position, ground.feature)
   world.deleteEntity(entity)
 }
 
-function putTile(world: TlbWorld, map: WorldMap, position: Vector, entity: Entity, type: FeatureType): void {
-  const feature = removeGround(world, map, position)
+function putTile(world: TlbWorld, map: WorldMap, level: number, position: Vector, feature: FeatureProvider): Entity {
+  const ground = removeGround(world, map, level, position)
   const tile = world
     .createEntity()
-    .withComponent<TriggeredByComponent>('triggered-by', { entity })
-    .withComponent<PositionComponent>('position', { position })
-    .withComponent<FeatureComponent>('feature', { type })
-    .withComponent<GroundComponent>('ground', { feature }).entity
-  map.setTile(position, tile)
+    .withComponent<PositionComponent>('position', { level, position })
+    .withComponent<FeatureComponent>('feature', { feature })
+    .withComponent<GroundComponent>('ground', { feature: ground }).entity
+  map.levels[level].setTile(position, tile)
+  return tile
+}
+
+function addTrigger(world: TlbWorld, tile: Entity, entity: Entity): void {
+  world.editEntity(tile).withComponent('triggered-by', { entity })
   world.getComponent<TriggersComponent>(entity, 'triggers')!.entities.push(tile)
 }
 
-function removeGround(world: TlbWorld, map: WorldMap, position: Vector): FeatureType {
-  const entity = map.removeTile(position)
+function removeGround(world: TlbWorld, map: WorldMap, level: number, position: Vector): FeatureProvider {
+  const entity = map.levels[level].removeTile(position)
   if (entity === undefined) {
     throw new Error(`cannot build asset on missing ground at ${position.key}`)
   }
   const feature = world.getComponent<FeatureComponent>(entity, 'feature')
-  if (feature === undefined || features[feature.type].blocking) {
+  if (feature === undefined || feature.feature().blocking) {
     throw new Error('cannot build asset on missing or blocking ground')
   }
   world.deleteEntity(entity)
-  return feature.type
+  return feature.feature
 }
