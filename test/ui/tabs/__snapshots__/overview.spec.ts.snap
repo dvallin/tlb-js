@@ -1,0 +1,31 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Full free mode displays overview 1`] = `
+"head    |||||       
+leftArm |||||       
+rightArm|||||       
+torso   |||||       
+leftLeg |||||       
+rightLeg|||||       
+effects             "
+`;
+
+exports[`Full turn based mode displays overview 1`] = `
+"head    |||||       3/4 AP 2/4 MP
+leftArm |||||       guard
+rightArm|||||       guard
+torso   |||||       
+leftLeg |||||       
+rightLeg|||||       
+effects             "
+`;
+
+exports[`MinimizedOverview displays overview 1`] = `
+"head    |||||       
+leftArm |||||       
+rightArm|||||       
+torso   |||||       
+leftLeg |||||       
+rightLeg|||||       
+effects             "
+`;

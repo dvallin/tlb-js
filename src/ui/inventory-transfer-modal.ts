@@ -10,6 +10,7 @@ import { WindowDecoration } from './window-decoration'
 import { InputResource, Input } from '../resources/input'
 import { dropAt } from '../array-utils'
 import { InventoryDescription, createInventoryDescription } from '../component-reducers/inventory-description'
+import { Rectangle } from '../geometry/rectangle'
 
 export interface State {
   leftWindow: WindowDecoration
@@ -36,6 +37,21 @@ export class InventoryTransferModal implements UIElement {
     this.renderInventory(renderer, rightWindow, rightInventory!, !leftActive, leftActive ? undefined : hovered)
   }
 
+  public static build(bounds: Rectangle, source: Entity, sourceTitle: string, target: Entity, targetTitle: string): InventoryTransferModal {
+    const width = Math.floor(bounds.width / 2)
+    const leftWindow = new WindowDecoration(new Rectangle(bounds.left, bounds.top, width, bounds.height), sourceTitle)
+    const rightWindow = new WindowDecoration(new Rectangle(leftWindow.right, bounds.top, bounds.width - width, bounds.height), targetTitle)
+
+    return new InventoryTransferModal({
+      left: source,
+      right: target,
+      leftWindow,
+      rightWindow,
+      leftActive: true,
+      hovered: 0,
+    })
+  }
+
   public renderInventory(
     renderer: Renderer,
     window: WindowDecoration,
@@ -51,7 +67,7 @@ export class InventoryTransferModal implements UIElement {
     inventoryItems.forEach(item => {
       const numeric = active ? `${y + 1} ` : ''
       renderer.text(
-        `${numeric}${item.name} (${item.weight})`,
+        `${numeric}${item.item.name} (${item.item.weight})`,
         window.content.topLeft.add(new Vector([0, y])),
         primary[1],
         hovered === y ? gray[1] : undefined
@@ -70,7 +86,7 @@ export class InventoryTransferModal implements UIElement {
     this.state.rightInventory = createInventoryDescription(world, this.state.right)
 
     const input: Input = world.getResource<InputResource>('input')
-    let position
+    let position: Vector | undefined
     if (input.position) {
       position = new Vector([input.position.x, input.position.y])
     }
@@ -136,9 +152,13 @@ export class InventoryTransferModal implements UIElement {
 
   public transfer(source: InventoryDescription, target: InventoryDescription, index: number) {
     const item = source.items[index]
-    if (item !== undefined && (target.maximumWeight === undefined || target.currentWeight + item.weight <= target.maximumWeight)) {
-      target.inventory.content.push(source.inventory.content[index])
-      dropAt(source.inventory.content, index)
+    if (item !== undefined) {
+      const passesWeightRestriction = target.maximumWeight === undefined || target.currentWeight + item.item.weight <= target.maximumWeight
+      const isEquiped = source.equipment.some(e => e.entity === item.entity)
+      if (passesWeightRestriction && !isEquiped) {
+        target.inventory.content.push(source.inventory.content[index])
+        dropAt(source.inventory.content, index)
+      }
     }
   }
 

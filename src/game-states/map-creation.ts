@@ -77,7 +77,7 @@ export class MapCreation extends AbstractState {
           return e !== undefined && world.getComponent<FeatureComponent>(e, 'feature')!.feature().name !== 'wall'
         })
         if (region.getTile(p) === undefined && someTileExists) {
-          createFeatureFromType(world, map, index, p, 'wall')
+          createFeatureFromType(world, index, p, 'wall')
         }
       })
     })

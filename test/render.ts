@@ -6,12 +6,13 @@ import { Renderer } from '../src/renderer/renderer'
 import { mockRenderer } from './mocks'
 import { Position } from '../src/renderer/position'
 
-export function renderMap(world: TlbWorld, shape: Rectangle): string {
+export function renderMap(world: TlbWorld, shape?: Rectangle): string {
   const map: WorldMap = world.getResource<WorldMapResource>('map')
 
   let render = ''
-  let currentLine = shape.top
-  shape.foreach(p => {
+  const boundary = shape || map.levels[0].boundary
+  let currentLine = boundary.top
+  boundary.foreach(p => {
     if (currentLine != p.y) {
       render += '\n'
       currentLine = p.y
@@ -30,7 +31,7 @@ export function renderMap(world: TlbWorld, shape: Rectangle): string {
   return render
 }
 
-export function displayerRenderer(): { renderer: Renderer; getDisplay: () => string } {
+export function stringRenderer(): { renderer: Renderer; getDisplay: () => string } {
   const display: string[][] = []
   const renderer = mockRenderer()
   renderer.text = (text, position) => pushToDisplay(text, position, display)

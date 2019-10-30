@@ -3,7 +3,7 @@ import { TlbWorld } from '../tlb'
 
 import { FeatureComponent } from './feature'
 import { PositionComponent } from './position'
-import { WorldMap } from '../resources/world-map'
+import { WorldMap, WorldMapResource } from '../resources/world-map'
 import { Vector } from '../spatial'
 import { Entity } from '../ecs/entity'
 import { FeatureType, features } from '../assets/features'
@@ -31,11 +31,12 @@ export function getFeature(world: TlbWorld, entity: Entity): Feature | undefined
   return undefined
 }
 
-export function createFeatureFromType(world: TlbWorld, map: WorldMap, level: number, position: Vector, type: FeatureType): Entity {
-  return createFeature(world, map, level, position, () => features[type])
+export function createFeatureFromType(world: TlbWorld, level: number, position: Vector, type: FeatureType): Entity {
+  return createFeature(world, level, position, () => features[type])
 }
 
-export function createFeature(world: TlbWorld, map: WorldMap, level: number, position: Vector, feature: FeatureProvider): Entity {
+export function createFeature(world: TlbWorld, level: number, position: Vector, feature: FeatureProvider): Entity {
+  const map: WorldMap = world.getResource<WorldMapResource>('map')
   const e = map.levels[level].getTile(position)
   if (e !== undefined) {
     throw new Error(`there is already a tile at ${position.key}`)

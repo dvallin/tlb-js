@@ -80,7 +80,7 @@ function placeAssetAtWalls(
       map.levels[level].tileMatches(world, p, t => t === undefined || t.feature() === features.wall)
     )
     if (isFree && isBackedByWall) {
-      placedAssets.push(createAssetFromShape(world, map, level, shape, a))
+      placedAssets.push(createAssetFromShape(world, level, shape, a))
     }
     return isFree
   })
@@ -102,7 +102,7 @@ function placeAssetRandomly(
     const shape = shapeOfAsset(a, position, direction)
     const isFree = shape.all(p => canPlace(world, map, level, p))
     if (isFree) {
-      placedAssets.push(createAssetFromShape(world, map, level, shape, a))
+      placedAssets.push(createAssetFromShape(world, level, shape, a))
     }
     return isFree
   })

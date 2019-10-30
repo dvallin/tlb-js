@@ -25,9 +25,9 @@ describe('RegionCreator', () => {
         entry: new Vector([0, 0]),
       }).entity
 
-    const creator = new RegionCreator(new Uniform('12'))
+    const system = new RegionCreator(new Uniform('12'))
 
-    creator.update(world, region)
+    system.update(world, region)
 
     expect(renderMap(world, shape)).toMatchSnapshot()
   })

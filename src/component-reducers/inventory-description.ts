@@ -8,9 +8,14 @@ export function maximumInventoryWeight(stats: CharacterStatsComponent): number {
   return stats.current.strength * 5
 }
 
+export interface ItemWithEntity {
+  item: Item
+  entity: Entity
+}
+
 export interface InventoryDescription {
   inventory: InventoryComponent
-  items: Item[]
+  items: ItemWithEntity[]
   equipment: EquipmentAttachement[]
   currentWeight: number
   maximumWeight: number | undefined
@@ -26,7 +31,10 @@ export function createInventoryDescription(world: TlbWorld, entity: Entity): Inv
   }
   const inventoryItems = inventory.content.map(e => {
     const item = world.getComponent<ItemComponent>(e, 'item')!
-    return items[item.type]
+    return {
+      entity: e,
+      item: items[item.type],
+    }
   })
   const currentWeight = inventory.content
     .map(i => {

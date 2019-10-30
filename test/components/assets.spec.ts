@@ -50,7 +50,7 @@ describe('createAssetFromPosition', () => {
     })
 
     // when
-    const asset = createAssetFromShape(world, map, 0, shape, 'door')
+    const asset = createAssetFromShape(world, 0, shape, 'door')
 
     // then
     shape.foreach(position => {

@@ -21,6 +21,7 @@ describe('ApplyEffects', () => {
   let world: TlbWorld
   let guard: Entity
   let player: Entity
+  let system: ApplyEffects
   beforeEach(() => {
     world = new World()
     registerComponents(world)
@@ -28,6 +29,7 @@ describe('ApplyEffects', () => {
 
     player = characterCreators.player(world)
     guard = characterCreators.guard(world)
+    system = new ApplyEffects()
   })
 
   describe('damage', () => {
@@ -36,7 +38,6 @@ describe('ApplyEffects', () => {
         .createEntity()
         .withComponent<EffectComponent>('effect', { effect: damage(3), source: player, target: guard, bodyParts: ['torso'] }).entity
 
-      const system = new ApplyEffects()
       system.update(world, effect)
 
       const maxHealth = characterStats.guard.bodyParts['torso'].health
@@ -49,7 +50,6 @@ describe('ApplyEffects', () => {
         .createEntity()
         .withComponent<EffectComponent>('effect', { effect: damage(3), source: guard, target: player, bodyParts: ['torso'] }).entity
 
-      const system = new ApplyEffects()
       system.update(world, effect)
 
       const maxHealth = characterStats.player.bodyParts['torso'].health
@@ -70,7 +70,6 @@ describe('ApplyEffects', () => {
         ],
       })
 
-      const system = new ApplyEffects()
       system.update(world, effect)
 
       const maxHealth = characterStats.guard.bodyParts['torso'].health
@@ -87,7 +86,6 @@ describe('ApplyEffects', () => {
         .createEntity()
         .withComponent<EffectComponent>('effect', { effect: heal(), source: player, target: player, bodyParts: ['torso'] }).entity
 
-      const system = new ApplyEffects()
       system.update(world, effect)
 
       const maxHealth = characterStats.player.bodyParts['torso'].health
@@ -101,7 +99,6 @@ describe('ApplyEffects', () => {
       const effect = world.createEntity().withComponent<EffectComponent>('effect', { effect: immobilize(2), source: player, target: guard })
         .entity
 
-      const system = new ApplyEffects()
       system.update(world, effect)
 
       const activeEffects = world.getComponent<ActiveEffectsComponent>(guard, 'active-effects')!.effects
@@ -115,7 +112,6 @@ describe('ApplyEffects', () => {
         .withComponent<EffectComponent>('effect', { effect: bleed(), source: player, target: guard, bodyParts: ['leftArm', 'rightArm'] })
         .entity
 
-      const system = new ApplyEffects()
       system.update(world, effect)
 
       const activeEffects = world.getComponent<ActiveEffectsComponent>(guard, 'active-effects')!.effects
@@ -137,7 +133,6 @@ describe('ApplyEffects', () => {
         .createEntity()
         .withComponent<EffectComponent>('effect', { effect: negateEffects(), source: player, target: player }).entity
 
-      const system = new ApplyEffects()
       system.update(world, effect)
 
       const activeEffects = world.getComponent<ActiveEffectsComponent>(player, 'active-effects')!.effects
@@ -150,7 +145,6 @@ describe('ApplyEffects', () => {
         .createEntity()
         .withComponent<EffectComponent>('effect', { effect: negateEffects(), source: player, target: player, bodyParts: ['head'] }).entity
 
-      const system = new ApplyEffects()
       system.update(world, effect)
 
       const activeEffects = world.getComponent<ActiveEffectsComponent>(player, 'active-effects')!.effects
@@ -165,7 +159,6 @@ describe('ApplyEffects', () => {
       const effect = world.createEntity().withComponent<EffectComponent>('effect', { effect: kill(), source: player, target: player })
         .entity
 
-      const system = new ApplyEffects()
       system.update(world, effect)
 
       expect(world.hasComponent(player, 'dead')).toBeTruthy()

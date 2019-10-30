@@ -162,23 +162,9 @@ export class UIResource implements TlbResource, UI {
     this.isModal = true
 
     const viewport: Viewport = world.getResource<ViewportResource>('viewport')
-    const leftWindow = new WindowDecoration(
-      new Rectangle(viewport.boundaries.x / 2 - 30, viewport.boundaries.y / 2 - modalOffsetY, 30, 20),
-      sourceTitle
-    )
-    const rightWindow = new WindowDecoration(
-      new Rectangle(viewport.boundaries.x / 2, viewport.boundaries.y / 2 - modalOffsetY, 30, 20),
-      targetTitle
-    )
+    const bounds = new Rectangle(viewport.boundaries.x / 2 - 30, viewport.boundaries.y / 2 - modalOffsetY, 60, 20)
 
-    this.inventoryTransferModal = new InventoryTransferModal({
-      left: source,
-      right: target,
-      leftWindow,
-      rightWindow,
-      leftActive: true,
-      hovered: 0,
-    })
+    this.inventoryTransferModal = InventoryTransferModal.build(bounds, source, sourceTitle, target, targetTitle)
   }
 
   public inventoryTransferModalShowing(): boolean {

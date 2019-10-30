@@ -202,7 +202,7 @@ export class ActionSelector implements Tab, Selector<SelectedAction> {
   }
 
   public setMinimized(content: Rectangle): void {
-    this.minimized = new ActionSelectorFullView(content, this.groups)
+    this.minimized = new ActionSelectorMinimizedView(content, this.groups)
   }
 
   public get selected(): SelectedAction | undefined {

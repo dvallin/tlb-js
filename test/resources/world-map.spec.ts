@@ -2,25 +2,25 @@ import { WorldMap, WorldMapResource } from '../../src/resources/world-map'
 import { Vector } from '../../src/spatial/vector'
 import { TlbWorld } from '../../src/tlb'
 import { World } from '../../src/ecs/world'
-import { createFeature, FeatureComponent } from '../../src/components/feature'
+import { FeatureComponent, createFeatureFromType } from '../../src/components/feature'
 import { MapStorage } from '../../src/ecs/storage'
 import { PositionComponent } from '../../src/components/position'
 import { Rectangle } from '../../src/geometry/rectangle'
 import { Difference } from '../../src/geometry/difference'
-import { features } from '../../src/assets/features'
 
 describe('WorldMap', () => {
   describe('tile based queries', () => {
     let map: WorldMap
     let world: TlbWorld
     beforeEach(() => {
-      map = new WorldMapResource(10)
       world = new World()
+      world.registerResource(new WorldMapResource(10))
+      map = world.getResource<WorldMapResource>('map')
 
       world.registerComponentStorage('position', new MapStorage<PositionComponent>())
       world.registerComponentStorage('feature', new MapStorage<FeatureComponent>())
-      createFeature(world, map, 0, new Vector([1, 0]), () => features['locker'])
-      createFeature(world, map, 0, new Vector([1, 1]), () => features['corridor'])
+      createFeatureFromType(world, 0, new Vector([1, 0]), 'locker')
+      createFeatureFromType(world, 0, new Vector([1, 1]), 'corridor')
     })
 
     describe('tileMatches', () => {

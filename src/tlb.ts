@@ -165,5 +165,5 @@ export function registerSystems(
   world.registerSystem('region-creator', new RegionCreator(uniform))
   world.registerSystem('script', new Script())
   world.registerSystem('trigger', new Trigger(new Random(uniform), pushState))
-  world.registerSystem('start-round', new StartRound(new Random(uniform)))
+  world.registerSystem('start-round', new StartRound())
 }

@@ -24,7 +24,7 @@ describe('PlayerRoundControl', () => {
   let player: Entity
   let ui: UI
   let input: Input
-  let control: PlayerRoundControl
+  let system: PlayerRoundControl
   beforeEach(() => {
     world = new World()
     registerComponents(world)
@@ -39,11 +39,11 @@ describe('PlayerRoundControl', () => {
     placeCharacter(world, player, 0, new Vector([0, 0]))
     world.editEntity(player).withComponent<TakeTurnComponent>('take-turn', { actions: 5, movements: 4 })
 
-    control = new PlayerRoundControl(mockQueries(), new Random(new Uniform('12')))
+    system = new PlayerRoundControl(mockQueries(), new Random(new Uniform('12')))
   })
 
   it('initializes selected action and opens selector', () => {
-    control.update(world, player)
+    system.update(world, player)
 
     expect(world.hasComponent(player, 'selected-action')).toBeTruthy()
     expect(ui.showActionSelector).toHaveBeenCalledTimes(1)
@@ -54,7 +54,7 @@ describe('PlayerRoundControl', () => {
     mockReturnValue<SelectedAction>(ui.selectedAction, { entity: 42, action: actions.endTurn })
     world.editEntity(player).withComponent<SelectedActionComponent>('selected-action', { skippedActions: 0, currentSubAction: 0 })
 
-    control.update(world, player)
+    system.update(world, player)
 
     expect(world.getComponent<SelectedActionComponent>(player, 'selected-action')!.selection).toEqual(selection)
     expect(ui.hideSelectors).toHaveBeenCalledTimes(1)
@@ -67,7 +67,7 @@ describe('PlayerRoundControl', () => {
         .editEntity(player)
         .withComponent<SelectedActionComponent>('selected-action', { skippedActions: 0, currentSubAction: 0, selection })
 
-      control.update(world, player)
+      system.update(world, player)
 
       expect(world.getComponent<TakeTurnComponent>(player, 'take-turn')).toEqual({ actions: 0, movements: 0 })
       expect(world.hasComponent(player, 'selected-action')).toBeFalsy()
@@ -82,7 +82,7 @@ describe('PlayerRoundControl', () => {
         .editEntity(player)
         .withComponent<SelectedActionComponent>('selected-action', { skippedActions: 0, currentSubAction: 0, selection })
 
-      control.update(world, player)
+      system.update(world, player)
 
       expect(ui.showMovementSelector).toHaveBeenCalledTimes(1)
     })
@@ -95,7 +95,7 @@ describe('PlayerRoundControl', () => {
         .editEntity(player)
         .withComponent<SelectedActionComponent>('selected-action', { skippedActions: 0, currentSubAction: 0, selection })
 
-      control.update(world, player)
+      system.update(world, player)
 
       expect(world.hasComponent(player, 'script')).toBeTruthy()
       expect(world.getComponent<SelectedActionComponent>(player, 'selected-action')!.currentSubAction).toEqual(1)
@@ -110,7 +110,7 @@ describe('PlayerRoundControl', () => {
         .editEntity(player)
         .withComponent<SelectedActionComponent>('selected-action', { skippedActions: 0, currentSubAction: 0, selection })
 
-      control.update(world, player)
+      system.update(world, player)
 
       expect(ui.showAttackSelector).toHaveBeenCalledTimes(1)
     })
@@ -126,7 +126,7 @@ describe('PlayerRoundControl', () => {
         .editEntity(player)
         .withComponent<SelectedActionComponent>('selected-action', { skippedActions: 0, currentSubAction: 0, selection })
 
-      control.update(world, player)
+      system.update(world, player)
 
       expect(world.getComponent<SelectedActionComponent>(player, 'selected-action')!.target).toEqual(firstEnemy)
     })
@@ -139,7 +139,7 @@ describe('PlayerRoundControl', () => {
         .editEntity(player)
         .withComponent<SelectedActionComponent>('selected-action', { skippedActions: 0, currentSubAction: 0, selection, target })
 
-      control.update(world, player)
+      system.update(world, player)
 
       expect(world.getStorage<EffectComponent>('effect').size()).toEqual(2)
       world.getStorage<EffectComponent>('effect').foreach((_, effect) => {
@@ -157,7 +157,7 @@ describe('PlayerRoundControl', () => {
         .editEntity(player)
         .withComponent<SelectedActionComponent>('selected-action', { skippedActions: 0, currentSubAction: 0, selection })
 
-      control.update(world, player)
+      system.update(world, player)
 
       expect(ui.showMultipleChoiceSelector).toHaveBeenCalledTimes(1)
     })
@@ -169,7 +169,7 @@ describe('PlayerRoundControl', () => {
         .editEntity(player)
         .withComponent<SelectedActionComponent>('selected-action', { skippedActions: 0, currentSubAction: 0, selection })
 
-      control.update(world, player)
+      system.update(world, player)
 
       expect(ui.showMultipleChoiceSelector).toHaveBeenCalledTimes(1)
 
@@ -189,7 +189,7 @@ describe('PlayerRoundControl', () => {
         .editEntity(player)
         .withComponent<SelectedActionComponent>('selected-action', { skippedActions: 0, currentSubAction: 0, selection })
 
-      control.update(world, player)
+      system.update(world, player)
 
       expect(ui.showMultipleChoiceSelector).toHaveBeenCalledTimes(1)
 
@@ -205,7 +205,7 @@ describe('PlayerRoundControl', () => {
         .editEntity(player)
         .withComponent<SelectedActionComponent>('selected-action', { skippedActions: 0, currentSubAction: 0, selection })
 
-      control.update(world, player)
+      system.update(world, player)
 
       expect(world.getComponent<SelectedActionComponent>(player, 'selected-action')!.currentSubAction).toEqual(1)
       expect(world.getComponent<SelectedActionComponent>(player, 'selected-action')!.skippedActions).toEqual(1)
@@ -219,7 +219,7 @@ describe('PlayerRoundControl', () => {
         .editEntity(player)
         .withComponent<SelectedActionComponent>('selected-action', { skippedActions: 1, currentSubAction: 2, selection })
 
-      control.update(world, player)
+      system.update(world, player)
 
       expect(world.getComponent<TakeTurnComponent>(player, 'take-turn')).toEqual({ actions: 2, movements: 1 })
     })
@@ -230,7 +230,7 @@ describe('PlayerRoundControl', () => {
         .editEntity(player)
         .withComponent<SelectedActionComponent>('selected-action', { skippedActions: 2, currentSubAction: 2, selection })
 
-      control.update(world, player)
+      system.update(world, player)
 
       expect(world.getComponent<TakeTurnComponent>(player, 'take-turn')).toEqual({ actions: 5, movements: 4 })
     })
@@ -241,7 +241,7 @@ describe('PlayerRoundControl', () => {
         .editEntity(player)
         .withComponent<SelectedActionComponent>('selected-action', { skippedActions: 0, currentSubAction: 1, selection })
 
-      control.update(world, player)
+      system.update(world, player)
 
       expect(world.getComponent<TakeTurnComponent>(player, 'take-turn')).toEqual({ actions: 0, movements: 0 })
     })
@@ -250,7 +250,7 @@ describe('PlayerRoundControl', () => {
   it('ends turn if no AP and MP left', () => {
     world.editEntity(player).withComponent<TakeTurnComponent>('take-turn', { actions: 0, movements: 0 })
 
-    control.update(world, player)
+    system.update(world, player)
 
     expect(world.hasComponent(player, 'took-turn')).toBeTruthy()
     expect(world.hasComponent(player, 'take-turn')).toBeFalsy()

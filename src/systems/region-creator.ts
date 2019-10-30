@@ -240,7 +240,7 @@ export class RegionCreator implements TlbSystem {
 
   private renderCorridors(world: TlbWorld, map: WorldMap, level: number, region: Entity, corridor: Corridor): void {
     corridor.shape.foreach(p => {
-      createFeatureFromType(world, map, level, p, 'corridor')
+      createFeatureFromType(world, level, p, 'corridor')
       map.levels[level].setStructure(p, corridor.entity!)
     })
 
@@ -255,7 +255,7 @@ export class RegionCreator implements TlbSystem {
   private renderRoom(world: TlbWorld, map: WorldMap, level: number, region: Entity, room: Room): void {
     const structureShape = room.shape.shrink()
     structureShape.foreach(p => {
-      createFeatureFromType(world, map, level, p, 'room')
+      createFeatureFromType(world, level, p, 'room')
       map.levels[level].setStructure(p, room.entity!)
     })
 
@@ -266,10 +266,10 @@ export class RegionCreator implements TlbSystem {
     for (let i = 0; i < count; ++i) {
       const shape = doors[i]
       shape.foreach(p => {
-        createFeatureFromType(world, map, level, p, 'corridor')
+        createFeatureFromType(world, level, p, 'corridor')
         map.levels[level].setStructure(p, room.entity!)
       })
-      createAssetFromShape(world, map, level, shape, 'door')
+      createAssetFromShape(world, level, shape, 'door')
     }
 
     room.rooms.forEach(r => this.renderRoom(world, map, level, region, r))

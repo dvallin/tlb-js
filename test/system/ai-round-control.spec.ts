@@ -21,7 +21,7 @@ describe('AiRoundControl', () => {
   let world: TlbWorld
   let guard: Entity
   let player: Entity
-  let control: AiRoundControl
+  let system: AiRoundControl
   let queries: Queries
   beforeEach(() => {
     world = new World()
@@ -32,7 +32,7 @@ describe('AiRoundControl', () => {
     mockLog(world)
 
     queries = mockQueries()
-    control = new AiRoundControl(queries, new Random(new Uniform('12')))
+    system = new AiRoundControl(queries, new Random(new Uniform('12')))
 
     guard = characterCreators.guard(world)
     placeCharacter(world, guard, 0, new Vector([0, 0]))
@@ -47,7 +47,7 @@ describe('AiRoundControl', () => {
       })
 
       it('ends turn if cannot hit player', () => {
-        control.update(world, guard)
+        system.update(world, guard)
 
         expect(world.hasComponent(guard, 'take-turn')).toBeFalsy()
         expect(world.hasComponent(guard, 'took-turn')).toBeTruthy()
@@ -56,7 +56,7 @@ describe('AiRoundControl', () => {
       it('selects attack action against player', () => {
         mockReturnValue<Path>(queries.ray, { path: [new Vector([1, 0])], cost: 1 })
 
-        control.update(world, guard)
+        system.update(world, guard)
 
         const selectedAction = world.getComponent<SelectedActionComponent>(guard, 'selected-action')!
         expect(selectedAction.target).toEqual(player)
@@ -73,7 +73,7 @@ describe('AiRoundControl', () => {
       it('selects movement action towards player', () => {
         mockReturnValue<Path>(queries.ray, { path: [new Vector([1, 0])], cost: 1 })
 
-        control.update(world, guard)
+        system.update(world, guard)
 
         const selectedAction = world.getComponent<SelectedActionComponent>(guard, 'selected-action')!
         expect(selectedAction.target).toEqual(player)
@@ -95,7 +95,7 @@ describe('AiRoundControl', () => {
         .withComponent<SelectedActionComponent>('selected-action', { skippedActions: 0, currentSubAction: 0, selection, target: player })
       mockReturnValue<Path>(queries.ray, { path: [new Vector([1, 0])], cost: 1 })
 
-      control.update(world, guard)
+      system.update(world, guard)
 
       expect(world.getStorage<EffectComponent>('effect').size()).toEqual(1)
       world.getStorage<EffectComponent>('effect').foreach((_, effect) => {
@@ -119,7 +119,7 @@ describe('AiRoundControl', () => {
         .withComponent<SelectedActionComponent>('selected-action', { skippedActions: 0, currentSubAction: 0, selection, target: player })
       mockReturnValue<Path>(queries.shortestPath, { path: [new Vector([1, 0])], cost: 1 })
 
-      control.update(world, guard)
+      system.update(world, guard)
 
       expect(world.hasComponent(guard, 'script')).toBeTruthy()
       expect(world.getComponent<SelectedActionComponent>(guard, 'selected-action')!.currentSubAction).toEqual(1)
@@ -133,7 +133,7 @@ describe('AiRoundControl', () => {
         .editEntity(guard)
         .withComponent<SelectedActionComponent>('selected-action', { skippedActions: 1, currentSubAction: 2, selection })
 
-      control.update(world, guard)
+      system.update(world, guard)
 
       expect(world.getComponent<TakeTurnComponent>(guard, 'take-turn')).toEqual({ actions: 2, movements: 1 })
     })
@@ -144,7 +144,7 @@ describe('AiRoundControl', () => {
         .editEntity(guard)
         .withComponent<SelectedActionComponent>('selected-action', { skippedActions: 0, currentSubAction: 1, selection })
 
-      control.update(world, guard)
+      system.update(world, guard)
 
       expect(world.getComponent<TakeTurnComponent>(guard, 'take-turn')).toEqual({ actions: 0, movements: 0 })
     })

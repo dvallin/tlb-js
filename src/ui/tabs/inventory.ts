@@ -5,9 +5,9 @@ import { TlbWorld } from '../../tlb'
 import { primary, gray } from '../../renderer/palettes'
 import { InputResource, Input, KeyboardCommand } from '../../resources/input'
 import { Rectangle } from '../../geometry/rectangle'
-import { createInventoryDescription, InventoryDescription } from '../../component-reducers/inventory-description'
+import { createInventoryDescription, InventoryDescription, ItemWithEntity } from '../../component-reducers/inventory-description'
 import { ItemSelector } from '../selector'
-import { EquipedItemsComponent, ItemComponent, Item } from '../../components/items'
+import { EquipedItemsComponent, ItemComponent } from '../../components/items'
 import { CharacterStatsComponent } from '../../components/character-stats'
 import { dropAt } from '../../array-utils'
 
@@ -25,7 +25,7 @@ export class FullInventoryView implements TabView {
 
   private selectedItemIndex: number | undefined
 
-  public readonly itemSelector: ItemSelector<Item>
+  public readonly itemSelector: ItemSelector<ItemWithEntity>
   private readonly button: Button
 
   public constructor(public readonly content: Rectangle, focus: Entity) {
@@ -50,7 +50,12 @@ export class FullInventoryView implements TabView {
 
     let y = 0
     inventoryItems.forEach(item => {
-      renderer.text(`${y + 1} ${item.name}`, this.content.topLeft.add(new Vector([0, y])), primary[1], hovered === y ? gray[1] : undefined)
+      renderer.text(
+        `${y + 1} ${item.item.name}`,
+        this.content.topLeft.add(new Vector([0, y])),
+        primary[1],
+        hovered === y ? gray[1] : undefined
+      )
       y++
     })
 
@@ -62,9 +67,10 @@ export class FullInventoryView implements TabView {
   public renderDescription(renderer: Renderer, inventory: InventoryDescription, index: number) {
     const entity = inventory.inventory.content[index]
     const inventoryItems = inventory.items || []
-    const item = inventoryItems[index]
+    const inventoryItem = inventoryItems[index]
     let y = 0
-    if (item !== undefined) {
+    if (inventoryItem !== undefined) {
+      const item = inventoryItem.item
       y += renderer.flowText(`${item.description}`, this.content.topLeft.add(new Vector([0, y])), this.content.width, primary[1])
       y += renderer.flowText(
         'actions: ' + item.actions.join(', '),
@@ -109,7 +115,7 @@ export class FullInventoryView implements TabView {
     const inventory = this.state.inventory!
     const item = inventory.inventory.content[this.selectedItemIndex!]
     const inventoryItems = inventory.items || []
-    const hoveredItem = inventoryItems[this.selectedItemIndex!]
+    const hoveredItem = inventoryItems[this.selectedItemIndex!].item
     if (hoveredItem.attachments > 0) {
       const equipped = world.getComponent<EquipedItemsComponent>(this.state.focus, 'equiped-items')!
 
@@ -176,7 +182,7 @@ export class MinimizedInventoryView implements TabView {
 
     let y = 0
     inventoryItems.forEach(item => {
-      renderer.text(`${item.name}`, content.topLeft.add(new Vector([0, y])), primary[1])
+      renderer.text(`${item.item.name}`, content.topLeft.add(new Vector([0, y])), primary[1])
       y++
     })
 

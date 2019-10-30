@@ -1,7 +1,7 @@
 import { Vector } from '../spatial'
 import { TlbWorld } from '../tlb'
 import { Entity } from '../ecs/entity'
-import { WorldMap } from '../resources/world-map'
+import { WorldMap, WorldMapResource } from '../resources/world-map'
 import { Shape } from '../geometry/shape'
 
 import { FeatureComponent, createFeature, Feature, FeatureProvider } from './feature'
@@ -61,7 +61,7 @@ export function createAsset(
   return entity
 }
 
-export function createAssetFromShape(world: TlbWorld, map: WorldMap, level: number, shape: Shape, type: AssetType): Entity {
+export function createAssetFromShape(world: TlbWorld, level: number, shape: Shape, type: AssetType): Entity {
   const asset = assets[type]
   const entity = world
     .createEntity()
@@ -70,6 +70,7 @@ export function createAssetFromShape(world: TlbWorld, map: WorldMap, level: numb
   if (asset.hasInventory) {
     world.editEntity(entity).withComponent<InventoryComponent>('inventory', { content: [] })
   }
+  const map: WorldMap = world.getResource<WorldMapResource>('map')
   shape.foreach((p, i) => {
     const tile = putTile(world, map, level, p, () => asset.feature(i))
     addTrigger(world, tile, entity)
@@ -87,7 +88,7 @@ function removeTile(world: TlbWorld, map: WorldMap, entity: Entity): void {
   const ground = world.getComponent<GroundComponent>(entity, 'ground')!
   const position = world.getComponent<PositionComponent>(entity, 'position')!
   map.levels[position.level].removeTile(position.position)
-  createFeature(world, map, position.level, position.position, ground.feature)
+  createFeature(world, position.level, position.position, ground.feature)
   world.deleteEntity(entity)
 }
 
