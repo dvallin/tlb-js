@@ -92,6 +92,10 @@ export function embedComplexes(
   region: Entity,
   complexes: ComplexDescription[]
 ): ComplexEmbedding[] | undefined {
+  if (complexes.length === 0) {
+    return []
+  }
+
   const G = buildG(world, region, [])
 
   const requiredComplexes = complexes

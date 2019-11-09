@@ -2,13 +2,13 @@ import { Shape } from '../geometry/shape'
 import { Vector } from '../spatial'
 import { Entity } from '../ecs/entity'
 
-export type RegionsType = 'red'
+export type RegionsType = 'elevator' | 'red'
 
 export interface RegionComponent {
   type: RegionsType
   level: number
   shape: Shape
-  entry: Vector | undefined
+  exits: Vector[]
   authorized: Set<Entity>
 }
 

@@ -156,6 +156,7 @@ export class WorldMapResource implements TlbResource, WorldMap {
 
   public constructor(public readonly width: number) {
     this.levels.push(new Level(this.width))
+    this.levels.push(new Level(this.width))
   }
 
   public update(world: TlbWorld): void {

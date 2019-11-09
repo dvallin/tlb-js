@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`RegionCreator creates a region 1`] = `
+exports[`RegionBuilder creates a region 1`] = `
 "                    ∏..       
  ......... .....gg. .╔╗ ..... 
  ......... ........ .╚╝ ...g. 

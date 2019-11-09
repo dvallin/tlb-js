@@ -100,4 +100,5 @@ export const regionParams: { [key in RegionsType]: ComplexDescription[] } = {
       template: complexes.generators,
     },
   ],
+  elevator: [],
 }

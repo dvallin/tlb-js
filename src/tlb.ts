@@ -17,7 +17,7 @@ import { FreeModeControl } from './systems/free-mode-control'
 import { Npc } from './systems/npc'
 import { PlayerControl } from './systems/player-control'
 import { PlayerInteraction } from './systems/player-interaction'
-import { RegionCreator } from './systems/region-creator'
+import { RegionBuilder } from './systems/region-builder'
 import { PlayerRoundControl } from './systems/player-round-control'
 import { Trigger } from './systems/trigger'
 import { ApplyEffects } from './systems/apply-effect'
@@ -91,7 +91,7 @@ export type SystemName =
   | 'player-control'
   | 'player-interaction'
   | 'player-round-control'
-  | 'region-creator'
+  | 'region-builder'
   | 'script'
   | 'trigger'
 export type ResourceName = 'input' | 'map' | 'viewport' | 'ui' | 'log'
@@ -162,7 +162,7 @@ export function registerSystems(
   world.registerSystem('player-control', new PlayerControl())
   world.registerSystem('player-interaction', new PlayerInteraction(pushState))
   world.registerSystem('player-round-control', new PlayerRoundControl(queries, new Random(uniform)))
-  world.registerSystem('region-creator', new RegionCreator(uniform))
+  world.registerSystem('region-builder', new RegionBuilder(uniform))
   world.registerSystem('script', new Script())
   world.registerSystem('trigger', new Trigger(new Random(uniform), pushState))
   world.registerSystem('start-round', new StartRound())

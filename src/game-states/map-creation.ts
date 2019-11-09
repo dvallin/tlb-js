@@ -3,19 +3,19 @@ import { AbstractState } from './state'
 
 import { RegionComponent } from '../components/region'
 
-import { Rectangle } from '../geometry/rectangle'
 import { Entity } from '../ecs/entity'
 import { PositionComponent } from '../components/position'
 import { WorldMap, WorldMapResource } from '../resources/world-map'
 import { FunctionalShape } from '../geometry/functional-shape'
 import { FeatureComponent, createFeatureFromType } from '../components/feature'
 import { ViewportResource, Viewport } from '../resources/viewport'
+import { create } from '../generative/region-creator'
 
 export class MapCreation extends AbstractState {
   private startRegion: Entity | undefined
 
   public constructor() {
-    super('map-creation', ['region-creator'])
+    super('map-creation', ['region-builder'])
   }
 
   public start(world: TlbWorld): void {
@@ -38,16 +38,7 @@ export class MapCreation extends AbstractState {
       transformed: true,
     })
 
-    this.startRegion = world
-      .createEntity()
-      .withComponent<RegionComponent>('region', {
-        type: 'red',
-        shape: new Rectangle(0, 0, 50, 50),
-        level: 0,
-        entry: undefined,
-        authorized: new Set(),
-      })
-      .withComponent('active', {}).entity
+    this.startRegion = create(world)
   }
 
   public update({  }: TlbWorld): void {}
@@ -58,7 +49,7 @@ export class MapCreation extends AbstractState {
       const region = world.getComponent<RegionComponent>(this.startRegion, 'region')!
       world
         .createEntity()
-        .withComponent<PositionComponent>('position', { level: region.level, position: region.entry! })
+        .withComponent<PositionComponent>('position', { level: region.level, position: region.exits[0] })
         .withComponent('spawn', {})
     }
     this.fillWalls(world)
