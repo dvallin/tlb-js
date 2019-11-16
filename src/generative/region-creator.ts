@@ -10,7 +10,7 @@ function regionComponent(type: RegionsType, shape: Shape, exits: Vector[], level
 }
 
 export function create(world: TlbWorld): Entity {
-  const elevatorRegion = new Rectangle(50, 25, 20, 20)
+  const elevatorRegion = new Rectangle(50, 26, 6, 6)
   world
     .createEntity()
     .withComponent<RegionComponent>('region', regionComponent('elevator', elevatorRegion, [new Vector([50, 28])], 0))

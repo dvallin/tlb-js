@@ -1,4 +1,4 @@
-import { StructureDescription, Spawn, CharacterCreator } from './complex-embedder'
+import { StructureDescription, Spawn, CharacterCreator, Placement } from './complex-embedder'
 import { TlbWorld } from '../tlb'
 import { Entity } from '../ecs/entity'
 import { StructureComponent } from '../components/region'
@@ -15,24 +15,27 @@ import { ItemComponent, InventoryComponent } from '../components/items'
 import { Rectangle } from '../geometry/rectangle'
 import { placeCharacter } from '../component-reducers/place-character'
 
+type AssetPlacements = { [key in Placement]: AssetType[] }
 export function fill(world: TlbWorld, map: WorldMap, level: number, entity: Entity, random: Random, description: StructureDescription) {
   const structure = world.getComponent<StructureComponent>(entity, 'structure')!
 
-  const sampledContainers: AssetType[] = []
-  description.containers.forEach(c => sampledContainers.push(...sampleSpawn(random, c)))
+  const sampledContainers: AssetPlacements = { center: [], wall: [], random: [] }
+  description.containers.forEach(c => {
+    sampledContainers[c.placement].push(...sampleSpawn(random, c))
+  })
+  const containers: Entity[] = placeAssets(world, map, level, random, sampledContainers, structure.shape.bounds())
 
-  const sampledDecorations: AssetType[] = []
-  description.decorations.forEach(c => sampledDecorations.push(...sampleSpawn(random, c)))
+  const sampledDecorations: AssetPlacements = { center: [], wall: [], random: [] }
+  description.decorations.forEach(c => {
+    sampledDecorations[c.placement].push(...sampleSpawn(random, c))
+  })
+  placeAssets(world, map, level, random, sampledDecorations, structure.shape.bounds())
 
   const sampledItems: ItemType[] = []
   description.loots.forEach(l => sampledItems.push(...sampleSpawn(random, l)))
 
   const sampledCharacters: CharacterCreator[] = []
   description.npcs.forEach(l => sampledCharacters.push(...sampleSpawn(random, l)))
-
-  const containers: Entity[] = placeAssetAtWalls(world, map, level, random, sampledContainers, structure.shape.bounds())
-
-  placeAssetRandomly(world, map, level, random, sampledDecorations, structure.shape.bounds())
   placeCharacterRandomly(world, map, level, random, sampledCharacters, structure.shape.bounds())
 
   if (containers.length > 0) {
@@ -51,6 +54,21 @@ function sampleSpawn<S>(random: Random, spawn: Spawn<S>): S[] {
     result.push(random.pick(spawn.types))
   }
   return result
+}
+
+function placeAssets(
+  world: TlbWorld,
+  map: WorldMap,
+  level: number,
+  random: Random,
+  placements: AssetPlacements,
+  bounds: Rectangle
+): Entity[] {
+  return [
+    ...placeAssetAtWalls(world, map, level, random, placements.wall, bounds),
+    ...placeAssetRandomly(world, map, level, random, placements.random, bounds),
+    ...placeAssetCentered(world, map, level, random, placements.center, bounds),
+  ]
 }
 
 function placeAssetAtWalls(
@@ -109,6 +127,28 @@ function placeAssetRandomly(
   return placedAssets
 }
 
+function placeAssetCentered(
+  world: TlbWorld,
+  map: WorldMap,
+  level: number,
+  random: Random,
+  assets: AssetType[],
+  bounds: Rectangle
+): Entity[] {
+  const placedAssets: Entity[] = []
+  retry(random, assets, a => {
+    const direction = random.pick(directions)
+    const position = bounds.center
+    const shape = shapeOfAsset(a, position, direction)
+    const isFree = shape.all(p => canPlace(world, map, level, p))
+    if (isFree) {
+      placedAssets.push(createAssetFromShape(world, level, shape, a))
+    }
+    return isFree
+  })
+  return placedAssets
+}
+
 function placeCharacterRandomly(
   world: TlbWorld,
   map: WorldMap,
@@ -132,9 +172,5 @@ function placeCharacterRandomly(
 }
 
 function canPlace(world: TlbWorld, map: WorldMap, level: number, position: Vector): boolean {
-  return map.levels[level].tileMatches(
-    world,
-    position,
-    t => t !== undefined && (t.feature() === features.room || t.feature() === features.corridor)
-  )
+  return map.levels[level].tileMatches(world, position, t => t !== undefined && t.feature().ground)
 }

@@ -5,7 +5,7 @@ import { ItemType } from './items'
 import { TriggeredByComponent, TriggersComponent } from '../components/trigger'
 import { DialogComponent } from '../components/dialog'
 
-export type AnswerType = 'close' | 'attack' | 'authorized'
+export type AnswerType = 'close' | 'attack' | 'authorized' | 'move_level_up' | 'move_level_down'
 export type Check = (world: TlbWorld, player: Entity, npc: Entity) => boolean
 export interface Answer {
   text: string
@@ -25,6 +25,12 @@ function answer(text: string, navigation: number | AnswerType, check?: Check): A
 }
 function attack(): Answer {
   return answer('[attack]', 'attack')
+}
+function moveUp(): Answer {
+  return answer('[move one level up]', 'move_level_up')
+}
+function moveDown(): Answer {
+  return answer('[move one level down]', 'move_level_down')
 }
 const playerHasItem = (type: ItemType) => (world: TlbWorld, player: Entity) => {
   const inventory = world.getComponent<InventoryComponent>(player, 'inventory')!.content
@@ -90,6 +96,14 @@ const dialogDefinitions = {
       {
         text: ['Ok, you can pass'],
         answers: [answer('ok', 'authorized')],
+      },
+    ],
+  },
+  elevator: {
+    steps: [
+      {
+        text: ['Elevator controls. Please select a level'],
+        answers: [moveUp(), moveDown()],
       },
     ],
   },

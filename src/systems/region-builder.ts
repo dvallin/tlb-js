@@ -13,7 +13,7 @@ import { shapeOfAsset, createAssetFromShape } from '../components/asset'
 import { regionParams } from '../assets/complexes'
 import { embedComplexes, ComplexEmbedding } from '../generative/complex-embedder'
 import { fill } from '../generative/complex-filler'
-import { SpacePartitioner, Corridor, Room } from '../generative/space-partitioner'
+import { SpacePartitioner, Corridor, Room, Hub } from '../generative/space-partitioner'
 
 export class RegionBuilder implements TlbSystem {
   public readonly components: ComponentName[] = ['active', 'region']
@@ -34,11 +34,42 @@ export class RegionBuilder implements TlbSystem {
     let success = true
     switch (region.type) {
       case 'elevator':
+        success = this.buildElevator(world, entity, region)
+        break
       case 'red':
         success = this.buildOfficeSpace(world, entity, region)
+        break
     }
     if (success) {
       world.editEntity(entity).removeComponent('active')
+    }
+  }
+
+  private buildElevator(world: TlbWorld, entity: Entity, region: RegionComponent): boolean {
+    const hub: Hub = {
+      kind: 'hub',
+      exits: region.exits.map(
+        e =>
+          ({
+            kind: 'corridor',
+            shape: new Rectangle(e.x, e.y, 1, 3),
+            exits: [],
+            rooms: [],
+            hubs: [],
+          } as Corridor)
+      ),
+      shape: region.shape,
+    }
+    const rootStructure = this.createHub(world, entity, hub, undefined)
+    const embeddings = this.findEmbedding(world, entity, rootStructure)
+    if (embeddings !== undefined) {
+      const map = world.getResource<WorldMapResource>('map')
+      this.renderHub(world, map, region.level, hub)
+      embeddings.forEach(e => fill(world, map, region.level, e.embedding, this.uniform, e.structure))
+      return true
+    } else {
+      this.removeStructures(world, entity)
+      return false
     }
   }
 
@@ -50,8 +81,8 @@ export class RegionBuilder implements TlbSystem {
     if (embeddings !== undefined) {
       const map = world.getResource<WorldMapResource>('map')
 
-      this.renderCorridors(world, map, region.level, entity, structure)
-      this.renderRooms(world, map, region.level, entity, structure)
+      this.renderCorridors(world, map, region.level, structure)
+      this.renderRooms(world, map, region.level, structure)
 
       embeddings.forEach(e => fill(world, map, region.level, e.embedding, this.uniform, e.structure))
 
@@ -67,6 +98,7 @@ export class RegionBuilder implements TlbSystem {
     const connections = [
       ...corridor.exits.map(c => this.createCorridor(world, region, c, entity)),
       ...corridor.rooms.map(r => this.createRoom(world, region, r, entity)),
+      ...corridor.hubs.map(h => this.createHub(world, region, h, entity)),
     ]
     if (parent !== undefined) {
       connections.push(parent)
@@ -86,7 +118,18 @@ export class RegionBuilder implements TlbSystem {
     }
     world.editEntity(entity).withComponent<StructureComponent>('structure', { kind: 'room', shape: room.shape, connections, region }).entity
     room.entity = entity
-    return room.entity
+    return entity
+  }
+
+  private createHub(world: TlbWorld, region: Entity, hub: Hub, parent: Entity | undefined): Entity {
+    const entity = world.createEntity().entity
+    const connections = [...hub.exits.map(c => this.createCorridor(world, region, c, entity))]
+    if (parent !== undefined) {
+      connections.push(parent)
+    }
+    world.editEntity(entity).withComponent<StructureComponent>('structure', { kind: 'hub', shape: hub.shape, connections, region })
+    hub.entity = entity
+    return entity
   }
 
   private removeStructures(world: TlbWorld, region: Entity): void {
@@ -109,27 +152,45 @@ export class RegionBuilder implements TlbSystem {
     return undefined
   }
 
-  private renderCorridors(world: TlbWorld, map: WorldMap, level: number, region: Entity, corridor: Corridor): void {
+  private renderCorridors(world: TlbWorld, map: WorldMap, level: number, corridor: Corridor): void {
     corridor.shape.foreach(p => {
       createFeatureFromType(world, level, p, 'corridor')
       map.levels[level].setStructure(p, corridor.entity!)
     })
 
-    corridor.exits.forEach(c => this.renderCorridors(world, map, level, region, c))
+    corridor.exits.forEach(c => this.renderCorridors(world, map, level, c))
   }
 
-  private renderRooms(world: TlbWorld, map: WorldMap, level: number, region: Entity, corridor: Corridor): void {
-    corridor.rooms.forEach(r => this.renderRoom(world, map, level, region, r))
-    corridor.exits.forEach(c => this.renderRooms(world, map, level, region, c))
+  private renderRooms(world: TlbWorld, map: WorldMap, level: number, corridor: Corridor): void {
+    corridor.rooms.forEach(r => this.renderRoom(world, map, level, r))
+    corridor.exits.forEach(c => this.renderRooms(world, map, level, c))
   }
 
-  private renderRoom(world: TlbWorld, map: WorldMap, level: number, region: Entity, room: Room): void {
+  private renderHub(world: TlbWorld, map: WorldMap, level: number, hub: Hub): void {
+    const structureShape = hub.shape.shrink()
+    structureShape.foreach(p => {
+      createFeatureFromType(world, level, p, 'hub')
+      map.levels[level].setStructure(p, hub.entity!)
+    })
+
+    this.placeDoors(world, map, level, hub)
+
+    hub.exits.forEach(c => this.renderCorridors(world, map, level, c))
+  }
+
+  private renderRoom(world: TlbWorld, map: WorldMap, level: number, room: Room): void {
     const structureShape = room.shape.shrink()
     structureShape.foreach(p => {
       createFeatureFromType(world, level, p, 'room')
       map.levels[level].setStructure(p, room.entity!)
     })
 
+    this.placeDoors(world, map, level, room)
+
+    room.rooms.forEach(r => this.renderRoom(world, map, level, r))
+  }
+
+  private placeDoors(world: TlbWorld, map: WorldMap, level: number, room: Room | Hub): void {
     const doors = this.findPossibleDoors(map, level, room.shape.bounds())
     if (doors.length > 0) {
       this.uniform.shuffle(doors)
@@ -143,8 +204,6 @@ export class RegionBuilder implements TlbSystem {
         createAssetFromShape(world, level, shape, 'door')
       }
     }
-
-    room.rooms.forEach(r => this.renderRoom(world, map, level, region, r))
   }
 
   private findPossibleDoors(map: WorldMap, level: number, rectangle: Rectangle): Shape[] {

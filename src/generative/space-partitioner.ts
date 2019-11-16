@@ -11,6 +11,7 @@ export interface Corridor {
   shape: Shape
   exits: Corridor[]
   rooms: Room[]
+  hubs: Hub[]
 
   entity?: Entity
 }
@@ -19,6 +20,14 @@ export interface Room {
   kind: 'room'
   shape: Shape
   rooms: Room[]
+
+  entity?: Entity
+}
+
+export interface Hub {
+  kind: 'hub'
+  shape: Shape
+  exits: Corridor[]
 
   entity?: Entity
 }
@@ -84,6 +93,7 @@ export class SpacePartitioner {
       shape: corridorShape,
       exits,
       rooms,
+      hubs: [],
     }
   }
 
@@ -155,6 +165,7 @@ export class SpacePartitioner {
       shape: corridorShape,
       exits,
       rooms,
+      hubs: [],
     }
   }
 

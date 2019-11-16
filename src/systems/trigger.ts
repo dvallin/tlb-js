@@ -14,6 +14,8 @@ import { DialogComponent } from '../components/dialog'
 import { Random } from '../random'
 import { AiComponent } from '../components/ai'
 import { engage } from '../component-reducers/ai'
+import { move } from '../component-reducers/position'
+import { PositionComponent } from '../components/position'
 
 export class Trigger implements TlbSystem {
   public readonly components: ComponentName[] = ['active', 'triggers']
@@ -22,7 +24,6 @@ export class Trigger implements TlbSystem {
 
   public update(world: TlbWorld, entity: Entity): void {
     let handled = true
-
     const triggers = world.getComponent<TriggersComponent>(entity, 'triggers')!
     switch (triggers.type) {
       case 'dialog':
@@ -42,7 +43,7 @@ export class Trigger implements TlbSystem {
   }
 
   public handleDialog(world: TlbWorld, entity: Entity, triggers: TriggersComponent): boolean {
-    const dialog = world.getComponent<DialogComponent>(triggers.entities[0], 'dialog')!
+    const dialog = this.getDialog(world, entity, triggers)
     const triggeredBy = world.getComponent<TriggeredByComponent>(entity, 'triggered-by')!
     const result = runDialog(
       world.getResource<UIResource>('ui'),
@@ -59,10 +60,24 @@ export class Trigger implements TlbSystem {
         if (ai !== undefined) {
           engage(world, entity, ai, this.pushState)
         }
+      } else if (result === 'move_level_up') {
+        const p = world.getComponent<PositionComponent>(triggeredBy.entity, 'position')!
+        move(world, triggeredBy.entity, p.level + 1, p.position)
+      } else if (result === 'move_level_down') {
+        const p = world.getComponent<PositionComponent>(triggeredBy.entity, 'position')!
+        move(world, triggeredBy.entity, p.level - 1, p.position)
       }
       return true
     }
     return false
+  }
+
+  private getDialog(world: TlbWorld, entity: Entity, triggers: TriggersComponent): DialogComponent {
+    let dialog = world.getComponent<DialogComponent>(entity, 'dialog')
+    if (dialog === undefined) {
+      dialog = world.getComponent<DialogComponent>(triggers.entities[0], 'dialog')!
+    }
+    return dialog
   }
 
   public handleAsset(world: TlbWorld, entity: Entity, triggers: TriggersComponent): boolean {
@@ -72,6 +87,8 @@ export class Trigger implements TlbSystem {
         return this.door(world, triggers)
       case 'loot':
         return this.loot(world, entity, triggers, true)
+      case 'elevator':
+        return this.handleDialog(world, entity, triggers)
       case 'trash':
       case 'locker':
       case 'table':
@@ -79,8 +96,9 @@ export class Trigger implements TlbSystem {
       case 'generator':
         this.log(world, 'clonck')
         return true
+      default:
+        return true
     }
-    return false
   }
 
   public door(world: TlbWorld, triggers: TriggersComponent): boolean {

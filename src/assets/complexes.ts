@@ -1,12 +1,11 @@
 import {
   ComplexTemplate,
-  spawnTimes,
   spawn,
-  spawnOptional,
   ComplexDescription,
   occur,
   StructureRestriction,
   CharacterCreator,
+  optional,
 } from '../generative/complex-embedder'
 import { characterCreators, createEmptyNpc, defaultActions, take, equip } from './characters'
 import { AssetType } from './assets'
@@ -28,16 +27,16 @@ const boss1: CharacterCreator = world => {
   return boss
 }
 
-const complexesDefinition = {
+const complexesDefinition: { [key: string]: ComplexTemplate } = {
   anEncounter: {
     structures: [
       {
         description: {
-          decorations: [spawn<AssetType>('trash')],
-          containers: [spawn<AssetType>('locker')],
-          loots: [spawn<ItemType>('nailGun', 'leatherJacket'), spawnOptional<ItemType>('bootsOfStriding')],
-          npcs: [spawn<CharacterCreator>(characterCreators.eliteGuard, characterCreators.guard)],
-          bosses: [spawn<CharacterCreator>(boss1)],
+          decorations: [spawn<AssetType>('random', occur(1), 'trash')],
+          containers: [spawn<AssetType>('wall', occur(1), 'locker')],
+          loots: [spawn<ItemType>('random', occur(1), 'nailGun', 'leatherJacket'), spawn<ItemType>('random', occur(1), 'bootsOfStriding')],
+          npcs: [spawn<CharacterCreator>('random', occur(1), characterCreators.eliteGuard, characterCreators.guard)],
+          bosses: [spawn<CharacterCreator>('random', occur(1), boss1)],
         },
         restriction: restriction({ kind: 'room' }),
       },
@@ -48,9 +47,12 @@ const complexesDefinition = {
       {
         description: {
           decorations: [],
-          containers: [spawnTimes<AssetType>('table', 5)],
-          loots: [spawn<ItemType>('bandages', 'deathPill')],
-          npcs: [spawnTimes<CharacterCreator>(characterCreators.eliteGuard, 2), spawnTimes<CharacterCreator>(characterCreators.guard, 3)],
+          containers: [spawn<AssetType>('random', occur(5), 'table')],
+          loots: [spawn<ItemType>('random', occur(1), 'bandages', 'deathPill')],
+          npcs: [
+            spawn<CharacterCreator>('random', occur(2), characterCreators.eliteGuard),
+            spawn<CharacterCreator>('random', occur(3), characterCreators.guard),
+          ],
           bosses: [],
         },
         restriction: restriction({ kind: 'room', connects: [1] }),
@@ -58,9 +60,13 @@ const complexesDefinition = {
       {
         description: {
           decorations: [],
-          containers: [spawnTimes<AssetType>('locker', 5)],
-          loots: [spawnTimes<ItemType>('sniperRifle', 5), spawnTimes<ItemType>('bandages', 3), spawnTimes<ItemType>('leatherJacket', 5)],
-          npcs: [spawn<CharacterCreator>(characterCreators.eliteGuard, characterCreators.guard)],
+          containers: [spawn<AssetType>('wall', occur(5), 'locker')],
+          loots: [
+            spawn<ItemType>('random', occur(5), 'sniperRifle'),
+            spawn<ItemType>('random', occur(3), 'bandages'),
+            spawn<ItemType>('random', occur(5), 'leatherJacket'),
+          ],
+          npcs: [spawn<CharacterCreator>('random', occur(1), characterCreators.eliteGuard, characterCreators.guard)],
           bosses: [],
         },
         restriction: restriction({ kind: 'room', connects: [0], exact: true }),
@@ -71,13 +77,27 @@ const complexesDefinition = {
     structures: [
       {
         description: {
-          decorations: [spawnTimes<AssetType>('generator', 3)],
-          containers: [spawnOptional<AssetType>('locker')],
-          loots: [spawnTimes<ItemType>('bandages', 2)],
+          decorations: [spawn<AssetType>('random', occur(3), 'generator')],
+          containers: [spawn<AssetType>('random', optional(1), 'locker')],
+          loots: [spawn<ItemType>('random', occur(2), 'bandages')],
           npcs: [],
           bosses: [],
         },
         restriction: restriction({ kind: 'corridor' }),
+      },
+    ],
+  },
+  elevator: {
+    structures: [
+      {
+        description: {
+          decorations: [spawn<AssetType>('center', occur(1), 'elevator')],
+          containers: [],
+          loots: [],
+          npcs: [],
+          bosses: [],
+        },
+        restriction: restriction({ kind: 'hub' }),
       },
     ],
   },
@@ -100,5 +120,5 @@ export const regionParams: { [key in RegionsType]: ComplexDescription[] } = {
       template: complexes.generators,
     },
   ],
-  elevator: [],
+  elevator: [{ occurrence: occur(1), template: complexes.elevator }],
 }

@@ -1,53 +1,62 @@
 import { TlbResource, ResourceName } from '../tlb'
 import { Vector } from '../spatial'
 import { Position } from '../renderer/position'
-import { KEYS } from 'rot-js'
-
-export const defaultKeyMapping: { [key in KeyboardCommand]: number | Key } = {
-  // player controls
-  left: KEYS.VK_H,
-  down: KEYS.VK_J,
-  up: KEYS.VK_K,
-  right: KEYS.VK_L,
-  use: KEYS.VK_E,
-
-  // ui interaction
-  accept: KEYS.VK_RETURN,
-  cancel: KEYS.VK_ESCAPE,
-
-  0: KEYS.VK_1,
-  1: KEYS.VK_2,
-  2: KEYS.VK_3,
-  3: KEYS.VK_4,
-  4: KEYS.VK_5,
-  5: KEYS.VK_6,
-  6: KEYS.VK_7,
-  7: KEYS.VK_8,
-  8: KEYS.VK_9,
-
-  // tabs selection
-  inventory: KEYS.VK_I,
-  log: KEYS.VK_O,
-  overview: KEYS.VK_U,
-  focus: KEYS.VK_Q,
-
-  // options
-  grid: KEYS.VK_G,
-}
 
 export interface Key {
-  shift: boolean
   ctrl: boolean
   meta: boolean
   alt: boolean
-  pressed: number
+  key: string
+}
+
+function key(key: string) {
+  return {
+    ctrl: false,
+    meta: false,
+    alt: false,
+    key,
+  }
+}
+
+export const defaultKeyMapping: { [key in KeyboardCommand]: Key } = {
+  // player controls
+  left: key('h'),
+  down: key('j'),
+  up: key('k'),
+  right: key('l'),
+  use: key('e'),
+  plus: key('+'),
+  minus: key('-'),
+
+  // ui interaction
+  accept: key('Enter'),
+  cancel: key('Escape'),
+
+  0: key('1'),
+  1: key('2'),
+  2: key('3'),
+  3: key('4'),
+  4: key('5'),
+  5: key('6'),
+  6: key('7'),
+  7: key('8'),
+  8: key('9'),
+
+  // tabs selection
+  inventory: key('i'),
+  log: key('o'),
+  overview: key('u'),
+  focus: key('q'),
+
+  // options
+  grid: key('g'),
 }
 
 export type NumericKeyboardCommand = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8
 export type OptionsKeyboardCommand = 'grid'
 export type TabKeyboardCommand = 'inventory' | 'log' | 'focus' | 'overview'
 export type UIInteractionKeyboardCommand = 'accept' | 'cancel'
-export type PlayerInteractionKeyboardCommand = 'left' | 'down' | 'up' | 'right' | 'use'
+export type PlayerInteractionKeyboardCommand = 'left' | 'down' | 'up' | 'right' | 'use' | 'plus' | 'minus'
 export type KeyboardCommand =
   | NumericKeyboardCommand
   | PlayerInteractionKeyboardCommand
@@ -81,9 +90,9 @@ export class InputResource implements TlbResource, Input {
   public alt: boolean = false
   public meta: boolean = false
 
-  public keyDown: Set<number> = new Set()
-  public keyPressed: Set<number> = new Set()
-  public keyReleased: Set<number> = new Set()
+  public keyDown: Set<string> = new Set()
+  public keyPressed: Set<string> = new Set()
+  public keyReleased: Set<string> = new Set()
 
   private mouseEvent: MouseEvent | undefined = undefined
   private keyEvents: KeyboardEvent[] = []
@@ -102,17 +111,12 @@ export class InputResource implements TlbResource, Input {
 
   isActive(command: KeyboardCommand): boolean {
     const mapped = defaultKeyMapping[command]
-    if (typeof mapped === 'number') {
-      return !this.shift && !this.alt && !this.ctrl && !this.meta && this.keyPressed.has(mapped)
-    } else {
-      return (
-        this.shift === mapped.shift &&
-        this.alt === mapped.alt &&
-        this.ctrl === mapped.ctrl &&
-        this.meta === mapped.meta &&
-        this.keyPressed.has(mapped.pressed)
-      )
-    }
+    return this.alt === mapped.alt && this.ctrl === mapped.ctrl && this.meta === mapped.meta && this.keyPressed.has(mapped.key)
+  }
+
+  isDown(command: KeyboardCommand): boolean {
+    const mapped = defaultKeyMapping[command]
+    return this.alt === mapped.alt && this.ctrl === mapped.ctrl && this.meta === mapped.meta && this.keyDown.has(mapped.key)
   }
 
   numericActive(): NumericKeyboardCommand | undefined {
@@ -122,16 +126,16 @@ export class InputResource implements TlbResource, Input {
 
   public createMovementDelta(): Vector {
     let delta = new Vector([0, 0])
-    if (this.keyDown.has(KEYS.VK_H)) {
+    if (this.isDown('left')) {
       delta = delta.add(Vector.fromDirection('left'))
     }
-    if (this.keyDown.has(KEYS.VK_J)) {
+    if (this.isDown('down')) {
       delta = delta.add(Vector.fromDirection('down'))
     }
-    if (this.keyDown.has(KEYS.VK_K)) {
+    if (this.isDown('up')) {
       delta = delta.add(Vector.fromDirection('up'))
     }
-    if (this.keyDown.has(KEYS.VK_L)) {
+    if (this.isDown('right')) {
       delta = delta.add(Vector.fromDirection('right'))
     }
     return delta.normalize()
@@ -165,11 +169,11 @@ export class InputResource implements TlbResource, Input {
       this.alt = e.altKey
       this.meta = e.metaKey
       if (e.type === 'keydown') {
-        this.keyPressed.add(e.keyCode)
-        this.keyDown.add(e.keyCode)
+        this.keyPressed.add(e.key)
+        this.keyDown.add(e.key)
       } else {
-        this.keyReleased.add(e.keyCode)
-        this.keyDown.delete(e.keyCode)
+        this.keyReleased.add(e.key)
+        this.keyDown.delete(e.key)
       }
     }
     this.keyEvents = []

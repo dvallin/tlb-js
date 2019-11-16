@@ -50,7 +50,7 @@ export function kill(world: TlbWorld, entity: Entity) {
     map.levels[position.level].removeCharacter(position.position)
 
     const positionFloor = new Vector([position.position.fX, position.position.fY])
-    const loot = createAsset(world, map, position.level, positionFloor, 'up', 'loot')
+    const loot = createAsset(world, position.level, positionFloor, 'up', 'loot')
     world.editEntity(loot).withComponent<InventoryComponent>('inventory', { ...inventory })
 
     const log: Log = world.getResource<LogResource>('log')

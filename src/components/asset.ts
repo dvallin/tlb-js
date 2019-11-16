@@ -14,6 +14,8 @@ import { AssetType, assets } from '../assets/assets'
 import { FeatureType } from '../assets/features'
 import { Direction } from '../spatial/direction'
 import { InventoryComponent } from './items'
+import { DialogType } from '../assets/dialogs'
+import { DialogComponent } from './dialog'
 
 export interface AssetComponent {
   type: AssetType
@@ -25,6 +27,7 @@ export interface Asset {
   size: Vector
   cover: Cover
   hasInventory: boolean
+  dialog: DialogType | undefined
   feature: (index: number) => Feature
 }
 
@@ -38,30 +41,18 @@ export function shapeOfAsset(type: AssetType, position: Vector, direction: Direc
   return Rectangle.footprint(position, direction, asset.size)
 }
 
-export function createAsset(
-  world: TlbWorld,
-  map: WorldMap,
-  level: number,
-  position: Vector,
-  direction: Direction,
-  type: AssetType
-): Entity {
-  const asset = assets[type]
-  const entity = world
-    .createEntity()
-    .withComponent<AssetComponent>('asset', { type })
-    .withComponent<TriggersComponent>('triggers', { name: asset.name, type: 'asset', entities: [] }).entity
-  if (asset.hasInventory) {
-    world.editEntity(entity).withComponent<InventoryComponent>('inventory', { content: [] })
-  }
-  shapeOfAsset(type, position, direction).foreach((p, i) => {
-    const tile = putTile(world, map, level, p, () => asset.feature(i))
-    addTrigger(world, tile, entity)
-  })
-  return entity
+export function createAsset(world: TlbWorld, level: number, position: Vector, direction: Direction, type: AssetType): Entity {
+  const shape = shapeOfAsset(type, position, direction)
+  return createAssetFromShape(world, level, shape, type)
 }
 
 export function createAssetFromShape(world: TlbWorld, level: number, shape: Shape, type: AssetType): Entity {
+  const entity = placeAsset(world, type)
+  placeAssetParts(world, type, entity, level, shape)
+  return entity
+}
+
+function placeAsset(world: TlbWorld, type: AssetType): Entity {
   const asset = assets[type]
   const entity = world
     .createEntity()
@@ -70,12 +61,19 @@ export function createAssetFromShape(world: TlbWorld, level: number, shape: Shap
   if (asset.hasInventory) {
     world.editEntity(entity).withComponent<InventoryComponent>('inventory', { content: [] })
   }
+  if (asset.dialog !== undefined) {
+    world.editEntity(entity).withComponent<DialogComponent>('dialog', { type: asset.dialog })
+  }
+  return entity
+}
+
+function placeAssetParts(world: TlbWorld, type: AssetType, entity: Entity, level: number, shape: Shape): void {
   const map: WorldMap = world.getResource<WorldMapResource>('map')
+  const asset = assets[type]
   shape.foreach((p, i) => {
     const tile = putTile(world, map, level, p, () => asset.feature(i))
     addTrigger(world, tile, entity)
   })
-  return entity
 }
 
 export function removeAsset(world: TlbWorld, map: WorldMap, entity: Entity): void {
