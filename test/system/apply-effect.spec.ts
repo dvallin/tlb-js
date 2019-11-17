@@ -16,6 +16,7 @@ import { characterCreators, characterStats } from '../../src/assets/characters'
 import { Entity } from '../../src/ecs/entity'
 import { mockLog } from '../mocks'
 import { CharacterStatsComponent } from '../../src/components/character-stats'
+import { WorldMapResource } from '../../src/resources/world-map'
 
 describe('ApplyEffects', () => {
   let world: TlbWorld
@@ -25,6 +26,7 @@ describe('ApplyEffects', () => {
   beforeEach(() => {
     world = new World()
     registerComponents(world)
+    world.registerResource(new WorldMapResource(2))
     mockLog(world)
 
     player = characterCreators.player(world)

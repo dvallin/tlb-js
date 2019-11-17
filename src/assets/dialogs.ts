@@ -119,3 +119,41 @@ export function addDialog(world: TlbWorld, entity: Entity, type: DialogType): En
   world.getComponent<TriggersComponent>(entity, 'triggers')!.entities.push(dialog)
   return dialog
 }
+
+/*
+00:00 Right. You
+00:21 know, and
+00:26 everything crisp
+00:31 and we
+00:36 just we
+00:41 figured it
+00:46 out. Black
+00:59 Ops 2.
+01:24 Then the just one
+01:31 more input test by
+01:38 it's also rifle team
+01:45 could not using machine
+01:52 in. Yeah,
+02:05 yeah. Here's
+02:31 one. Select.
+03:03 As I said, This
+03:09 is the fight fire
+03:15 unwilling to tag just
+03:21 put up this soon.
+03:37 The app submitted fish relative quotes for the motions to
+03:45 plant life conversion of toolbar come on his income considers
+03:53 timberwolf does Metcalf burden for also 2, 1/2 or
+04:00 and he deep sea teams and after the hunger plant.
+04:07 Often the underplanted with fewer number? What
+04:11 is the accentor after grammars perfecting it.
+04:24 That's funny farm, he
+04:31 bought all we would
+04:38 miss him for us.
+04:56 Then give me another disaster on boarding fast,
+05:02 so the largest bank.
+05:07 What is
+05:27 life?
+05:38 But I
+05:53 will
+06:01 not. Probably.
+*/

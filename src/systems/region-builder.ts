@@ -52,7 +52,7 @@ export class RegionBuilder implements TlbSystem {
         e =>
           ({
             kind: 'corridor',
-            shape: new Rectangle(e.x, e.y, 1, 3),
+            shape: new Rectangle(e.x, e.y - 1, 1, 3),
             exits: [],
             rooms: [],
             hubs: [],
@@ -74,10 +74,13 @@ export class RegionBuilder implements TlbSystem {
   }
 
   private buildOfficeSpace(world: TlbWorld, entity: Entity, region: RegionComponent): boolean {
-    const structure = this.partitioner.planStructureWithExits(region.shape, region.exits, 6, 10, 3) as Corridor
+    const structure = this.partitioner.planStructureWithExits(region.shape, region.exits, 6, 10, 3)
+    if (structure.kind !== 'corridor') {
+      return false
+    }
+
     const rootStructure = this.createCorridor(world, entity, structure, undefined)
     const embeddings = this.findEmbedding(world, entity, rootStructure)
-
     if (embeddings !== undefined) {
       const map = world.getResource<WorldMapResource>('map')
 

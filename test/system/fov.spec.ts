@@ -30,6 +30,6 @@ describe('Npc', () => {
 
   it('pushes fov', () => {
     system.update(world, player)
-    expect(world.getComponent<FovComponent>(player, 'fov')!.fov).not.toHaveLength(0)
+    expect(world.getComponent<FovComponent>(player, 'fov')!.fov.objects).toMatchSnapshot()
   })
 })

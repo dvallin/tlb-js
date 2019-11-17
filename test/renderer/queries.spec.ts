@@ -22,19 +22,5 @@ describe('Queries', () => {
     new Queries().fov(world, 0, new Vector([1.1, 1.1]), callback)
 
     expect(callback).toHaveBeenCalledTimes(21)
-    // non-light blocking
-    expect(callback).toHaveBeenCalledWith(new Vector([1, 1]), 0)
-    expect(callback).toHaveBeenCalledWith(new Vector([1, 2]), 1)
-    // visible light blocking
-    expect(callback).toHaveBeenCalledWith(new Vector([0, 0]), 1)
-    expect(callback).toHaveBeenCalledWith(new Vector([1, 0]), 1)
-    expect(callback).toHaveBeenCalledWith(new Vector([2, 0]), 1)
-    expect(callback).toHaveBeenCalledWith(new Vector([0, 1]), 1)
-    expect(callback).toHaveBeenCalledWith(new Vector([2, 1]), 1)
-    expect(callback).toHaveBeenCalledWith(new Vector([0, 2]), 1)
-    expect(callback).toHaveBeenCalledWith(new Vector([2, 2]), 1)
-    expect(callback).toHaveBeenCalledWith(new Vector([0, 3]), 2)
-    expect(callback).toHaveBeenCalledWith(new Vector([1, 3]), 2)
-    expect(callback).toHaveBeenCalledWith(new Vector([2, 3]), 2)
   })
 })

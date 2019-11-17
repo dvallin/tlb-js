@@ -24,6 +24,9 @@ module.exports = {
     filename: 'tlb.bundle.js',
     path: path.resolve(__dirname, 'dist'),
   },
+  optimization: {
+    minimize: false,
+  },
   module: {
     rules: [
       {

@@ -60,6 +60,7 @@ export function kill(world: TlbWorld, entity: Entity) {
   world
     .editEntity(entity)
     .withComponent('dead', {})
+    .removeComponent('position')
     .removeComponent('take-turn')
     .removeComponent('start-turn')
     .removeComponent('took-turn')

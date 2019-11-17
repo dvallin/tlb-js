@@ -54,12 +54,11 @@ export class SpacePartitioner {
     const bounds = shape.bounds()
     const axis = head.x === bounds.left || head.x === bounds.right ? 'y' : 'x'
     const halfCorridorWidth = Math.floor(corridorWidth / 2)
-    const split = axis === 'x' ? head.x - bounds.topLeft.x - halfCorridorWidth : head.y - bounds.topLeft.y - halfCorridorWidth
+    const split = axis === 'x' ? head.x - bounds.topLeft.x - halfCorridorWidth - 1 : head.y - bounds.topLeft.y - halfCorridorWidth - 1
     const splitMask = this.split3(bounds, axis, split, corridorWidth)
     const leftShape = new Intersection(shape, splitMask[0])
     const corridorShape = new Intersection(shape, splitMask[1])
     const rightShape = new Intersection(shape, splitMask[2])
-
     const left = this.planStructureWithExits(
       leftShape,
       tail.filter(e => leftShape.containsVector(e)),
@@ -69,7 +68,7 @@ export class SpacePartitioner {
     )
     const right = this.planStructureWithExits(
       rightShape,
-      tail.filter(e => leftShape.containsVector(e)),
+      tail.filter(e => rightShape.containsVector(e)),
       minRoomWidth,
       maxRoomWidth,
       corridorWidth

@@ -6,6 +6,7 @@ import { registerComponents, TlbWorld } from '../../src/tlb'
 import { TakeTurnComponent } from '../../src/components/rounds'
 import { ActiveEffectsComponent, immobilize, stun, confuse, bleed } from '../../src/components/effects'
 import { CharacterStatsComponent } from '../../src/components/character-stats'
+import { WorldMapResource } from '../../src/resources/world-map'
 
 describe('StartRound', () => {
   let world: TlbWorld
@@ -14,6 +15,7 @@ describe('StartRound', () => {
   beforeEach(() => {
     world = new World()
     registerComponents(world)
+    world.registerResource(new WorldMapResource(2))
 
     player = characterCreators.player(world)
     world.editEntity(player).withComponent('start-turn', {})

@@ -32,7 +32,7 @@ function mockSpace<T>(): Space<T> {
   return { get: jest.fn(), set: jest.fn(), setAll: jest.fn(), remove: jest.fn() }
 }
 function mockSetSpace(): SetSpace {
-  return { has: jest.fn(), set: jest.fn(), setAll: jest.fn(), remove: jest.fn() }
+  return new SetSpace(2)
 }
 
 export function mockMap(world: TlbWorld): WorldMapResource {
