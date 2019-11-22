@@ -20,6 +20,7 @@ export interface Feature {
 
   blocking: boolean
   lightBlocking: boolean
+  ground: boolean
   name: string
 }
 

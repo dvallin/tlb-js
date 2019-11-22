@@ -87,7 +87,7 @@ export class RotRenderer implements Renderer {
   ): void {
     const level = world.getResource<WorldMapResource>('map').levels[position.level]
     const p = position.position
-    if (level.isDiscovered(p)) {
+    if (level.isDiscovered(p) || true) {
       const color = level.isVisible(p) ? feature.diffuse : this.computeColor(this.ambientColor, feature.diffuse)
       const overlay = world.getComponent<OverlayComponent>(entity, 'overlay') || { background: undefined }
       const displayPosition = viewport.toDisplay(p, centered)

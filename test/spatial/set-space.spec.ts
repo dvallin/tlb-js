@@ -1,9 +1,9 @@
 import { Vector } from '../../src/spatial/vector'
-import { DiscreteSetSpace, SetSpace } from '../../src/spatial/set-space'
+import { SetSpace } from '../../src/spatial/set-space'
 import { Rectangle } from '../../src/geometry/rectangle'
 
-describe('DiscreteSetSpace', () => {
-  testSetSpace(new Vector([0, 2]), () => new DiscreteSetSpace(10))
+describe('SetSpace', () => {
+  testSetSpace(new Vector([0, 2]), () => new SetSpace(10))
 })
 
 function testSetSpace(position: Vector, spaceBuilder: () => SetSpace): void {

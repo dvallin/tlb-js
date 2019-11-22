@@ -26,7 +26,7 @@ describe('createAssetFromPosition', () => {
     const position = new Vector([0, 0])
 
     // when / then
-    expect(() => createAsset(world, map, 0, position, 'up', 'door')).toThrowErrorMatchingSnapshot()
+    expect(() => createAsset(world, 0, position, 'up', 'door')).toThrowErrorMatchingSnapshot()
   })
 
   it('throws error on blocking ground', () => {
@@ -36,7 +36,7 @@ describe('createAssetFromPosition', () => {
     map.levels[0].setTile(position, ground)
 
     // when / then
-    expect(() => createAsset(world, map, 0, position, 'up', 'door')).toThrowErrorMatchingSnapshot()
+    expect(() => createAsset(world, 0, position, 'up', 'door')).toThrowErrorMatchingSnapshot()
   })
 
   it('creates assets', () => {

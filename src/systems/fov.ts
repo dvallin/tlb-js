@@ -12,7 +12,7 @@ export class Fov implements TlbSystem {
   public update(world: TlbWorld, entity: Entity): void {
     const fov = world.getComponent<FovComponent>(entity, 'fov')!
     const position = world.getComponent<PositionComponent>(entity, 'position')!
-    fov.fov = []
-    this.queries.fov(world, position.level, position.position, (position, distance) => fov.fov.push({ position, distance }))
+    fov.fov.clear()
+    this.queries.fov(world, position.level, position.position, p => fov.fov.set(p))
   }
 }

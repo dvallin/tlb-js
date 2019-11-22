@@ -40,7 +40,7 @@ describe('Npc', () => {
       shape: boundary,
       level: 0,
       authorized: new Set(),
-      entry: new Vector([0, 0]),
+      exits: [],
     }).entity
     const room = world
       .createEntity()

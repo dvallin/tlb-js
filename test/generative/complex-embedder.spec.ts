@@ -5,6 +5,7 @@ import {
   spawn,
   embedComplexes,
   ComplexDescription,
+  occur,
 } from '../../src/generative/complex-embedder'
 import { World } from '../../src/ecs/world'
 import { TlbWorld } from '../../src/tlb'
@@ -22,7 +23,7 @@ function structure(
 ): { description: StructureDescription; restriction: Partial<StructureRestriction> } {
   return {
     description: {
-      decorations: indices(id).map(() => spawn<AssetType>('door')),
+      decorations: indices(id).map(() => spawn<AssetType>('center', occur(1), 'generator')),
       containers: [],
       npcs: [],
       loots: [],

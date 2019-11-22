@@ -1,4 +1,3 @@
-import { KEYS } from 'rot-js'
 import { InputResource } from '../../src/resources/input'
 import { Position } from '../../src/renderer/position'
 import { Vector } from '../../src/spatial'
@@ -14,77 +13,77 @@ describe('Input', () => {
   describe('key down', () => {
     it('registers as keydown', () => {
       // given
-      keyEvent('keydown', KEYS.VK_0)
+      keyEvent('keydown', '0')
 
       // when
       input.update()
 
       // then
-      expect(input.keyDown.has(KEYS.VK_0)).toBeTruthy()
+      expect(input.keyDown.has('0')).toBeTruthy()
     })
 
     it('registers as keypressed', () => {
       // given
-      keyEvent('keydown', KEYS.VK_0)
+      keyEvent('keydown', '0')
 
       // when
       input.update()
 
       // then
-      expect(input.keyPressed.has(KEYS.VK_0)).toBeTruthy()
+      expect(input.keyPressed.has('0')).toBeTruthy()
     })
 
     it('resets keypressed', () => {
       // given
-      keyEvent('keydown', KEYS.VK_0)
+      keyEvent('keydown', '0')
 
       // when
       input.update()
       input.update()
 
       // then
-      expect(input.keyPressed.has(KEYS.VK_0)).toBeFalsy()
-      expect(input.keyDown.has(KEYS.VK_0)).toBeTruthy()
+      expect(input.keyPressed.has('0')).toBeFalsy()
+      expect(input.keyDown.has('0')).toBeTruthy()
     })
   })
 
   describe('key up', () => {
     it('resets keydown', () => {
       // given
-      input.keyDown.add(KEYS.VK_0)
-      keyEvent('keyup', KEYS.VK_0)
+      input.keyDown.add('0')
+      keyEvent('keyup', '0')
 
       // when
       input.update()
 
       // then
-      expect(input.keyDown.has(KEYS.VK_0)).toBeFalsy()
+      expect(input.keyDown.has('0')).toBeFalsy()
     })
 
     it('registers as keyreleased', () => {
       // given
-      input.keyDown.add(KEYS.VK_0)
-      keyEvent('keyup', KEYS.VK_0)
+      input.keyDown.add('0')
+      keyEvent('keyup', '0')
 
       // when
       input.update()
 
       // then
-      expect(input.keyReleased.has(KEYS.VK_0)).toBeTruthy()
+      expect(input.keyReleased.has('0')).toBeTruthy()
     })
 
     it('resets keyreleased', () => {
       // given
-      input.keyDown.add(KEYS.VK_0)
-      keyEvent('keyup', KEYS.VK_0)
+      input.keyDown.add('0')
+      keyEvent('keyup', '0')
 
       // when
       input.update()
       input.update()
 
       // then
-      expect(input.keyReleased.has(KEYS.VK_0)).toBeFalsy()
-      expect(input.keyDown.has(KEYS.VK_0)).toBeFalsy()
+      expect(input.keyReleased.has('0')).toBeFalsy()
+      expect(input.keyDown.has('0')).toBeFalsy()
     })
   })
 
@@ -222,42 +221,42 @@ describe('Input', () => {
 
   describe('createMovementDelta', () => {
     it('moves left on h', () => {
-      input.keyDown.add(KEYS.VK_H)
+      input.keyDown.add('h')
       expect(input.createMovementDelta()).toEqual(new Vector([-1, 0]))
     })
 
     it('moves right on l', () => {
-      input.keyDown.add(KEYS.VK_L)
+      input.keyDown.add('l')
       expect(input.createMovementDelta()).toEqual(new Vector([1, 0]))
     })
 
     it('moves down on j', () => {
-      input.keyDown.add(KEYS.VK_J)
+      input.keyDown.add('j')
       expect(input.createMovementDelta()).toEqual(new Vector([0, 1]))
     })
 
     it('moves up on k', () => {
-      input.keyDown.add(KEYS.VK_K)
+      input.keyDown.add('k')
       expect(input.createMovementDelta()).toEqual(new Vector([0, -1]))
     })
 
     it('normalizes movement', () => {
-      input.keyDown.add(KEYS.VK_H)
-      input.keyDown.add(KEYS.VK_K)
+      input.keyDown.add('h')
+      input.keyDown.add('k')
       expect(input.createMovementDelta()).toEqual(new Vector([-1, -1]).normalize())
     })
 
     it('cancels out movement', () => {
-      input.keyDown.add(KEYS.VK_H)
-      input.keyDown.add(KEYS.VK_L)
-      input.keyDown.add(KEYS.VK_J)
+      input.keyDown.add('h')
+      input.keyDown.add('l')
+      input.keyDown.add('j')
       expect(input.createMovementDelta()).toEqual(new Vector([0, 1]))
     })
   })
 })
 
-function keyEvent(type: 'keydown' | 'keyup', keyCode: number): void {
-  document.dispatchEvent(Object.assign(new Event(type), { keyCode }))
+function keyEvent(type: 'keydown' | 'keyup', key: string): void {
+  document.dispatchEvent(Object.assign(new Event(type), { key }))
 }
 
 function mouseEvent(type: 'mousedown' | 'mousemove', buttons: number): void {

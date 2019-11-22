@@ -3,7 +3,7 @@ import { Entity } from '../ecs/entity'
 import { ResourceName, TlbResource, TlbWorld } from '../tlb'
 import { FeatureComponent } from '../components/feature'
 import { Shape } from '../geometry/shape'
-import { SetSpace, DiscreteSetSpace } from '../spatial/set-space'
+import { SetSpace } from '../spatial/set-space'
 import { FovComponent } from '../components/fov'
 import { PositionComponent } from '../components/position'
 import { Rectangle } from '../geometry/rectangle'
@@ -25,8 +25,8 @@ export class Level {
     this.characters = new DiscreteSpace(width)
     this.structures = new DiscreteSpace(width)
 
-    this.visible = new DiscreteSetSpace(width)
-    this.discovered = new DiscreteSetSpace(width)
+    this.visible = new SetSpace(width)
+    this.discovered = new SetSpace(width)
   }
 
   public setTile(position: Vector, entity: Entity): void {
@@ -156,6 +156,7 @@ export class WorldMapResource implements TlbResource, WorldMap {
 
   public constructor(public readonly width: number) {
     this.levels.push(new Level(this.width))
+    this.levels.push(new Level(this.width))
   }
 
   public update(world: TlbWorld): void {
@@ -164,12 +165,9 @@ export class WorldMapResource implements TlbResource, WorldMap {
       if (position !== undefined) {
         const level = this.levels[position.level]
         const fov = world.getComponent<FovComponent>(player, 'fov')
-        level.visible = new DiscreteSetSpace(this.width)
         if (fov !== undefined) {
-          fov.fov.forEach(p => {
-            level.visible.set(p.position)
-            level.discovered.set(p.position)
-          })
+          level.visible = fov.fov
+          level.discovered.add(fov.fov)
         }
       }
     })

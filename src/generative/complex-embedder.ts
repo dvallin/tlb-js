@@ -28,9 +28,12 @@ export interface Occurrence {
   maximum: number
 }
 
+export type Placement = 'wall' | 'center' | 'random'
+
 export interface Spawn<T> {
   types: T[]
   occurrence: Occurrence
+  placement: Placement
 }
 
 export interface StructureRestriction {
@@ -60,14 +63,8 @@ export function optional(t: number = 1): Occurrence {
   return { minimum: 0, maximum: t }
 }
 
-export function spawn<T>(...types: T[]): Spawn<T> {
-  return { types: types, occurrence: occur() }
-}
-export function spawnTimes<T>(type: T, t: number): Spawn<T> {
-  return { types: [type], occurrence: occur(t) }
-}
-export function spawnOptional<T>(type: T, t?: number): Spawn<T> {
-  return { types: [type], occurrence: optional(t) }
+export function spawn<T>(placement: Placement, occurrence: Occurrence, ...types: T[]): Spawn<T> {
+  return { types, occurrence, placement }
 }
 
 export interface ComplexEmbedding {
@@ -92,6 +89,10 @@ export function embedComplexes(
   region: Entity,
   complexes: ComplexDescription[]
 ): ComplexEmbedding[] | undefined {
+  if (complexes.length === 0) {
+    return []
+  }
+
   const G = buildG(world, region, [])
 
   const requiredComplexes = complexes

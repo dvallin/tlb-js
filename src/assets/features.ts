@@ -1,6 +1,6 @@
 import { Feature } from '../components/feature'
 import { gray, primary } from '../renderer/palettes'
-import { strangeSymbols, gridSymbols } from '../symbols'
+import { strangeSymbols, gridSymbols, arrows } from '../symbols'
 
 function enemy(character: string, name: string): Feature {
   return {
@@ -8,6 +8,7 @@ function enemy(character: string, name: string): Feature {
     diffuse: primary[1],
     blocking: true,
     lightBlocking: true,
+    ground: false,
     name,
   }
 }
@@ -18,6 +19,7 @@ function eliteEnemy(character: string, name: string): Feature {
     diffuse: primary[3],
     blocking: true,
     lightBlocking: true,
+    ground: false,
     name,
   }
 }
@@ -28,6 +30,7 @@ const featuresDefinition = {
     diffuse: gray[3],
     blocking: true,
     lightBlocking: true,
+    ground: false,
     name: 'wall',
   },
   corridor: {
@@ -35,6 +38,7 @@ const featuresDefinition = {
     diffuse: gray[0],
     blocking: false,
     lightBlocking: false,
+    ground: true,
     name: 'corridor',
   },
   room: {
@@ -42,6 +46,7 @@ const featuresDefinition = {
     diffuse: primary[1],
     blocking: false,
     lightBlocking: false,
+    ground: true,
     name: 'floor',
   },
   locker: {
@@ -49,6 +54,7 @@ const featuresDefinition = {
     diffuse: primary[1],
     blocking: true,
     lightBlocking: true,
+    ground: false,
     name: 'locker',
   },
   trash: {
@@ -56,6 +62,7 @@ const featuresDefinition = {
     diffuse: gray[2],
     blocking: false,
     lightBlocking: false,
+    ground: false,
     name: 'trash',
   },
   door: {
@@ -63,6 +70,7 @@ const featuresDefinition = {
     diffuse: primary[1],
     blocking: true,
     lightBlocking: true,
+    ground: false,
     name: 'door',
   },
   hub: {
@@ -70,6 +78,7 @@ const featuresDefinition = {
     diffuse: primary[0],
     blocking: false,
     lightBlocking: false,
+    ground: true,
     name: 'floor',
   },
   player: {
@@ -77,6 +86,7 @@ const featuresDefinition = {
     diffuse: primary[0],
     blocking: true,
     lightBlocking: true,
+    ground: false,
     name: 'you',
   },
   loot: {
@@ -84,6 +94,7 @@ const featuresDefinition = {
     diffuse: primary[1],
     blocking: false,
     lightBlocking: false,
+    ground: false,
     name: 'some loot',
   },
   table: {
@@ -91,6 +102,7 @@ const featuresDefinition = {
     diffuse: primary[1],
     blocking: true,
     lightBlocking: false,
+    ground: false,
     name: 'a table',
   },
   guard: enemy('g', 'guard'),
@@ -105,7 +117,16 @@ const generatorsDefinition = {
     diffuse: primary[1],
     blocking: true,
     lightBlocking: false,
+    ground: false,
     name: 'a block of concrete',
+  }),
+  elevator: (_index: number) => ({
+    character: arrows[7],
+    diffuse: primary[1],
+    blocking: true,
+    lightBlocking: false,
+    ground: false,
+    name: 'an elevator',
   }),
 }
 export type FeatureGeneratorsType = keyof typeof generatorsDefinition

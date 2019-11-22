@@ -1,7 +1,7 @@
 import { Vector } from './vector'
 
 export class Line {
-  public constructor(public readonly origin: Vector, public readonly direction: Vector) {}
+  public constructor(public origin: Vector, public direction: Vector) {}
 
   public side(point: Vector): 'left' | 'inside' | 'right' {
     const d = (point.x - this.origin.x) * this.direction.y - (point.y - this.origin.y) * this.direction.x
@@ -12,5 +12,9 @@ export class Line {
     } else {
       return 'right'
     }
+  }
+
+  public isEqual(line: Line): boolean {
+    return this.side(line.origin) === 'inside' && this.side(line.origin.add(line.direction)) === 'inside'
   }
 }

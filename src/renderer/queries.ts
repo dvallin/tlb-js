@@ -6,7 +6,6 @@ import { bfs } from './bfs'
 import { FunctionalShape } from '../geometry/functional-shape'
 import { astar, Path } from './astar'
 import { Entity } from '../ecs/entity'
-import { DiscreteSetSpace } from '../spatial/set-space'
 import { digitalLine } from './digital-line'
 
 export interface QueryParameters {
@@ -17,17 +16,12 @@ export interface QueryParameters {
 }
 
 export class Queries {
-  public fov(world: TlbWorld, level: number, origin: Vector, callback: (pos: Vector, distance: number) => void) {
+  public fov(world: TlbWorld, level: number, origin: Vector, callback: (pos: Vector) => void) {
     const originFloor = new Vector([origin.fX, origin.fY])
     const map = world.getResource<WorldMapResource>('map')
     const fov = new FOV.RecursiveShadowcasting((x, y) => !map.levels[level].isLightBlocking(world, new Vector([x, y])), { topology: 8 })
-    const seenAlready = new DiscreteSetSpace(map.levels[level].boundary.width)
-    fov.compute(originFloor.x, originFloor.y, 20, (x, y, distance) => {
-      const position = new Vector([x, y])
-      if (!seenAlready.has(position)) {
-        seenAlready.set(position)
-        callback(position, distance)
-      }
+    fov.compute(originFloor.x, originFloor.y, 20, (x, y) => {
+      callback(new Vector([x, y]))
     })
   }
 

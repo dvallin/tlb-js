@@ -13,6 +13,8 @@ import { ActionType } from './actions'
 import { ItemType } from './items'
 import { addDialog } from './dialogs'
 import { TriggersComponent } from '../components/trigger'
+import { SetSpace } from '../spatial/set-space'
+import { WorldMapResource } from '../resources/world-map'
 
 function humanoidBodyParts(core: number, head: number, limp: number): { [key: string]: BodyPart } {
   return {
@@ -76,10 +78,11 @@ export const defaultActions: ActionType[] = ['longMove', 'hit', 'rush', 'endTurn
 
 export function createPlayer(world: TlbWorld): Entity {
   const player = createCharacter(world, 'player', 'player', defaultActions)
+  const width = world.getResource<WorldMapResource>('map').width
   world
     .editEntity(player)
     .withComponent<{}>('player', {})
-    .withComponent<FovComponent>('fov', { fov: [] })
+    .withComponent<FovComponent>('fov', { fov: new SetSpace(width) })
     .withComponent<{}>('viewport-focus', {})
 
   take(world, player, 'idCard')
