@@ -40,7 +40,7 @@ export class Npc implements TlbSystem {
           playerPosition.level === position.level &&
           playerPosition.position.minus(position.position).l1() < 10
         ) {
-          const path = this.queries.ray(world, position.level, position.position, playerPosition.position, {})
+          const path = this.queries.los(world, position.level, position.position, playerPosition.position, {})
           if (path !== undefined) {
             ai.interest = player
           }

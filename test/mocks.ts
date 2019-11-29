@@ -189,7 +189,7 @@ export function mockQueries(): Queries {
     fov: jest.fn(),
     explore: jest.fn(),
     shortestPath: jest.fn(),
-    ray: jest.fn(),
+    los: jest.fn(),
   }
 }
 

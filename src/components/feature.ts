@@ -14,10 +14,12 @@ export interface FeatureComponent {
   feature: FeatureProvider
 }
 
+export type Cover = 'full' | 'partial' | 'none'
 export interface Feature {
   character: string
   diffuse: Color
 
+  cover: Cover
   blocking: boolean
   lightBlocking: boolean
   ground: boolean

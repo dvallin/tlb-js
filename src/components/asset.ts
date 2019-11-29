@@ -21,11 +21,9 @@ export interface AssetComponent {
   type: AssetType
 }
 
-export type Cover = 'full' | 'partial' | 'none'
 export interface Asset {
   name: string
   size: Vector
-  cover: Cover
   hasInventory: boolean
   dialog: DialogType | undefined
   feature: (index: number) => Feature

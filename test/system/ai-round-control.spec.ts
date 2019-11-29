@@ -54,7 +54,7 @@ describe('AiRoundControl', () => {
       })
 
       it('selects attack action against player', () => {
-        mockReturnValue<Path>(queries.ray, { path: [new Vector([1, 0])], cost: 1 })
+        mockReturnValue<Path>(queries.los, { path: [new Vector([1, 0])], cost: 1 })
 
         system.update(world, guard)
 
@@ -71,7 +71,7 @@ describe('AiRoundControl', () => {
       })
 
       it('selects movement action towards player', () => {
-        mockReturnValue<Path>(queries.ray, { path: [new Vector([1, 0])], cost: 1 })
+        mockReturnValue<Path>(queries.los, { path: [new Vector([1, 0])], cost: 1 })
 
         system.update(world, guard)
 
@@ -93,7 +93,7 @@ describe('AiRoundControl', () => {
       world
         .editEntity(guard)
         .withComponent<SelectedActionComponent>('selected-action', { skippedActions: 0, currentSubAction: 0, selection, target: player })
-      mockReturnValue<Path>(queries.ray, { path: [new Vector([1, 0])], cost: 1 })
+      mockReturnValue<Path>(queries.los, { path: [new Vector([1, 0])], cost: 1 })
 
       system.update(world, guard)
 
