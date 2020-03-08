@@ -1,7 +1,6 @@
 import { Color } from '../renderer/color'
 import { TlbWorld } from '../tlb'
 
-import { FeatureComponent } from './feature'
 import { PositionComponent } from './position'
 import { WorldMap, WorldMapResource } from '../resources/world-map'
 import { Vector } from '../spatial'

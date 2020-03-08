@@ -21,11 +21,9 @@ export interface BodyPart {
 export interface CharacterStats {
   bodyParts: { [key: string]: BodyPart }
   strength: number
-  movement: number
-  actions: number
   aim: number
 }
 
-export function speed(stats: CharacterStatsComponent): number {
-  return stats.current.movement / 13
+export function speed(_stats: CharacterStatsComponent): number {
+  return 0.4
 }

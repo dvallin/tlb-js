@@ -41,7 +41,7 @@ export class MapCreation extends AbstractState {
     this.startRegion = create(world)
   }
 
-  public update({  }: TlbWorld): void {}
+  public update({}: TlbWorld): void {}
 
   public stop(world: TlbWorld): void {
     super.stop(world)

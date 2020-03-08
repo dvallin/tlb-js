@@ -27,8 +27,8 @@ describe('StartRound', () => {
 
     expect(world.hasComponent(player, 'start-turn')).toBeFalsy()
     expect(world.getComponent<TakeTurnComponent>(player, 'take-turn')).toEqual({
-      actions: characterStats.player.actions,
-      movements: characterStats.player.movement,
+      moved: false,
+      acted: false,
     })
   })
 
@@ -48,8 +48,8 @@ describe('StartRound', () => {
 
       expect(world.getComponent<ActiveEffectsComponent>(player, 'active-effects')!.effects).toHaveLength(0)
       expect(world.getComponent<TakeTurnComponent>(player, 'take-turn')).toEqual({
-        actions: characterStats.player.actions,
-        movements: characterStats.player.movement,
+        moved: false,
+        acted: false,
       })
     })
 
@@ -59,8 +59,8 @@ describe('StartRound', () => {
       system.update(world, player)
 
       expect(world.getComponent<TakeTurnComponent>(player, 'take-turn')).toEqual({
-        actions: characterStats.player.actions,
-        movements: 0,
+        moved: true,
+        acted: false,
       })
     })
 
@@ -78,8 +78,8 @@ describe('StartRound', () => {
       system.update(world, player)
 
       expect(world.getComponent<TakeTurnComponent>(player, 'take-turn')).toEqual({
-        actions: 0,
-        movements: 0,
+        moved: true,
+        acted: true,
       })
     })
 
@@ -102,8 +102,8 @@ describe('StartRound', () => {
       system.update(world, player)
 
       expect(world.getComponent<TakeTurnComponent>(player, 'take-turn')).toEqual({
-        movements: 2,
-        actions: characterStats.player.actions,
+        moved: false,
+        acted: false,
       })
     })
 
@@ -115,8 +115,8 @@ describe('StartRound', () => {
       system.update(world, player)
 
       expect(world.getComponent<TakeTurnComponent>(player, 'take-turn')).toEqual({
-        movements: 1,
-        actions: characterStats.player.actions,
+        moved: false,
+        acted: false,
       })
     })
 
@@ -127,8 +127,8 @@ describe('StartRound', () => {
       system.update(world, player)
 
       expect(world.getComponent<TakeTurnComponent>(player, 'take-turn')).toEqual({
-        movements: characterStats.player.movement,
-        actions: characterStats.player.actions,
+        moved: false,
+        acted: false,
       })
     })
 
@@ -140,8 +140,8 @@ describe('StartRound', () => {
       system.update(world, player)
 
       expect(world.getComponent<TakeTurnComponent>(player, 'take-turn')).toEqual({
-        movements: characterStats.player.movement,
-        actions: 1,
+        moved: false,
+        acted: false,
       })
     })
 
@@ -155,8 +155,8 @@ describe('StartRound', () => {
       system.update(world, player)
 
       expect(world.getComponent<TakeTurnComponent>(player, 'take-turn')).toEqual({
-        movements: 0,
-        actions: 1,
+        moved: false,
+        acted: false,
       })
     })
   })

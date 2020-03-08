@@ -190,7 +190,7 @@ describe('SetStorage', () => {
 
 describe('SingletonStorage', () => {
   it('inserts and gets values', () => {
-    const storage = new SingletonStorage()
+    const storage = new SingletonStorage<object>()
     storage.insert(2, {})
     expect(storage.get(2)).toEqual({})
   })
@@ -201,14 +201,14 @@ describe('SingletonStorage', () => {
   })
 
   it('checks if value exists', () => {
-    const storage = new SingletonStorage()
+    const storage = new SingletonStorage<object>()
     storage.insert(2, {})
     expect(storage.has(2)).toBeTruthy()
     expect(storage.has(3)).toBeFalsy()
   })
 
   it('removes values', () => {
-    const storage = new SingletonStorage()
+    const storage = new SingletonStorage<object>()
     storage.insert(2, {})
     const value1 = storage.remove(2)
     const value2 = storage.remove(2)
@@ -218,7 +218,7 @@ describe('SingletonStorage', () => {
   })
 
   it('clears storage', () => {
-    const storage = new SingletonStorage()
+    const storage = new SingletonStorage<object>()
     storage.insert(2, {})
     storage.insert(3, {})
     storage.clear()
@@ -227,7 +227,7 @@ describe('SingletonStorage', () => {
   })
 
   it('iterates over elements', () => {
-    const storage = new SingletonStorage()
+    const storage = new SingletonStorage<object>()
     storage.insert(2, {})
     storage.insert(3, {})
     const entities: number[] = []
@@ -240,7 +240,7 @@ describe('SingletonStorage', () => {
     expect(values).toEqual([{}])
   })
   it('tracks size', () => {
-    const storage = new SingletonStorage()
+    const storage = new SingletonStorage<object>()
     expect(storage.size()).toBe(0)
     storage.insert(2, {})
     storage.insert(3, {})

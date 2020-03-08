@@ -24,7 +24,10 @@ export function calculateAvailableActions(
 
 function buildPlayerActionGroup(world: TlbWorld, entity: Entity, takeTurn: TakeTurnComponent): ActionGroup {
   const hasActions = world.getComponent<HasActionComponent>(entity, 'has-action')!
-  const selectableActions = buildSelectableActions(hasActions.actions.map(a => actions[a]), takeTurn)
+  const selectableActions = buildSelectableActions(
+    hasActions.actions.map(a => actions[a]),
+    takeTurn
+  )
   return { items: selectableActions, name: 'player', description: 'actions you can do without any equipment', entity }
 }
 
@@ -32,7 +35,10 @@ function buildEquipmentActionGroups(world: TlbWorld, entity: Entity, takeTurn: T
   const equipment = world.getComponent<EquipedItemsComponent>(entity, 'equiped-items')!
   return equipment.equipment.map(equiped => {
     const item = items[world.getComponent<ItemComponent>(equiped.entity, 'item')!.type]
-    const selectableActions: SelectableAction[] = buildSelectableActions(item.actions.map(a => actions[a]), takeTurn)
+    const selectableActions: SelectableAction[] = buildSelectableActions(
+      item.actions.map(a => actions[a]),
+      takeTurn
+    )
     return { items: selectableActions, description: item.description, name: item.name, entity: equiped.entity }
   })
 }
@@ -43,7 +49,10 @@ function buildConsumableActionGroups(world: TlbWorld, entity: Entity, takeTurn: 
     .map(inventoryContent => {
       const item = items[world.getComponent<ItemComponent>(inventoryContent, 'item')!.type]
       if (item.kind === 'consumable') {
-        const selectableActions: SelectableAction[] = buildSelectableActions(item.actions.map(a => actions[a]), takeTurn)
+        const selectableActions: SelectableAction[] = buildSelectableActions(
+          item.actions.map(a => actions[a]),
+          takeTurn
+        )
         return { items: selectableActions, description: item.description, name: item.name, entity: inventoryContent }
       }
       return undefined
@@ -55,7 +64,20 @@ function buildSelectableActions(availableActions: Action[], takeTurn: TakeTurnCo
   return availableActions.map(action => {
     return {
       action,
-      available: action.cost.actions <= takeTurn.actions && action.cost.movement <= takeTurn.movements,
+      available: actionAvailable(action, takeTurn),
     }
   })
+}
+
+function actionAvailable(action: Action, takeTurn: TakeTurnComponent): boolean {
+  switch (action.cost) {
+    case 'all':
+      return !takeTurn.acted && !takeTurn.moved
+    case 'action':
+      return !takeTurn.acted
+    case 'movement':
+      return !takeTurn.moved
+    default:
+      return true
+  }
 }

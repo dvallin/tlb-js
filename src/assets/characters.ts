@@ -29,31 +29,23 @@ function humanoidBodyParts(core: number, head: number, limp: number): { [key: st
 
 const charactersStatsDefinition = {
   player: {
-    bodyParts: humanoidBodyParts(14, 5, 5),
+    bodyParts: humanoidBodyParts(10, 5, 5),
     strength: 5,
-    movement: 4,
-    actions: 4,
     aim: 10,
   },
   guard: {
     bodyParts: humanoidBodyParts(3, 1, 1),
     strength: 5,
-    movement: 3,
-    actions: 3,
     aim: 6,
   },
   eliteGuard: {
     bodyParts: humanoidBodyParts(5, 3, 3),
     strength: 8,
-    movement: 2,
-    actions: 5,
     aim: 6,
   },
   boss: {
     bodyParts: humanoidBodyParts(8, 5, 5),
     strength: 10,
-    movement: 3,
-    actions: 9,
     aim: 8,
   },
 }
@@ -74,7 +66,7 @@ const characterCreatorsDefinition = {
   },
 }
 
-export const defaultActions: ActionType[] = ['longMove', 'hit', 'rush', 'endTurn']
+export const defaultActions: ActionType[] = ['move', 'hit', 'rush', 'endTurn']
 
 export function createPlayer(world: TlbWorld): Entity {
   const player = createCharacter(world, 'player', 'player', defaultActions)

@@ -39,7 +39,10 @@ export function fill(world: TlbWorld, map: WorldMap, level: number, entity: Enti
   placeCharacterRandomly(world, map, level, random, sampledCharacters, structure.shape.bounds())
 
   if (containers.length > 0) {
-    const items: Entity[] = sampledItems.map(i => world.createEntity().withComponent<ItemComponent>('item', { type: i }).entity)
+    const items: Entity[] = sampledItems.map(
+      i =>
+        world.createEntity().withComponent<ItemComponent>('item', { type: i }).entity
+    )
     items.forEach(item => {
       const container = random.pick(containers)
       world.getComponent<InventoryComponent>(container, 'inventory')!.content.push(item)

@@ -36,12 +36,18 @@ export class Queries {
     const originFloor = new Vector([origin.fX, origin.fY])
     const maximumDepth = params.maximumCost || Number.MAX_SAFE_INTEGER
     const onlyDiscovered = params.onlyDiscovered || false
-    bfs(map.levels[level].boundary.width, originFloor, target => FunctionalShape.lN(target, 1, false), visit, (target, depth) => {
-      if (depth >= maximumDepth || map.levels[level].isBlocking(world, target)) {
-        return false
+    bfs(
+      map.levels[level].boundary.width,
+      originFloor,
+      target => FunctionalShape.lN(target, 1, false),
+      visit,
+      (target, depth) => {
+        if (depth >= maximumDepth || map.levels[level].isBlocking(world, target)) {
+          return false
+        }
+        return onlyDiscovered ? map.levels[level].isDiscovered(target) : true
       }
-      return onlyDiscovered ? map.levels[level].isDiscovered(target) : true
-    })
+    )
   }
 
   public shortestPath(world: TlbWorld, level: number, origin: Vector, target: Vector, params: Partial<QueryParameters>): Path | undefined {

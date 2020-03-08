@@ -7,12 +7,26 @@ describe('astar', () => {
   const p1 = new Vector([2, 2])
 
   it('finds a path if goal is already reached', () => {
-    const path = astar(p0, p0, () => 1, p => FunctionalShape.lN(p), p => p1.minus(p).lN(), 3)
+    const path = astar(
+      p0,
+      p0,
+      () => 1,
+      p => FunctionalShape.lN(p),
+      p => p1.minus(p).lN(),
+      3
+    )
     expect(path).toEqual({ cost: 0, path: [new Vector([0, 0])] })
   })
 
   it('does not find a path if cost is undefined', () => {
-    const path = astar(p0, p1, () => undefined, p => FunctionalShape.lN(p), p => p1.minus(p).lN(), 3)
+    const path = astar(
+      p0,
+      p1,
+      () => undefined,
+      p => FunctionalShape.lN(p),
+      p => p1.minus(p).lN(),
+      3
+    )
     expect(path).toBeUndefined()
   })
 
@@ -50,19 +64,40 @@ describe('astar', () => {
 
   describe('LN neighbourhood', () => {
     it('finds a path', () => {
-      const path = astar(p0, p1, () => 1, p => FunctionalShape.lN(p), p => p1.minus(p).lN(), 3)
+      const path = astar(
+        p0,
+        p1,
+        () => 1,
+        p => FunctionalShape.lN(p),
+        p => p1.minus(p).lN(),
+        3
+      )
       expect(path).toEqual({ cost: 2, path: [new Vector([2, 2]), new Vector([1, 1]), new Vector([0, 0])] })
     })
   })
 
   describe('L1 neighbourhood', () => {
     it('does not find a path has cost of 3', () => {
-      const path = astar(p0, p1, () => 1, p => FunctionalShape.l1(p), p => p1.minus(p).lN(), 3)
+      const path = astar(
+        p0,
+        p1,
+        () => 1,
+        p => FunctionalShape.l1(p),
+        p => p1.minus(p).lN(),
+        3
+      )
       expect(path).toBeUndefined()
     })
 
     it('finds a path', () => {
-      const path = astar(p0, p1, () => 1, p => FunctionalShape.l1(p), p => p1.minus(p).lN(), 4)
+      const path = astar(
+        p0,
+        p1,
+        () => 1,
+        p => FunctionalShape.l1(p),
+        p => p1.minus(p).lN(),
+        4
+      )
       expect(path).toEqual({
         cost: 4,
         path: [new Vector([2, 2]), new Vector([1, 2]), new Vector([1, 1]), new Vector([0, 1]), new Vector([0, 0])],
@@ -72,7 +107,15 @@ describe('astar', () => {
 
   describe('best effort mode', () => {
     it('finds a path as far as possible along the optimal path', () => {
-      const path = astar(p0, p1, () => 1, p => FunctionalShape.l1(p), p => p1.minus(p).lN(), 2, true)
+      const path = astar(
+        p0,
+        p1,
+        () => 1,
+        p => FunctionalShape.l1(p),
+        p => p1.minus(p).lN(),
+        2,
+        true
+      )
       expect(path).toEqual({ cost: 2, path: [new Vector([1, 1]), new Vector([0, 1]), new Vector([0, 0])] })
     })
 

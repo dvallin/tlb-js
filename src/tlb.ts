@@ -37,7 +37,7 @@ import { Queries } from './renderer/queries'
 import { State } from './game-states/state'
 import { OverlayComponent } from './components/overlay'
 import { TakeTurnComponent } from './components/rounds'
-import { SelectedActionComponent, HasActionComponent } from './components/action'
+import { HasActionComponent } from './components/action'
 import { ScriptComponent } from './components/script'
 import { AiComponent } from './components/ai'
 import { AiRoundControl } from './systems/ai-round-control'
@@ -70,7 +70,6 @@ export type ComponentName =
   | 'region'
   | 'structure'
   | 'script'
-  | 'selected-action'
   | 'active-effects'
   | 'spawn'
   | 'start-turn'
@@ -124,7 +123,6 @@ export function registerComponents<S, R>(world: World<ComponentName, S, R>): voi
   world.registerComponentStorage('position', new VectorStorage<PositionComponent>())
   world.registerComponentStorage('region', new MapStorage<RegionComponent>())
   world.registerComponentStorage('script', new MapStorage<ScriptComponent>())
-  world.registerComponentStorage('selected-action', new SingletonStorage<SelectedActionComponent>())
   world.registerComponentStorage('active-effects', new MapStorage<ActiveEffectsComponent>())
   world.registerComponentStorage('spawn', new SingletonStorage<{}>())
   world.registerComponentStorage('take-turn', new MapStorage<TakeTurnComponent>())

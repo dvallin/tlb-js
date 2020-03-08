@@ -1,12 +1,12 @@
 import { ComponentName, TlbSystem, TlbWorld } from '../tlb'
-import { TakeTurnComponent } from '../components/rounds'
+import { TakeTurnComponent, SelectionState } from '../components/rounds'
 import { Queries } from '../renderer/queries'
 import { PositionComponent } from '../components/position'
 import { Entity } from '../ecs/entity'
 import { ScriptComponent } from '../components/script'
 import { Vector } from '../spatial'
 import { calculateAvailableActions } from '../component-reducers/available-actions'
-import { SelectedActionComponent, Movement, SelectedAction, Attack } from '../components/action'
+import { Movement, SelectedAction, Attack, Action } from '../components/action'
 import { Random } from '../random'
 import { ActionGroup } from '../ui/tabs/action-selector'
 import { attackTarget } from '../component-reducers/attack-target'
@@ -21,15 +21,14 @@ export class AiRoundControl implements TlbSystem {
     const takeTurn = world.getComponent<TakeTurnComponent>(entity, 'take-turn')!
 
     const isInAnimation = script !== undefined
-    const turnIsOver = takeTurn.actions === 0 && takeTurn.movements === 0
+    const turnIsOver = takeTurn.acted && takeTurn.moved
     if (!isInAnimation) {
       if (!turnIsOver) {
-        const selectedAction = world.getComponent<SelectedActionComponent>(entity, 'selected-action')
-        if (selectedAction === undefined) {
+        if (takeTurn.selectionState === undefined) {
           const availableActions = calculateAvailableActions(world, entity, takeTurn, false)
-          this.selectAction(world, entity, availableActions)
+          this.selectAction(world, entity, takeTurn, availableActions)
         } else {
-          this.takeAction(world, entity, takeTurn, selectedAction)
+          this.takeAction(world, entity, takeTurn, takeTurn.selectionState)
         }
       } else {
         this.endTurn(world, entity)
@@ -37,7 +36,7 @@ export class AiRoundControl implements TlbSystem {
     }
   }
 
-  public selectAction(world: TlbWorld, entity: Entity, actionGroups: ActionGroup[]) {
+  public selectAction(world: TlbWorld, entity: Entity, takeTurn: TakeTurnComponent, actionGroups: ActionGroup[]) {
     const position = world.getComponent<PositionComponent>(entity, 'position')!
     let target = this.findTarget(world, position.position)
 
@@ -77,12 +76,12 @@ export class AiRoundControl implements TlbSystem {
       }
 
       if (selection !== undefined) {
-        world.editEntity(entity).withComponent<SelectedActionComponent>('selected-action', {
+        takeTurn.selectionState = {
           skippedActions: 0,
           target,
           currentSubAction: 0,
           selection,
-        })
+        }
       } else {
         this.endTurn(world, entity)
       }
@@ -91,29 +90,34 @@ export class AiRoundControl implements TlbSystem {
     }
   }
 
-  public takeAction(world: TlbWorld, entity: Entity, takeTurn: TakeTurnComponent, selectedAction: SelectedActionComponent) {
-    const action = selectedAction.selection!.action
+  public takeAction(world: TlbWorld, entity: Entity, takeTurn: TakeTurnComponent, state: SelectionState) {
+    const action = state.selection!.action
     const subActions = action.subActions.length
-    if (selectedAction.currentSubAction >= subActions) {
-      if (action.cost.costsAll) {
-        takeTurn.movements = 0
-        takeTurn.actions = 0
-      } else {
-        takeTurn.movements -= action.cost.movement
-        takeTurn.actions -= action.cost.actions
+    if (state.currentSubAction >= subActions) {
+      switch (action.cost) {
+        case 'action':
+          takeTurn.acted = true
+          break
+        case 'movement':
+          takeTurn.moved = true
+          break
+        default:
+          takeTurn.acted = true
+          takeTurn.moved = true
+          break
       }
-      world.editEntity(entity).removeComponent('selected-action')
+      takeTurn.selectionState = undefined
     } else {
-      const currentAction = action.subActions[selectedAction.currentSubAction]
+      const currentAction = action.subActions[state.currentSubAction]
       switch (currentAction.kind) {
         case 'movement':
-          this.move(world, entity, selectedAction.target!, currentAction)
+          this.move(world, entity, state.target!, currentAction)
           break
         case 'attack':
-          this.attack(world, entity, selectedAction.target!, currentAction)
+          this.attack(world, entity, state.target!, action, currentAction)
           break
       }
-      selectedAction.currentSubAction++
+      state.currentSubAction++
     }
   }
 
@@ -131,12 +135,12 @@ export class AiRoundControl implements TlbSystem {
     }
   }
 
-  public attack(world: TlbWorld, entity: Entity, target: Entity, attack: Attack) {
+  public attack(world: TlbWorld, entity: Entity, target: Entity, action: Action, attack: Attack) {
     const position = world.getComponent<PositionComponent>(entity, 'position')!
     const targetPosition = world.getComponent<PositionComponent>(target!, 'position')!
     const path = this.queries.los(world, position.level, position.position, targetPosition.position, {})
     if (path !== undefined && path.cost <= attack.range) {
-      attackTarget(world, this.random, entity, target!, attack)
+      attackTarget(world, this.random, entity, target!, action, attack)
     }
   }
 

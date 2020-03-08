@@ -13,7 +13,10 @@ function invariant2(heap: RadixHeap<string>) {
 
 describe('RadixHeap', () => {
   describe('initialization', () => {
-    const cases = [{ span: 1, count: 2 }, { span: 5, count: 3 }]
+    const cases = [
+      { span: 1, count: 2 },
+      { span: 5, count: 3 },
+    ]
     cases.forEach(({ span, count }) => {
       const heap = new RadixHeap<string>(span)
 

@@ -14,15 +14,10 @@ import { Queries } from '../../renderer/queries'
 import { Entity } from '../../ecs/entity'
 import { PositionComponent } from '../../components/position'
 import { OverlayComponent } from '../../components/overlay'
-import { FunctionalShape } from '../../geometry/functional-shape'
-
-import { coveringPositions } from '../../component-reducers/cover'
-import { Vector } from '../../spatial'
 
 export class AttackSelectorFullView implements TabView, Selector<Path> {
   private isSelected: boolean = false
   private path: Path | undefined
-  private coverings: Vector[] | undefined
 
   public constructor(
     public readonly content: Rectangle,
@@ -74,28 +69,6 @@ export class AttackSelectorFullView implements TabView, Selector<Path> {
           this.isSelected = input.mousePressed
         }
       }
-    }
-    if (this.coverings === undefined) {
-      this.coverings = []
-      const characters: Entity[] = []
-      FunctionalShape.lN(position.position, this.range).foreach(p => {
-        const character = level.getCharacter(p)
-        if (character !== undefined && character !== this.target) {
-          characters.push(character)
-        }
-      })
-      characters.forEach(character => {
-        const characterPosition = world.getComponent<PositionComponent>(character, 'position')!
-        const path = this.queries.los(world, position.level, position.position, characterPosition.position, { maximumCost: this.range })
-        if (path !== undefined) {
-          this.coverings = coveringPositions(position.position, characterPosition.position)
-        }
-      })
-    } else {
-      this.coverings.forEach(p => {
-        const tile = level.getTile(p)!
-        world.editEntity(tile).withComponent<OverlayComponent>('overlay', { background: primary[1] })
-      })
     }
   }
 }

@@ -27,7 +27,13 @@ function equipment(
 }
 
 const itemsDefinition = {
-  nailGun: weapon('nail gun', 'a tool to drive nails into wood, control panels or bodies.', 5, ['overcharge', 'hitAndRun', 'bolt'], 1),
+  nailGun: weapon(
+    'nail gun',
+    'a tool to drive nails into wood, control panels or bodies.',
+    5,
+    ['overcharge', 'hitAndRun', 'bolt', 'doubleShot'],
+    1
+  ),
   rifle: weapon('rifle', 'a regular rifle.', 5, ['shoot'], 2),
   sniperRifle: weapon('sniper rifle', '', 6, ['headshot', 'shoot'], 2),
   deathPill: consumable('death pill', 'a pill that kills you', 1, 'kill'),
