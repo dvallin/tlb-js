@@ -21,3 +21,10 @@ export function playerIsDead(world: TlbWorld): boolean {
   const player: Entity = world.getStorage('player').first()!
   return world.hasComponent(player, 'dead')
 }
+
+export function clearTurnBased(world: TlbWorld) {
+  world.components.get('wait-turn')!.clear()
+  world.components.get('start-turn')!.clear()
+  world.components.get('take-turn')!.clear()
+  world.components.get('took-turn')!.clear()
+}

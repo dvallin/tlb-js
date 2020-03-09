@@ -1,4 +1,3 @@
-import { FOV } from 'rot-js'
 import { TlbWorld } from '../tlb'
 import { WorldMapResource } from '../resources/world-map'
 import { Vector } from '../spatial'
@@ -7,6 +6,7 @@ import { FunctionalShape } from '../geometry/functional-shape'
 import { astar, Path } from './astar'
 import { Entity } from '../ecs/entity'
 import { digitalLine } from './digital-line'
+import { PermissiveFov } from 'permissive-fov'
 
 export interface QueryParameters {
   onlyDiscovered: boolean
@@ -19,7 +19,7 @@ export class Queries {
   public fov(world: TlbWorld, level: number, origin: Vector, callback: (pos: Vector) => void) {
     const originFloor = new Vector([origin.fX, origin.fY])
     const map = world.getResource<WorldMapResource>('map')
-    const fov = new FOV.RecursiveShadowcasting((x, y) => !map.levels[level].isLightBlocking(world, new Vector([x, y])), { topology: 8 })
+    const fov = new PermissiveFov(map.width, map.width, (x, y) => !map.levels[level].isLightBlocking(world, new Vector([x, y])))
     fov.compute(originFloor.x, originFloor.y, 20, (x, y) => {
       callback(new Vector([x, y]))
     })
@@ -36,12 +36,18 @@ export class Queries {
     const originFloor = new Vector([origin.fX, origin.fY])
     const maximumDepth = params.maximumCost || Number.MAX_SAFE_INTEGER
     const onlyDiscovered = params.onlyDiscovered || false
-    bfs(map.levels[level].boundary.width, originFloor, target => FunctionalShape.lN(target, 1, false), visit, (target, depth) => {
-      if (depth >= maximumDepth || map.levels[level].isBlocking(world, target)) {
-        return false
+    bfs(
+      map.levels[level].boundary.width,
+      originFloor,
+      target => FunctionalShape.lN(target, 1, false),
+      visit,
+      (target, depth) => {
+        if (depth >= maximumDepth || map.levels[level].isBlocking(world, target)) {
+          return false
+        }
+        return onlyDiscovered ? map.levels[level].isDiscovered(target) : true
       }
-      return onlyDiscovered ? map.levels[level].isDiscovered(target) : true
-    })
+    )
   }
 
   public shortestPath(world: TlbWorld, level: number, origin: Vector, target: Vector, params: Partial<QueryParameters>): Path | undefined {
@@ -74,7 +80,7 @@ export class Queries {
     return undefined
   }
 
-  public ray(world: TlbWorld, level: number, origin: Vector, target: Vector, params: Partial<QueryParameters>): Path | undefined {
+  public los(world: TlbWorld, level: number, origin: Vector, target: Vector, params: Partial<QueryParameters>): Path | undefined {
     const map = world.getResource<WorldMapResource>('map')
     const originFloor = new Vector([origin.fX, origin.fY])
     const targetFloor = new Vector([target.fX, target.fY])

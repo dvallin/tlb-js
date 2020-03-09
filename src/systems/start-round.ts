@@ -40,55 +40,15 @@ export class StartRound implements TlbSystem {
       }
     })
 
-    let totalLegs = 0
-    let arms = 0
-    let legs = 0
-    Object.keys(stats.current.bodyParts).forEach(key => {
-      const bodyPart = stats.current.bodyParts[key]
-      switch (bodyPart.type) {
-        case 'leg':
-          totalLegs++
-          if (bodyPart.health > 0) {
-            legs++
-          }
-          break
-        case 'arm':
-          if (bodyPart.health > 0) {
-            arms++
-          }
-          break
-      }
-    })
-
     stats.current.aim = canAim ? characterStats[stats.type].aim : 0
-
-    let movementOverride: number | undefined
-    if (legs === 0) {
-      // put your arms to good use then
-      movementOverride = arms > 0 ? 1 : 0
-    } else if (legs < totalLegs) {
-      // loosing legs does not make you faster
-      movementOverride = Math.ceil(stats.current.movement / 2)
-    }
-    if (!canMove) {
-      movementOverride = 0
-    }
-
-    let actionOverride: number | undefined
-    if (arms === 0) {
-      // use your teeth, i guess?
-      actionOverride = 1
-    }
-    if (!canAttack) {
-      actionOverride = 0
-    }
 
     world
       .editEntity(entity)
       .removeComponent('start-turn')
       .withComponent<TakeTurnComponent>('take-turn', {
-        movements: movementOverride !== undefined ? movementOverride : stats.current.movement,
-        actions: actionOverride !== undefined ? actionOverride : stats.current.actions,
+        moved: !canMove,
+        acted: !canAttack,
+        selectionState: undefined,
       })
   }
 }

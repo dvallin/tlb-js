@@ -47,12 +47,12 @@ export class AttackSelectorFullView implements TabView, Selector<Path> {
     const input: Input = world.getResource<InputResource>('input')
     const map: WorldMap = world.getResource<WorldMapResource>('map')
     const viewport: Viewport = world.getResource<ViewportResource>('viewport')
+    const position = world.getComponent<PositionComponent>(this.target, 'position')!
+    const level = map.levels[position.level]
     if (input.position !== undefined) {
       const cursor = viewport.fromDisplay(input.position)
-      const position = world.getComponent<PositionComponent>(this.target, 'position')!
-      const path = this.queries.ray(world, position.level, position.position, cursor, { maximumCost: this.range })
+      const path = this.queries.los(world, position.level, position.position, cursor, { maximumCost: this.range })
       if (path !== undefined) {
-        const level = map.levels[position.level]
         path.path.forEach(p => {
           const target = level.getCharacter(p)
           const hasEnemy = target !== undefined && target !== this.target

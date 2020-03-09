@@ -1,7 +1,7 @@
 import { TlbWorld } from '../tlb'
 import { AbstractState } from './state'
 import { Entity } from '../ecs/entity'
-import { playerIsDead, playerIsStruggling, turnBasedEntities } from '../component-reducers/turn-based'
+import { playerIsDead, playerIsStruggling, turnBasedEntities, clearTurnBased } from '../component-reducers/turn-based'
 import { ViewportResource, Viewport } from '../resources/viewport'
 
 export class Fighting extends AbstractState {
@@ -24,6 +24,7 @@ export class Fighting extends AbstractState {
 
   public stop(world: TlbWorld): void {
     super.stop(world)
+    clearTurnBased(world)
     const viewport: Viewport = world.getResource<ViewportResource>('viewport')
     viewport.gridLocked = this.wasGridLocked
   }

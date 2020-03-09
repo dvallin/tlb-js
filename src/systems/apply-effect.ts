@@ -64,9 +64,11 @@ export class ApplyEffects implements TlbSystem {
         })
 
         const defense = defensiveEffects.reduce((a, b) => a + b.value!, 0)
-        const value = Math.max(0, effect.value! - defense)
+        let damage = Math.max(0, effect.value! - defense)
         log.effectApplied(world, effectComponent, bodyPart)
-        damageBodyPart(world, source, target, stats, bodyPart!, value)
+        if (damage > 0) {
+          damageBodyPart(world, source, target, stats, bodyPart!, damage)
+        }
       })
     }
   }

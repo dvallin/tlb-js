@@ -148,10 +148,19 @@ export class ActionSelectorFullView implements TabView, Selector<SelectedAction>
     if (hoveredAction !== undefined) {
       const { name, cost, subActions } = hoveredAction.action
       renderer.text(name, this.descriptions.topLeft, primary[1])
-      if (cost.costsAll) {
-        renderer.text('cost: all AP, MP', this.descriptions.topLeft.add(new Vector([0, 1])), primary[1])
-      } else {
-        renderer.text(`cost: ${cost.actions}AP ${cost.movement}MP`, this.descriptions.topLeft.add(new Vector([0, 2])), primary[1])
+      switch (cost) {
+        case 'action':
+          renderer.text('costs action', this.descriptions.topLeft.add(new Vector([0, 1])), primary[1])
+          break
+        case 'movement':
+          renderer.text('costs movement', this.descriptions.topLeft.add(new Vector([0, 1])), primary[1])
+          break
+        case 'all':
+          renderer.text('costs action and movement', this.descriptions.topLeft.add(new Vector([0, 1])), primary[1])
+          break
+        case 'both':
+          renderer.text('ends turn', this.descriptions.topLeft.add(new Vector([0, 1])), primary[1])
+          break
       }
 
       let y = 3

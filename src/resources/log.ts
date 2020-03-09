@@ -3,7 +3,7 @@ import { Renderer } from '../renderer/renderer'
 import { EffectComponent } from '../components/effects'
 import { getFeature } from '../components/feature'
 import { Entity } from '../ecs/entity'
-import { Attack } from '../components/action'
+import { Action } from '../components/action'
 
 export interface Log {
   getEntries(offset: number, limit: number): string[]
@@ -13,7 +13,7 @@ export interface Log {
   effectApplied(world: TlbWorld, effect: EffectComponent, bodyPart?: string): void
   died(world: TlbWorld, entity: Entity): void
   missed(world: TlbWorld, entity: Entity): void
-  attack(world: TlbWorld, source: Entity, target: Entity, attack: Attack): void
+  attack(world: TlbWorld, source: Entity, target: Entity, action: Action): void
 }
 
 export class LogResource implements TlbResource, Log {
@@ -21,9 +21,9 @@ export class LogResource implements TlbResource, Log {
 
   entries: string[] = []
 
-  public update({  }: TlbWorld): void {}
+  public update({}: TlbWorld): void {}
 
-  public render({  }: Renderer): void {}
+  public render({}: Renderer): void {}
 
   public getEntries(offset: number, limit: number): string[] {
     const start = Math.max(0, this.entries.length + offset - limit)
@@ -49,14 +49,14 @@ export class LogResource implements TlbResource, Log {
     this.entries.push(text)
   }
 
-  public attack(world: TlbWorld, source: Entity, target: Entity, attack: Attack): void {
+  public attack(world: TlbWorld, source: Entity, target: Entity, action: Action): void {
     const sourceName = this.getName(world, source)
     const targetName = this.getName(world, target)
 
     let verb = this.verbify(sourceName, 'try')
     const objectName = targetName
 
-    this.entries.push(`${sourceName} ${verb} to ${attack.kind} ${objectName}`)
+    this.entries.push(`${sourceName} ${verb} to ${action.name} ${objectName}`)
   }
 
   public died(world: TlbWorld, entity: Entity): void {

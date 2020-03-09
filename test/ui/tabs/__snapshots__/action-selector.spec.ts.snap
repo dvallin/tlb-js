@@ -12,7 +12,7 @@ exports[`ActionSelectorFullView displays action groups 2`] = `
 
 exports[`ActionSelectorFullView displays actions 1`] = `
 "1 hit    hit        
+         costs action
 
-         cost: 2AP 0MP
           attack 3  "
 `;

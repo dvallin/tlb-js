@@ -44,7 +44,7 @@ describe('World', () => {
 
   describe('component', () => {
     it('registers components', () => {
-      const storage = new VectorStorage()
+      const storage = new VectorStorage<object>()
       world.registerComponentStorage('component1', storage)
       expect(world.getStorage('component1')).toEqual(storage)
     })
@@ -52,7 +52,7 @@ describe('World', () => {
 
   describe('entity-component', () => {
     it('registers components for entities', () => {
-      const storage = new VectorStorage()
+      const storage = new VectorStorage<object>()
       world.registerComponentStorage('component1', storage)
       const entity = world.createEntity().withComponent('component1', {}).entity
       expect(storage.has(entity)).toBeTruthy()
@@ -61,7 +61,7 @@ describe('World', () => {
     })
 
     it('removes components for deleted entities', () => {
-      const storage = new VectorStorage()
+      const storage = new VectorStorage<object>()
       world.registerComponentStorage('component1', storage)
       const entity = world.createEntity().withComponent('component1', {}).entity
       world.deleteEntity(entity)
@@ -97,7 +97,7 @@ describe('World', () => {
     const updated = jest.fn()
     class S implements System<ComponentName, SystemName, ResourceName> {
       public readonly components: ComponentName[] = ['component1']
-      public update({  }: World<ComponentName, SystemName, ResourceName>, entity: Entity): void {
+      public update({}: World<ComponentName, SystemName, ResourceName>, entity: Entity): void {
         updated(entity)
       }
     }
@@ -105,7 +105,7 @@ describe('World', () => {
     const updated2 = jest.fn()
     class T implements System<ComponentName, SystemName, ResourceName> {
       public readonly components: ComponentName[] = ['component1', 'component2']
-      public update({  }: World<ComponentName, SystemName, ResourceName>, entity: Entity): void {
+      public update({}: World<ComponentName, SystemName, ResourceName>, entity: Entity): void {
         updated2(entity)
       }
     }
@@ -189,7 +189,7 @@ describe('World', () => {
     const updated = jest.fn()
     class R implements Resource<ComponentName, SystemName, ResourceName> {
       public readonly kind: ResourceName = 'resource1'
-      public update({  }: World<ComponentName, SystemName, ResourceName>): void {
+      public update({}: World<ComponentName, SystemName, ResourceName>): void {
         updated()
       }
     }

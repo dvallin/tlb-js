@@ -57,9 +57,8 @@ export class OverviewView implements TabView {
     delta = new Vector([delta.x, 0])
 
     if (this.state.stats !== undefined && this.state.takeTurn !== undefined) {
-      const current = this.state.stats.current
       renderer.text(
-        `${this.state.takeTurn.actions}/${current.actions} AP ${this.state.takeTurn.movements}/${current.movement} MP`,
+        `${this.state.takeTurn.acted ? 'action taken' : 'can act'} ${this.state.takeTurn.acted ? 'already moved' : 'can move'}`,
         this.content.topLeft.add(delta),
         primary[1]
       )

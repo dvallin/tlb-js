@@ -43,7 +43,7 @@ describe('Full', () => {
 
   describe('turn based mode', () => {
     beforeEach(() => {
-      world.editEntity(player).withComponent<TakeTurnComponent>('take-turn', { actions: 3, movements: 2 })
+      world.editEntity(player).withComponent<TakeTurnComponent>('take-turn', { acted: false, moved: false, selectionState: undefined })
       world.editEntity(guard).withComponent('wait-turn', {})
       world.editEntity(guard2).withComponent('took-turn', {})
     })

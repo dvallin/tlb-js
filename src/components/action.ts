@@ -1,4 +1,3 @@
-import { Entity } from '../ecs/entity'
 import { Effect } from './effects'
 import { ActionType } from '../assets/actions'
 
@@ -6,11 +5,7 @@ export interface HasActionComponent {
   actions: ActionType[]
 }
 
-export interface Cost {
-  actions: number
-  movement: number
-  costsAll?: boolean
-}
+export type Cost = 'action' | 'movement' | 'all' | 'both'
 
 export interface Movement {
   kind: 'movement'
@@ -33,19 +28,15 @@ export interface Status {
 }
 
 export interface Action {
-  cost: Cost
   name: string
+  cost: Cost
   subActions: (Movement | Attack | Status)[]
+}
+export function action(name: string, cost: Cost, subActions: (Movement | Attack | Status)[]): Action {
+  return { name, cost, subActions }
 }
 
 export interface SelectedAction {
   entity: number
   action: Action
-}
-
-export interface SelectedActionComponent {
-  selection?: SelectedAction
-  target?: Entity
-  skippedActions: number
-  currentSubAction: number
 }

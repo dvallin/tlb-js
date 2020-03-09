@@ -6,8 +6,8 @@ import { PlayerRoundControl } from '../../src/systems/player-round-control'
 import { Random } from '../../src/random'
 import { characterCreators, take } from '../../src/assets/characters'
 import { Vector } from '../../src/spatial'
-import { TakeTurnComponent } from '../../src/components/rounds'
-import { SelectedAction, SelectedActionComponent } from '../../src/components/action'
+import { TakeTurnComponent, SelectionState } from '../../src/components/rounds'
+import { SelectedAction } from '../../src/components/action'
 import { UI } from '../../src/resources/ui'
 import { actions } from '../../src/assets/actions'
 import { Entity } from '../../src/ecs/entity'
@@ -37,50 +37,58 @@ describe('PlayerRoundControl', () => {
 
     player = characterCreators.player(world)
     placeCharacter(world, player, 0, new Vector([0, 0]))
-    world.editEntity(player).withComponent<TakeTurnComponent>('take-turn', { actions: 5, movements: 4 })
+    world.editEntity(player).withComponent<TakeTurnComponent>('take-turn', { acted: false, moved: false, selectionState: undefined })
 
     system = new PlayerRoundControl(mockQueries(), new Random(new Uniform('12')))
   })
 
+  function getSelectionState(): SelectionState | undefined {
+    return getTakeTurnComponent().selectionState
+  }
+
+  function getTakeTurnComponent(): TakeTurnComponent {
+    return world.getComponent<TakeTurnComponent>(player, 'take-turn')!
+  }
+
+  function setSelectionState(selectionState: SelectionState | undefined): void {
+    world.getComponent<TakeTurnComponent>(player, 'take-turn')!.selectionState = selectionState
+  }
+
   it('initializes selected action and opens selector', () => {
     system.update(world, player)
 
-    expect(world.hasComponent(player, 'selected-action')).toBeTruthy()
+    expect(getSelectionState()).toBeDefined()
     expect(ui.showActionSelector).toHaveBeenCalledTimes(1)
   })
 
   it('sets selection and hides selector', () => {
     const selection = { entity: 42, action: actions.endTurn }
     mockReturnValue<SelectedAction>(ui.selectedAction, { entity: 42, action: actions.endTurn })
-    world.editEntity(player).withComponent<SelectedActionComponent>('selected-action', { skippedActions: 0, currentSubAction: 0 })
+    setSelectionState({ skippedActions: 0, currentSubAction: 0 })
 
     system.update(world, player)
 
-    expect(world.getComponent<SelectedActionComponent>(player, 'selected-action')!.selection).toEqual(selection)
+    expect(getSelectionState()!.selection).toEqual(selection)
     expect(ui.hideSelectors).toHaveBeenCalledTimes(1)
   })
 
   describe('end turn action', () => {
-    it('endTurn removes all AP and MP ', () => {
+    it('endTurn sets acted and moved ', () => {
       const selection = { entity: player, action: actions.endTurn }
-      world
-        .editEntity(player)
-        .withComponent<SelectedActionComponent>('selected-action', { skippedActions: 0, currentSubAction: 0, selection })
+      setSelectionState({ skippedActions: 0, currentSubAction: 0, selection })
 
       system.update(world, player)
 
-      expect(world.getComponent<TakeTurnComponent>(player, 'take-turn')).toEqual({ actions: 0, movements: 0 })
-      expect(world.hasComponent(player, 'selected-action')).toBeFalsy()
+      expect(getTakeTurnComponent().acted).toBeTruthy()
+      expect(getTakeTurnComponent().moved).toBeTruthy()
+      expect(getSelectionState()).toBeUndefined()
     })
   })
 
   describe('move action', () => {
     it('shows move selector', () => {
-      player
-      const selection = { entity: player, action: actions.longMove }
-      world
-        .editEntity(player)
-        .withComponent<SelectedActionComponent>('selected-action', { skippedActions: 0, currentSubAction: 0, selection })
+      const selection = { entity: player, action: actions.move }
+      setSelectionState({ skippedActions: 0, currentSubAction: 0, selection })
 
       system.update(world, player)
 
@@ -88,27 +96,22 @@ describe('PlayerRoundControl', () => {
     })
 
     it('creates movement script and increases subaction', () => {
-      const selection = { entity: player, action: actions.longMove }
+      const selection = { entity: player, action: actions.move }
+      setSelectionState({ skippedActions: 0, currentSubAction: 0, selection })
       const path = [new Vector([0, 1]), new Vector([0, 2])]
       mockReturnValue<Path>(ui.selectedMovement, { path, cost: 2 })
-      world
-        .editEntity(player)
-        .withComponent<SelectedActionComponent>('selected-action', { skippedActions: 0, currentSubAction: 0, selection })
 
       system.update(world, player)
 
       expect(world.hasComponent(player, 'script')).toBeTruthy()
-      expect(world.getComponent<SelectedActionComponent>(player, 'selected-action')!.currentSubAction).toEqual(1)
+      expect(getSelectionState()!.currentSubAction).toEqual(1)
     })
   })
 
   describe('attack action', () => {
     it('shows attack selector', () => {
-      player
       const selection = { entity: 42, action: actions.bolt }
-      world
-        .editEntity(player)
-        .withComponent<SelectedActionComponent>('selected-action', { skippedActions: 0, currentSubAction: 0, selection })
+      setSelectionState({ skippedActions: 0, currentSubAction: 0, selection })
 
       system.update(world, player)
 
@@ -117,27 +120,23 @@ describe('PlayerRoundControl', () => {
 
     it('selects first enemy on path', () => {
       const selection = { entity: 42, action: actions.bolt }
+      setSelectionState({ skippedActions: 0, currentSubAction: 0, selection })
       mockReturnValue<Path>(ui.selectedAttack, { path: [new Vector([0, 1]), new Vector([0, 2])], cost: 2 })
       const firstEnemy = characterCreators.guard(world)
       const secondEnemy = characterCreators.guard(world)
       placeCharacter(world, firstEnemy, 0, new Vector([0, 1]))
       placeCharacter(world, secondEnemy, 0, new Vector([0, 2]))
-      world
-        .editEntity(player)
-        .withComponent<SelectedActionComponent>('selected-action', { skippedActions: 0, currentSubAction: 0, selection })
 
       system.update(world, player)
 
-      expect(world.getComponent<SelectedActionComponent>(player, 'selected-action')!.target).toEqual(firstEnemy)
+      expect(getSelectionState()!.target).toEqual(firstEnemy)
     })
 
     it('applies effects and increases subaction', () => {
       const selection = { entity: 42, action: actions.bolt }
       const target = characterCreators.guard(world)
+      setSelectionState({ skippedActions: 0, currentSubAction: 0, selection, target })
       placeCharacter(world, target, 0, new Vector([0, 1]))
-      world
-        .editEntity(player)
-        .withComponent<SelectedActionComponent>('selected-action', { skippedActions: 0, currentSubAction: 0, selection, target })
 
       system.update(world, player)
 
@@ -146,16 +145,14 @@ describe('PlayerRoundControl', () => {
         expect(effect.source).toEqual(player)
         expect(effect.target).toEqual(target)
       })
-      expect(world.getComponent<SelectedActionComponent>(player, 'selected-action')!.currentSubAction).toEqual(1)
+      expect(getSelectionState()!.currentSubAction).toEqual(1)
     })
   })
 
   describe('status action', () => {
     it('shows multiple choice selector', () => {
       const selection = { entity: 42, action: actions.healLimp }
-      world
-        .editEntity(player)
-        .withComponent<SelectedActionComponent>('selected-action', { skippedActions: 0, currentSubAction: 0, selection })
+      setSelectionState({ skippedActions: 0, currentSubAction: 0, selection })
 
       system.update(world, player)
 
@@ -164,10 +161,8 @@ describe('PlayerRoundControl', () => {
 
     it('applies effect and increases subaction', () => {
       const selection = { entity: 42, action: actions.healLimp }
+      setSelectionState({ skippedActions: 0, currentSubAction: 0, selection })
       mockReturnValue<Entity>(ui.selectedOption, 0)
-      world
-        .editEntity(player)
-        .withComponent<SelectedActionComponent>('selected-action', { skippedActions: 0, currentSubAction: 0, selection })
 
       system.update(world, player)
 
@@ -178,16 +173,14 @@ describe('PlayerRoundControl', () => {
         expect(effect.source).toEqual(player)
         expect(effect.target).toEqual(player)
       })
-      expect(world.getComponent<SelectedActionComponent>(player, 'selected-action')!.currentSubAction).toEqual(1)
+      expect(getSelectionState()!.currentSubAction).toEqual(1)
     })
 
     it('consumes item', () => {
       const bandages = take(world, player, 'bandages')
       const selection = { entity: bandages, action: actions.healLimp }
+      setSelectionState({ skippedActions: 0, currentSubAction: 0, selection })
       mockReturnValue<Entity>(ui.selectedOption, 0)
-      world
-        .editEntity(player)
-        .withComponent<SelectedActionComponent>('selected-action', { skippedActions: 0, currentSubAction: 0, selection })
 
       system.update(world, player)
 
@@ -200,55 +193,50 @@ describe('PlayerRoundControl', () => {
   describe('skip action', () => {
     it('increases subaction and skipped action', () => {
       const selection = { entity: 42, action: actions.healLimp }
+      setSelectionState({ skippedActions: 0, currentSubAction: 0, selection })
       mockImplementation<KeyboardCommand, boolean>(input.isActive, key => key === 'cancel')
-      world
-        .editEntity(player)
-        .withComponent<SelectedActionComponent>('selected-action', { skippedActions: 0, currentSubAction: 0, selection })
 
       system.update(world, player)
 
-      expect(world.getComponent<SelectedActionComponent>(player, 'selected-action')!.currentSubAction).toEqual(1)
-      expect(world.getComponent<SelectedActionComponent>(player, 'selected-action')!.skippedActions).toEqual(1)
+      expect(getSelectionState()!.currentSubAction).toEqual(1)
+      expect(getSelectionState()!.skippedActions).toEqual(1)
     })
   })
 
-  describe('AP and MP consumption', () => {
-    it('actions are fully credited if not all subactions are skipped', () => {
+  describe('acted and moved fields', () => {
+    it('actions are taken if not all subactions are skipped', () => {
       const selection = { entity: 42, action: actions.hitAndRun }
-      world
-        .editEntity(player)
-        .withComponent<SelectedActionComponent>('selected-action', { skippedActions: 1, currentSubAction: 2, selection })
+      setSelectionState({ skippedActions: 1, currentSubAction: 2, selection })
 
       system.update(world, player)
 
-      expect(world.getComponent<TakeTurnComponent>(player, 'take-turn')).toEqual({ actions: 2, movements: 1 })
+      expect(getTakeTurnComponent().acted).toBeTruthy()
+      expect(getTakeTurnComponent().moved).toBeFalsy()
     })
 
-    it('actions are not credited if all subactions are skipped', () => {
+    it('actions are not taken if all subactions are skipped', () => {
       const selection = { entity: 42, action: actions.hitAndRun }
-      world
-        .editEntity(player)
-        .withComponent<SelectedActionComponent>('selected-action', { skippedActions: 2, currentSubAction: 2, selection })
+      setSelectionState({ skippedActions: 2, currentSubAction: 2, selection })
 
       system.update(world, player)
 
-      expect(world.getComponent<TakeTurnComponent>(player, 'take-turn')).toEqual({ actions: 5, movements: 4 })
+      expect(getTakeTurnComponent().acted).toBeFalsy()
+      expect(getTakeTurnComponent().moved).toBeFalsy()
     })
 
-    it('cost all actions are fully credited', () => {
+    it('cost all actions are correctly taken', () => {
       const selection = { entity: 42, action: actions.rush }
-      world
-        .editEntity(player)
-        .withComponent<SelectedActionComponent>('selected-action', { skippedActions: 0, currentSubAction: 1, selection })
+      setSelectionState({ skippedActions: 0, currentSubAction: 1, selection })
 
       system.update(world, player)
 
-      expect(world.getComponent<TakeTurnComponent>(player, 'take-turn')).toEqual({ actions: 0, movements: 0 })
+      expect(getTakeTurnComponent().acted).toBeTruthy()
+      expect(getTakeTurnComponent().moved).toBeTruthy()
     })
   })
 
-  it('ends turn if no AP and MP left', () => {
-    world.editEntity(player).withComponent<TakeTurnComponent>('take-turn', { actions: 0, movements: 0 })
+  it('ends turn if no moved and acted', () => {
+    world.editEntity(player).withComponent<TakeTurnComponent>('take-turn', { acted: true, moved: true, selectionState: undefined })
 
     system.update(world, player)
 

@@ -3,7 +3,7 @@
 exports[`PlayerControl moves player position 1`] = `
 Vector {
   "coordinates": Array [
-    0.8076923076923077,
+    0.9,
     0.25,
   ],
 }

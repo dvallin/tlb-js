@@ -1,133 +1,93 @@
 import { Feature } from '../components/feature'
 import { gray, primary } from '../renderer/palettes'
 import { strangeSymbols, gridSymbols, arrows } from '../symbols'
+import { Color } from '../renderer/color'
 
-function enemy(character: string, name: string): Feature {
+function character(character: string, name: string, diffuse: Color): Feature {
   return {
-    character,
-    diffuse: primary[1],
+    cover: 'none',
     blocking: true,
     lightBlocking: true,
     ground: false,
+
+    character,
+    diffuse,
     name,
   }
 }
 
-function eliteEnemy(character: string, name: string): Feature {
+function ground(name: string, character: string, diffuse: Color): Feature {
   return {
+    cover: 'none',
+    blocking: false,
+    lightBlocking: false,
+    ground: true,
+
     character,
-    diffuse: primary[3],
+    diffuse,
+    name,
+  }
+}
+
+function highObstacle(name: string, character: string, diffuse: Color): Feature {
+  return {
+    cover: 'full',
     blocking: true,
     lightBlocking: true,
     ground: false,
+
+    character,
+    diffuse,
+    name,
+  }
+}
+
+function lowObstacle(name: string, character: string, diffuse: Color): Feature {
+  return {
+    cover: 'partial',
+    blocking: true,
+    lightBlocking: false,
+    ground: false,
+
+    character,
+    diffuse,
+    name,
+  }
+}
+
+function decoration(name: string, character: string, diffuse: Color): Feature {
+  return {
+    cover: 'none',
+    blocking: false,
+    lightBlocking: false,
+    ground: false,
+
+    character,
+    diffuse,
     name,
   }
 }
 
 const featuresDefinition = {
-  wall: {
-    character: '#',
-    diffuse: gray[3],
-    blocking: true,
-    lightBlocking: true,
-    ground: false,
-    name: 'wall',
-  },
-  corridor: {
-    character: '.',
-    diffuse: gray[0],
-    blocking: false,
-    lightBlocking: false,
-    ground: true,
-    name: 'corridor',
-  },
-  room: {
-    character: '.',
-    diffuse: primary[1],
-    blocking: false,
-    lightBlocking: false,
-    ground: true,
-    name: 'floor',
-  },
-  locker: {
-    character: strangeSymbols[16],
-    diffuse: primary[1],
-    blocking: true,
-    lightBlocking: true,
-    ground: false,
-    name: 'locker',
-  },
-  trash: {
-    character: strangeSymbols[21],
-    diffuse: gray[2],
-    blocking: false,
-    lightBlocking: false,
-    ground: false,
-    name: 'trash',
-  },
-  door: {
-    character: strangeSymbols[27],
-    diffuse: primary[1],
-    blocking: true,
-    lightBlocking: true,
-    ground: false,
-    name: 'door',
-  },
-  hub: {
-    character: '.',
-    diffuse: primary[0],
-    blocking: false,
-    lightBlocking: false,
-    ground: true,
-    name: 'floor',
-  },
-  player: {
-    character: '@',
-    diffuse: primary[0],
-    blocking: true,
-    lightBlocking: true,
-    ground: false,
-    name: 'you',
-  },
-  loot: {
-    character: 'l',
-    diffuse: primary[1],
-    blocking: false,
-    lightBlocking: false,
-    ground: false,
-    name: 'some loot',
-  },
-  table: {
-    character: strangeSymbols[3],
-    diffuse: primary[1],
-    blocking: true,
-    lightBlocking: false,
-    ground: false,
-    name: 'a table',
-  },
-  guard: enemy('g', 'guard'),
-  eliteGuard: eliteEnemy('g', 'elite guard'),
+  wall: highObstacle('wall', '#', gray[3]),
+  corridor: ground('corridor', '.', gray[0]),
+  room: ground('floor', '.', primary[1]),
+  hub: ground('floor', '.', primary[0]),
+  locker: highObstacle('locker', strangeSymbols[16], primary[1]),
+  trash: decoration('trash', strangeSymbols[21], gray[2]),
+  door: highObstacle('door', strangeSymbols[27], primary[1]),
+  player: character('you', '@', primary[0]),
+  loot: decoration('some loot', 'l', primary[1]),
+  table: lowObstacle('a table', strangeSymbols[3], primary[1]),
+  guard: character('g', 'guard', primary[1]),
+  eliteGuard: character('g', 'elite guard', primary[3]),
 }
 export type FeatureType = keyof typeof featuresDefinition
 export const features: { [key in FeatureType]: Feature } = featuresDefinition
 
-const generatorsDefinition = {
-  block: (index: number) => ({
-    character: gridSymbols[[7, 5, 15, 17][index]],
-    diffuse: primary[1],
-    blocking: true,
-    lightBlocking: false,
-    ground: false,
-    name: 'a block of concrete',
-  }),
-  elevator: (_index: number) => ({
-    character: arrows[7],
-    diffuse: primary[1],
-    blocking: true,
-    lightBlocking: false,
-    ground: false,
-    name: 'an elevator',
-  }),
+const generatorsDefinition: { [key: string]: (index: number) => Feature } = {
+  block: (index: number) => highObstacle('a block of concrete', gridSymbols[[7, 5, 15, 17][index]], primary[1]),
+  elevator: (_index: number) => lowObstacle('an elevator', arrows[7], primary[1]),
 }
 export type FeatureGeneratorsType = keyof typeof generatorsDefinition
 export const generators: { [key in FeatureGeneratorsType]: (index: number) => Feature } = generatorsDefinition

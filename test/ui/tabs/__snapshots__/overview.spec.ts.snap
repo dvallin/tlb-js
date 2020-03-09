@@ -11,7 +11,7 @@ effects             "
 `;
 
 exports[`Full turn based mode displays overview 1`] = `
-"head    |||||       3/4 AP 2/4 MP
+"head    |||||       can act can move
 leftArm |||||       guard
 rightArm|||||       guard
 torso   |||||       
