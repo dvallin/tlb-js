@@ -9,16 +9,20 @@ import { Rectangle } from '../../src/geometry/rectangle'
 import { Entity } from '../../src/ecs/entity'
 import { features } from '../../src/assets/features'
 import { GroundComponent } from '../../src/components/ground'
+import { Random } from '../../src/random'
+import { Uniform } from '../../src/random/distributions'
 
 describe('createAssetFromPosition', () => {
   let world: TlbWorld
   let map: WorldMap
+  let random: Random
   beforeEach(() => {
     jest.clearAllMocks()
     world = new World()
     registerComponents(world)
     registerResources(world, mockRenderer())
     map = world.getResource<WorldMapResource>('map')
+    random = new Random(new Uniform('createAssetFromPosition'))
   })
 
   it('throws error on missing ground', () => {
@@ -26,7 +30,7 @@ describe('createAssetFromPosition', () => {
     const position = new Vector([0, 0])
 
     // when / then
-    expect(() => createAsset(world, 0, position, 'up', 'door')).toThrowErrorMatchingSnapshot()
+    expect(() => createAsset(world, random, 0, position, 'up', 'door')).toThrowErrorMatchingSnapshot()
   })
 
   it('throws error on blocking ground', () => {
@@ -36,7 +40,7 @@ describe('createAssetFromPosition', () => {
     map.levels[0].setTile(position, ground)
 
     // when / then
-    expect(() => createAsset(world, 0, position, 'up', 'door')).toThrowErrorMatchingSnapshot()
+    expect(() => createAsset(world, random, 0, position, 'up', 'door')).toThrowErrorMatchingSnapshot()
   })
 
   it('creates assets', () => {
@@ -50,7 +54,7 @@ describe('createAssetFromPosition', () => {
     })
 
     // when
-    const asset = createAssetFromShape(world, 0, shape, 'door')
+    const asset = createAssetFromShape(world, random, 0, shape, 'door')
 
     // then
     shape.foreach(position => {

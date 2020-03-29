@@ -8,7 +8,6 @@ import { characterCreators } from '../../src/assets/characters'
 import { Entity } from '../../src/ecs/entity'
 import { World } from '../../src/ecs/world'
 import { TakeTurnComponent, SelectionState } from '../../src/components/rounds'
-import { Random } from '../../src/random'
 import { Uniform } from '../../src/random/distributions'
 import { placeCharacter } from '../../src/component-reducers/place-character'
 import { Queries } from '../../src/renderer/queries'
@@ -31,7 +30,7 @@ describe('AiRoundControl', () => {
     mockLog(world)
 
     queries = mockQueries()
-    system = new AiRoundControl(queries, new Random(new Uniform('12')))
+    system = new AiRoundControl(queries, new Uniform('12'))
 
     guard = characterCreators.guard(world)
     placeCharacter(world, guard, 0, new Vector([0, 0]))

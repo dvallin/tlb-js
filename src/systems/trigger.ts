@@ -16,11 +16,18 @@ import { AiComponent } from '../components/ai'
 import { engage } from '../component-reducers/ai'
 import { move } from '../component-reducers/position'
 import { PositionComponent } from '../components/position'
+import { Distribution } from '../random/distributions'
+import { LoreComponent } from '../components/lore'
+import { ProgressResource } from '../resources/progress'
+import { QuestComponent } from '../components/quest'
 
 export class Trigger implements TlbSystem {
   public readonly components: ComponentName[] = ['active', 'triggers']
+  private readonly random: Random
 
-  public constructor(public readonly random: Random, public readonly pushState: (state: State) => void) {}
+  public constructor(public rng: Distribution, public readonly pushState: (state: State) => void) {
+    this.random = new Random(rng)
+  }
 
   public update(world: TlbWorld, entity: Entity): void {
     let handled = true
@@ -55,17 +62,41 @@ export class Trigger implements TlbSystem {
       this.pushState
     )
     if (result !== undefined) {
-      if (result === 'attack') {
-        const ai = world.getComponent<AiComponent>(entity, 'ai')
-        if (ai !== undefined) {
-          engage(world, entity, ai, this.pushState)
+      switch (result.type) {
+        case 'attack': {
+          const ai = world.getComponent<AiComponent>(entity, 'ai')
+          if (ai !== undefined) {
+            engage(world, entity, ai, this.pushState)
+          }
+          break
         }
-      } else if (result === 'move_level_up') {
-        const p = world.getComponent<PositionComponent>(triggeredBy.entity, 'position')!
-        move(world, triggeredBy.entity, p.level + 1, p.position)
-      } else if (result === 'move_level_down') {
-        const p = world.getComponent<PositionComponent>(triggeredBy.entity, 'position')!
-        move(world, triggeredBy.entity, p.level - 1, p.position)
+        case 'move_level_up': {
+          const p = world.getComponent<PositionComponent>(triggeredBy.entity, 'position')!
+          move(world, triggeredBy.entity, p.level + 1, p.position)
+          break
+        }
+        case 'move_level_down': {
+          const p = world.getComponent<PositionComponent>(triggeredBy.entity, 'position')!
+          move(world, triggeredBy.entity, p.level - 1, p.position)
+          break
+        }
+        case 'unlock_lore': {
+          const lore = world.getComponent<LoreComponent>(entity, 'lore')!
+          world.getResource<ProgressResource>('progress').unlockLore(world, lore.type)
+          break
+        }
+        case 'start_quest': {
+          const quest = world.getComponent<QuestComponent>(entity, 'quest')!
+          world.getResource<ProgressResource>('progress').startQuest(world, quest.type)
+          break
+        }
+        case 'trigger': {
+          world
+            .editEntity(result.target!)
+            .withComponent('active', {})
+            .withComponent<TriggeredByComponent>('triggered-by', { entity: triggeredBy.entity })
+          break
+        }
       }
       return true
     }
@@ -88,6 +119,7 @@ export class Trigger implements TlbSystem {
       case 'loot':
         return this.loot(world, entity, triggers, true)
       case 'elevator':
+      case 'terminal':
         return this.handleDialog(world, entity, triggers)
       case 'trash':
       case 'locker':

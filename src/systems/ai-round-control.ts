@@ -10,11 +10,15 @@ import { Movement, SelectedAction, Attack, Action } from '../components/action'
 import { Random } from '../random'
 import { ActionGroup } from '../ui/tabs/action-selector'
 import { attackTarget } from '../component-reducers/attack-target'
+import { Distribution } from '../random/distributions'
 
 export class AiRoundControl implements TlbSystem {
   public readonly components: ComponentName[] = ['take-turn', 'ai', 'position']
+  public readonly random: Random
 
-  public constructor(public readonly queries: Queries, public readonly random: Random) {}
+  public constructor(public readonly queries: Queries, distribution: Distribution) {
+    this.random = new Random(distribution)
+  }
 
   public update(world: TlbWorld, entity: Entity): void {
     const script = world.getComponent<ScriptComponent>(entity, 'script')

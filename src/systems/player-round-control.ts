@@ -18,11 +18,15 @@ import { MultipleChoiceOption } from '../ui/multiple-choice-modal'
 import { ItemComponent } from '../components/items'
 import { consumeItem } from '../component-reducers/consume-item'
 import { items } from '../assets/items'
+import { Distribution } from '../random/distributions'
 
 export class PlayerRoundControl implements TlbSystem {
   public readonly components: ComponentName[] = ['take-turn', 'player', 'position']
+  private readonly random: Random
 
-  public constructor(public readonly queries: Queries, public readonly random: Random) {}
+  public constructor(public readonly queries: Queries, public rng: Distribution) {
+    this.random = new Random(rng)
+  }
 
   public update(world: TlbWorld, entity: Entity): void {
     const script = world.getComponent<ScriptComponent>(entity, 'script')

@@ -2,10 +2,10 @@ import { TlbWorld } from '../tlb'
 import { Vector } from '../spatial'
 import { WorldMapResource } from '../resources/world-map'
 import { FeatureComponent, Cover } from '../components/feature'
-import { directions } from '../spatial/direction'
+import { directions, Direction } from '../spatial/direction'
 
-export function coveringPositions(from: Vector, to: Vector): Vector[] {
-  let cover: Vector[] = []
+export function coveringDirections(from: Vector, to: Vector): Direction[] {
+  let cover: Direction[] = []
   let closest: number = Number.MAX_VALUE
   const fromFloor = new Vector([from.fX, from.fY])
   const toFloor = new Vector([to.fX, to.fY])
@@ -14,9 +14,9 @@ export function coveringPositions(from: Vector, to: Vector): Vector[] {
     const distance = fromFloor.minus(current).squaredLength()
     if (closest > distance) {
       closest = distance
-      cover = [current]
+      cover = [direction]
     } else if (closest === distance) {
-      cover.push(current)
+      cover.push(direction)
     }
   })
   return cover
@@ -24,9 +24,11 @@ export function coveringPositions(from: Vector, to: Vector): Vector[] {
 
 export function calculateCover(world: TlbWorld, level: number, from: Vector, to: Vector): Cover {
   const map = world.getResource<WorldMapResource>('map').levels[level]
-  const covers = coveringPositions(from, to)
+  const covers = coveringDirections(from, to)
   let bestCover: Cover = 'none'
-  covers.forEach(p => {
+  const toFloor = new Vector([to.fX, to.fY])
+  covers.forEach(direction => {
+    const p = toFloor.add(Vector.fromDirection(direction))
     const tile = map.getTile(p)
     if (tile !== undefined) {
       const feature = world.getComponent<FeatureComponent>(tile, 'feature')!

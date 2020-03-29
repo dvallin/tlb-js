@@ -1,0 +1,51 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`dialog terminal shows a main menu 1`] = `
+Object {
+  "answers": Array [
+    Object {
+      "dialog": "startLore1",
+      "text": "lore.txt",
+      "type": "next_dialog",
+    },
+    Object {
+      "text": "door controls",
+      "type": 1,
+    },
+    Object {
+      "target": undefined,
+      "text": "exit",
+      "type": "close",
+    },
+  ],
+  "text": Array [
+    "terminal",
+  ],
+}
+`;
+
+exports[`dialog terminal shows doors 1`] = `
+Object {
+  "answers": Array [
+    Object {
+      "target": 26,
+      "text": "a door to the right",
+      "type": "trigger",
+    },
+    Object {
+      "target": 27,
+      "text": "a door to the right,down",
+      "type": "trigger",
+    },
+    Object {
+      "text": "back",
+      "type": 0,
+    },
+  ],
+  "text": Array [
+    "door controls",
+  ],
+}
+`;
+
+exports[`dialog terminal shows lore 1`] = `undefined`;

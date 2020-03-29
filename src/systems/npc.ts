@@ -9,11 +9,19 @@ import { Random } from '../random'
 import { engage } from '../component-reducers/ai'
 import { Queries } from '../renderer/queries'
 import { isAuthorized, authorize } from '../component-reducers/region'
+import { Distribution } from '../random/distributions'
 
 export class Npc implements TlbSystem {
   public readonly components: ComponentName[] = ['npc', 'ai', 'position']
+  private readonly random: Random
 
-  public constructor(public readonly queries: Queries, public readonly random: Random, public readonly pushState: (state: State) => void) {}
+  public constructor(
+    public readonly queries: Queries,
+    public readonly distribution: Distribution,
+    public readonly pushState: (state: State) => void
+  ) {
+    this.random = new Random(distribution)
+  }
 
   public update(world: TlbWorld, entity: Entity): void {
     const position = world.getComponent<PositionComponent>(entity, 'position')!
@@ -73,7 +81,7 @@ export class Npc implements TlbSystem {
             this.pushState
           )
           if (result !== undefined) {
-            if (result === 'authorized') {
+            if (result.type === 'authorized') {
               authorize(world, position, ai.interest!)
               ai.interest = undefined
               ai.distrust = 0

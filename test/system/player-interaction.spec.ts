@@ -13,6 +13,8 @@ import { createAssetFromShape } from '../../src/components/asset'
 import { Rectangle } from '../../src/geometry/rectangle'
 import { UI } from '../../src/resources/ui'
 import { State } from '../../src/game-states/state'
+import { Random } from '../../src/random'
+import { Uniform } from '../../src/random/distributions'
 
 describe('PlayerInteraction', () => {
   let world: TlbWorld
@@ -22,6 +24,7 @@ describe('PlayerInteraction', () => {
   let map: WorldMap
   let pushState: () => void
   let ui: UI
+  let random: Random
   beforeEach(() => {
     world = new World()
     registerComponents(world)
@@ -38,6 +41,7 @@ describe('PlayerInteraction', () => {
     placeCharacter(world, player, 0, new Vector([0, 0]))
 
     system = new PlayerInteraction(pushState)
+    random = new Random(new Uniform('PlayerInteraction'))
   })
 
   it('activates direct triggers', () => {
@@ -51,7 +55,7 @@ describe('PlayerInteraction', () => {
   })
 
   it('activates reverse triggers', () => {
-    const door = createAssetFromShape(world, 0, new Rectangle(1, 1, 1, 1), 'door')
+    const door = createAssetFromShape(world, random, 0, new Rectangle(1, 1, 1, 1), 'door')
 
     mockImplementation<KeyboardCommand, boolean>(input.isActive, k => k === 'use')
     system.update(world, player)
@@ -62,7 +66,7 @@ describe('PlayerInteraction', () => {
   it('shows a dialog for multiple triggers and pushes modal state', () => {
     const guard = characterCreators.guard(world)
     placeCharacter(world, guard, 0, new Vector([0, 1]))
-    createAssetFromShape(world, 0, new Rectangle(1, 1, 1, 1), 'door')
+    createAssetFromShape(world, random, 0, new Rectangle(1, 1, 1, 1), 'door')
 
     mockImplementation<KeyboardCommand, boolean>(input.isActive, k => k === 'use')
     system.update(world, player)
@@ -74,7 +78,7 @@ describe('PlayerInteraction', () => {
   it('triggers multiple choice modals result', () => {
     const guard = characterCreators.guard(world)
     placeCharacter(world, guard, 0, new Vector([0, 1]))
-    createAssetFromShape(world, 0, new Rectangle(1, 1, 1, 1), 'door')
+    createAssetFromShape(world, random, 0, new Rectangle(1, 1, 1, 1), 'door')
 
     mockReturnValue<boolean>(ui.multipleChoiceModalShowing, true)
     mockReturnValue<Entity>(ui.selectedModalOption, guard)

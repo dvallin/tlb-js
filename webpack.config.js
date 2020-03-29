@@ -30,24 +30,24 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.tsx?$/,
-        loader: 'awesome-typescript-loader',
-        options: {
-          useBabel: true,
-          babelOptions: {
-            babelrc: false /* Important line */,
-            presets: [['@babel/preset-env', { targets: 'last 2 versions, ie 11', modules: false }]],
+        test: /\.(ts|js)?$/,
+        exclude: /node_modules/,
+        use: [
+          {
+            loader: 'babel-loader',
+            options: {
+              cacheDirectory: true,
+              babelrc: false,
+              presets: [['@babel/preset-env', { targets: { node: 'current' }, modules: 'commonjs' }], '@babel/preset-typescript'],
+            },
           },
-          babelCore: '@babel/core',
-        },
+          'ts-loader',
+        ],
       },
     ],
   },
   resolve: {
-    extensions: ['.tsx', '.ts', '.js'],
-    alias: {
-      '@': path.resolve(__dirname, 'src'),
-    },
+    extensions: ['.ts', '.js'],
   },
   plugins,
   devtool: 'source-map',

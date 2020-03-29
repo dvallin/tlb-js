@@ -12,6 +12,7 @@ import { AssetType } from './assets'
 import { ItemType } from './items'
 import { RegionsType } from '../components/region'
 import { addDialog } from './dialogs'
+import { QuestComponent } from '../components/quest'
 
 function restriction(restriction: Partial<StructureRestriction>): Partial<StructureRestriction> {
   return restriction
@@ -59,7 +60,7 @@ const complexesDefinition: { [key: string]: ComplexTemplate } = {
       },
       {
         description: {
-          decorations: [],
+          decorations: [spawn<AssetType>('random', occur(1), 'terminal')],
           containers: [spawn<AssetType>('wall', occur(5), 'locker')],
           loots: [
             spawn<ItemType>('random', occur(5), 'sniperRifle'),
@@ -70,6 +71,26 @@ const complexesDefinition: { [key: string]: ComplexTemplate } = {
           bosses: [],
         },
         restriction: restriction({ kind: 'room', connects: [0], exact: true }),
+      },
+      {
+        description: {
+          decorations: [spawn<AssetType>('random', occur(1), 'terminal')],
+          containers: [spawn<AssetType>('wall', occur(5), 'locker')],
+          loots: [
+            spawn<ItemType>('random', occur(5), 'sniperRifle'),
+            spawn<ItemType>('random', occur(3), 'bandages'),
+            spawn<ItemType>('random', occur(5), 'leatherJacket'),
+          ],
+          npcs: [
+            spawn<CharacterCreator>('random', occur(1), world => {
+              const civilian = characterCreators.civilian(world)
+              world.editEntity(civilian).withComponent<QuestComponent>('quest', { type: 'quest1' })
+              return civilian
+            }),
+          ],
+          bosses: [],
+        },
+        restriction: restriction({ kind: 'room' }),
       },
     ],
   },

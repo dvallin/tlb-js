@@ -5,6 +5,8 @@ import { Vector } from '../../src/spatial'
 import { createFeatureFromType } from '../../src/components/feature'
 import { mockRenderer } from '../mocks'
 import { createAsset } from '../../src/components/asset'
+import { Random } from '../../src/random'
+import { Uniform } from '../../src/random/distributions'
 
 describe('cover', () => {
   let world: TlbWorld
@@ -18,7 +20,7 @@ describe('cover', () => {
 
     createFeatureFromType(world, 0, new Vector([1, 0]), 'corridor')
     createFeatureFromType(world, 0, new Vector([1, 1]), 'corridor')
-    createAsset(world, 0, new Vector([1, 1]), 'up', 'table')
+    createAsset(world, new Random(new Uniform('cover')), 0, new Vector([1, 1]), 'up', 'table')
   })
 
   it('does not find cover if no cover exists', () => {

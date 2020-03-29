@@ -17,6 +17,7 @@ import { Entity } from '../../src/ecs/entity'
 import { mockLog } from '../mocks'
 import { CharacterStatsComponent } from '../../src/components/character-stats'
 import { WorldMapResource } from '../../src/resources/world-map'
+import { Uniform } from '../../src/random/distributions'
 
 describe('ApplyEffects', () => {
   let world: TlbWorld
@@ -31,7 +32,7 @@ describe('ApplyEffects', () => {
 
     player = characterCreators.player(world)
     guard = characterCreators.guard(world)
-    system = new ApplyEffects()
+    system = new ApplyEffects(new Uniform('ApplyEffects'))
   })
 
   describe('damage', () => {

@@ -2,7 +2,6 @@ import { Storage } from '../src/ecs/storage'
 import { WorldMapResource, Level } from '../src/resources/world-map'
 import { Renderer } from '../src/renderer/renderer'
 import { ComponentName, TlbWorld, ResourceName } from '../src/tlb'
-import { Random } from '../src/random'
 import { Queries } from '../src/renderer/queries'
 import { Space, Vector } from '../src/spatial'
 import { Entity } from '../src/ecs/entity'
@@ -202,20 +201,6 @@ export function mockRenderer(): Renderer {
     character: jest.fn(),
     text: jest.fn(),
     flowText: jest.fn(),
-  }
-}
-
-export function mockRandom(): Random {
-  return {
-    distribution: { sample: jest.fn() },
-    integerBetween: jest.fn(),
-    floatBetween: jest.fn(),
-    decision: jest.fn(),
-    weightedDecision: jest.fn(),
-    shuffle: jest.fn(),
-    pick: jest.fn(),
-    pickIndex: jest.fn(),
-    insideRectangle: jest.fn(),
   }
 }
 

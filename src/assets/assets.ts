@@ -20,6 +20,7 @@ const assetsDefinition = {
   table: asset('a table', s1x2, undefined, () => features['table']),
   generator: asset('a generator', s2x2, undefined, generators['block']),
   elevator: asset('an elevator', s1x1, 'elevator', generators['elevator']),
+  terminal: asset('a terminal', s1x1, 'terminal', () => features['terminal']),
 }
 
 export type AssetType = keyof typeof assetsDefinition

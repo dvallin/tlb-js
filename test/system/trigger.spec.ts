@@ -3,9 +3,9 @@ import { Entity } from '../../src/ecs/entity'
 import { World } from '../../src/ecs/world'
 import { characterCreators } from '../../src/assets/characters'
 import { Trigger } from '../../src/systems/trigger'
-import { Uniform } from '../../src/random/distributions'
+import { Uniform, Distribution } from '../../src/random/distributions'
 import { Random } from '../../src/random'
-import { addDialog, AnswerType } from '../../src/assets/dialogs'
+import { addDialog, Answer } from '../../src/assets/dialogs'
 import { mockUi, mockReturnValue, callArgument, mockLog } from '../mocks'
 import { UI } from '../../src/resources/ui'
 import { State } from '../../src/game-states/state'
@@ -28,6 +28,8 @@ describe('Trigger', () => {
   let map: WorldMap
   let pushState: () => void
   let system: Trigger
+  let rng: Distribution
+  let random: Random
   beforeEach(() => {
     world = new World()
     registerComponents(world)
@@ -44,12 +46,14 @@ describe('Trigger', () => {
       .withComponent('position', { level: 0, position: new Vector([1, 0]) })
     pushState = jest.fn()
 
-    system = new Trigger(new Random(new Uniform('1')), pushState)
+    rng = new Uniform('test1')
+    random = new Random(rng)
+    system = new Trigger(rng, pushState)
   })
 
   describe('dialog triggers', () => {
     it('opens a dialog modal', () => {
-      addDialog(world, guard, 'randomRemarks')
+      addDialog(world, guard, 'guardRandomRemarks')
       world.editEntity(guard).withComponent<TriggeredByComponent>('triggered-by', { entity: player })
 
       system.update(world, guard)
@@ -60,8 +64,8 @@ describe('Trigger', () => {
 
     it('closes dialog', () => {
       mockReturnValue<boolean>(ui.dialogShowing, true)
-      mockReturnValue<AnswerType>(ui.dialogResult, 'close')
-      addDialog(world, guard, 'randomRemarks')
+      mockReturnValue<Answer>(ui.dialogResult, { type: 'close', text: '' })
+      addDialog(world, guard, 'guardRandomRemarks')
       world.editEntity(guard).withComponent<TriggeredByComponent>('triggered-by', { entity: player })
 
       system.update(world, guard)
@@ -72,8 +76,8 @@ describe('Trigger', () => {
 
     it('handles attack result', () => {
       mockReturnValue<boolean>(ui.dialogShowing, true)
-      mockReturnValue<AnswerType>(ui.dialogResult, 'attack')
-      addDialog(world, guard, 'randomRemarks')
+      mockReturnValue<Answer>(ui.dialogResult, { type: 'attack', text: '' })
+      addDialog(world, guard, 'guardRandomRemarks')
       world.editEntity(guard).withComponent<TriggeredByComponent>('triggered-by', { entity: player })
 
       system.update(world, guard)
@@ -87,7 +91,7 @@ describe('Trigger', () => {
     describe('door', () => {
       it('opens', () => {
         map.levels[0].boundary.foreach(p => createFeatureFromType(world, 0, p, 'corridor'))
-        const door = createAssetFromShape(world, 0, new Rectangle(1, 1, 3, 1), 'door')
+        const door = createAssetFromShape(world, random, 0, new Rectangle(1, 1, 3, 1), 'door')
 
         world.editEntity(door).withComponent<TriggeredByComponent>('triggered-by', { entity: player })
         system.update(world, door)
@@ -97,7 +101,7 @@ describe('Trigger', () => {
 
       it('opens and then closes', () => {
         map.levels[0].boundary.foreach(p => createFeatureFromType(world, 0, p, 'corridor'))
-        const door = createAssetFromShape(world, 0, new Rectangle(1, 1, 3, 1), 'door')
+        const door = createAssetFromShape(world, random, 0, new Rectangle(1, 1, 3, 1), 'door')
 
         world.editEntity(door).withComponent<TriggeredByComponent>('triggered-by', { entity: player })
         system.update(world, door)
@@ -111,7 +115,7 @@ describe('Trigger', () => {
     describe('loot', () => {
       it('lootable opens dialog and pushes modal state', () => {
         map.levels[0].boundary.foreach(p => createFeatureFromType(world, 0, p, 'corridor'))
-        const loot = createAssetFromShape(world, 0, new Rectangle(1, 1, 1, 1), 'loot')
+        const loot = createAssetFromShape(world, random, 0, new Rectangle(1, 1, 1, 1), 'loot')
 
         world.editEntity(loot).withComponent<TriggeredByComponent>('triggered-by', { entity: player })
         system.update(world, loot)
@@ -124,7 +128,7 @@ describe('Trigger', () => {
         ui.isModal = true
         mockReturnValue<boolean>(ui.inventoryTransferModalShowing, false)
         map.levels[0].boundary.foreach(p => createFeatureFromType(world, 0, p, 'corridor'))
-        const loot = createAssetFromShape(world, 0, new Rectangle(1, 1, 1, 1), 'loot')
+        const loot = createAssetFromShape(world, random, 0, new Rectangle(1, 1, 1, 1), 'loot')
 
         world.editEntity(loot).withComponent<TriggeredByComponent>('triggered-by', { entity: player })
         system.update(world, loot)
@@ -137,7 +141,7 @@ describe('Trigger', () => {
     describe('container', () => {
       it('lootable opens dialog and pushes modal state', () => {
         map.levels[0].boundary.foreach(p => createFeatureFromType(world, 0, p, 'corridor'))
-        const loot = createAssetFromShape(world, 0, new Rectangle(1, 1, 1, 1), 'table')
+        const loot = createAssetFromShape(world, random, 0, new Rectangle(1, 1, 1, 1), 'table')
 
         world.editEntity(loot).withComponent<TriggeredByComponent>('triggered-by', { entity: player })
         system.update(world, loot)
@@ -150,7 +154,7 @@ describe('Trigger', () => {
         ui.isModal = true
         mockReturnValue<boolean>(ui.inventoryTransferModalShowing, false)
         map.levels[0].boundary.foreach(p => createFeatureFromType(world, 0, p, 'corridor'))
-        const loot = createAssetFromShape(world, 0, new Rectangle(1, 1, 1, 1), 'trash')
+        const loot = createAssetFromShape(world, random, 0, new Rectangle(1, 1, 1, 1), 'trash')
 
         world.editEntity(loot).withComponent<TriggeredByComponent>('triggered-by', { entity: player })
         system.update(world, loot)
@@ -164,7 +168,7 @@ describe('Trigger', () => {
       it('logs a noise', () => {
         const shape = new Rectangle(0, 0, 2, 2)
         shape.foreach(p => createFeatureFromType(world, 0, p, 'corridor'))
-        const generator = createAssetFromShape(world, 0, shape, 'generator')
+        const generator = createAssetFromShape(world, random, 0, shape, 'generator')
 
         world.editEntity(generator).withComponent<TriggeredByComponent>('triggered-by', { entity: player })
         system.update(world, generator)
@@ -176,7 +180,7 @@ describe('Trigger', () => {
     describe('elevator', () => {
       it('opens a dialog modal', () => {
         map.levels[0].boundary.foreach(p => createFeatureFromType(world, 0, p, 'corridor'))
-        const elevator = createAsset(world, 0, new Vector([0, 0]), 'up', 'elevator')
+        const elevator = createAsset(world, random, 0, new Vector([0, 0]), 'up', 'elevator')
 
         world.editEntity(elevator).withComponent<TriggeredByComponent>('triggered-by', { entity: player })
         system.update(world, elevator)
@@ -187,11 +191,11 @@ describe('Trigger', () => {
 
       it('moves up', () => {
         mockReturnValue<boolean>(ui.dialogShowing, true)
-        mockReturnValue<AnswerType>(ui.dialogResult, 'move_level_up')
+        mockReturnValue<Answer>(ui.dialogResult, { type: 'move_level_up', text: '' })
         map.levels[0].boundary.foreach(p => createFeatureFromType(world, 0, p, 'corridor'))
         map.levels[1].boundary.foreach(p => createFeatureFromType(world, 1, p, 'corridor'))
 
-        const elevator = createAsset(world, 0, new Vector([0, 0]), 'up', 'elevator')
+        const elevator = createAsset(world, random, 0, new Vector([0, 0]), 'up', 'elevator')
 
         world.editEntity(elevator).withComponent<TriggeredByComponent>('triggered-by', { entity: player })
         system.update(world, elevator)
@@ -203,12 +207,12 @@ describe('Trigger', () => {
 
       it('moves down', () => {
         mockReturnValue<boolean>(ui.dialogShowing, true)
-        mockReturnValue<AnswerType>(ui.dialogResult, 'move_level_down')
+        mockReturnValue<Answer>(ui.dialogResult, { type: 'move_level_down', text: '' })
         map.levels[0].boundary.foreach(p => createFeatureFromType(world, 0, p, 'corridor'))
         map.levels[1].boundary.foreach(p => createFeatureFromType(world, 1, p, 'corridor'))
         world.getComponent<PositionComponent>(player, 'position')!.level = 1
 
-        const elevator = createAsset(world, 0, new Vector([0, 0]), 'up', 'elevator')
+        const elevator = createAsset(world, random, 0, new Vector([0, 0]), 'up', 'elevator')
 
         world.editEntity(elevator).withComponent<TriggeredByComponent>('triggered-by', { entity: player })
         system.update(world, elevator)

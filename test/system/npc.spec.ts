@@ -4,7 +4,6 @@ import { Entity } from '../../src/ecs/entity'
 import { WorldMap, WorldMapResource } from '../../src/resources/world-map'
 import { Uniform } from '../../src/random/distributions'
 import { Queries } from '../../src/renderer/queries'
-import { Random } from '../../src/random'
 import { characterCreators } from '../../src/assets/characters'
 import { Vector } from '../../src/spatial'
 import { placeCharacter } from '../../src/component-reducers/place-character'
@@ -15,7 +14,7 @@ import { StructureComponent, RegionComponent } from '../../src/components/region
 import { AiComponent } from '../../src/components/ai'
 import { UI } from '../../src/resources/ui'
 import { State } from '../../src/game-states/state'
-import { AnswerType } from '../../src/assets/dialogs'
+import { Answer } from '../../src/assets/dialogs'
 
 describe('Npc', () => {
   let world: TlbWorld
@@ -59,7 +58,7 @@ describe('Npc', () => {
     player = characterCreators.player(world)
     placeCharacter(world, player, 0, new Vector([0, 0]))
 
-    system = new Npc(new Queries(), new Random(new Uniform('12')), pushState)
+    system = new Npc(new Queries(), new Uniform('12'), pushState)
   })
 
   describe('if player is visible', () => {
@@ -104,7 +103,7 @@ describe('Npc', () => {
       world.getComponent<AiComponent>(guard, 'ai')!.distrust = 10
 
       mockReturnValue<boolean>(ui.dialogShowing, true)
-      mockReturnValue<AnswerType>(ui.dialogResult, 'close')
+      mockReturnValue<Answer>(ui.dialogResult, { type: 'close', text: '' })
 
       system.update(world, guard)
 
@@ -117,7 +116,7 @@ describe('Npc', () => {
       world.getComponent<AiComponent>(guard, 'ai')!.distrust = 10
 
       mockReturnValue<boolean>(ui.dialogShowing, true)
-      mockReturnValue<AnswerType>(ui.dialogResult, 'authorized')
+      mockReturnValue<Answer>(ui.dialogResult, { type: 'authorized', text: '' })
 
       system.update(world, guard)
 

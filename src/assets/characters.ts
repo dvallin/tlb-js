@@ -38,6 +38,11 @@ const charactersStatsDefinition = {
     strength: 5,
     aim: 6,
   },
+  civilian: {
+    bodyParts: humanoidBodyParts(3, 1, 1),
+    strength: 4,
+    aim: 3,
+  },
   eliteGuard: {
     bodyParts: humanoidBodyParts(5, 3, 3),
     strength: 8,
@@ -54,16 +59,9 @@ export const characterStats: { [key in CharacterStatsType]: CharacterStats } = c
 
 const characterCreatorsDefinition = {
   player: (world: TlbWorld) => createPlayer(world),
-  eliteGuard: (world: TlbWorld) => {
-    const entity = createDefaultNpc(world, 'some elite guard', 'eliteGuard', 'eliteGuard')
-    addDialog(world, entity, 'guardRandomRemarks')
-    return entity
-  },
-  guard: (world: TlbWorld) => {
-    const entity = createDefaultNpc(world, 'some guard', 'guard', 'guard')
-    addDialog(world, entity, 'guardRandomRemarks')
-    return entity
-  },
+  eliteGuard: (world: TlbWorld) => createGuard(world, 'some elite guard', 'eliteGuard', 'eliteGuard'),
+  guard: (world: TlbWorld) => createGuard(world, 'some guard', 'guard', 'guard'),
+  civilian: (world: TlbWorld) => createCivilian(world, 'some guy', 'civilian', 'civilian'),
 }
 
 export const defaultActions: ActionType[] = ['move', 'hit', 'rush', 'endTurn']
@@ -86,9 +84,17 @@ export function createPlayer(world: TlbWorld): Entity {
   return player
 }
 
-export function createDefaultNpc(world: TlbWorld, name: string, statsType: CharacterStatsType, featureType: FeatureType): Entity {
+export function createCivilian(world: TlbWorld, name: string, statsType: CharacterStatsType, featureType: FeatureType): Entity {
   const npc = createEmptyNpc(world, name, statsType, featureType, defaultActions)
+  addDialog(world, npc, 'civilianDialog')
+  return npc
+}
+
+export function createGuard(world: TlbWorld, name: string, statsType: CharacterStatsType, featureType: FeatureType): Entity {
+  const npc = createEmptyNpc(world, name, statsType, featureType, defaultActions)
+  world.editEntity(npc).withComponent<AiComponent>('ai', { type: 'rushing', state: 'idle', interest: undefined, distrust: 0 })
   equip(world, npc, 'rifle', ['leftArm'])
+  addDialog(world, npc, 'guardRandomRemarks')
   return npc
 }
 
@@ -117,8 +123,7 @@ export function createEmptyNpc(
   return world
     .editEntity(character)
     .withComponent('npc', {})
-    .withComponent<TriggersComponent>('triggers', { entities: [], type: 'dialog', name })
-    .withComponent<AiComponent>('ai', { type: 'rushing', state: 'idle', interest: undefined, distrust: 0 }).entity
+    .withComponent<TriggersComponent>('triggers', { entities: [], type: 'dialog', name }).entity
 }
 
 export function createCharacter(world: TlbWorld, statsType: CharacterStatsType, featureType: FeatureType, actions: ActionType[]): Entity {

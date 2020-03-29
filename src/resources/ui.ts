@@ -17,7 +17,7 @@ import { MovementSelector } from '../ui/tabs/movement-selector'
 import { Queries } from '../renderer/queries'
 import { Path } from '../renderer/astar'
 import { AttackSelector } from '../ui/tabs/attack-selector'
-import { DialogType, dialogs, AnswerType } from '../assets/dialogs'
+import { DialogType, dialogs, Answer } from '../assets/dialogs'
 import { DialogModal } from '../ui/dialog-modal'
 import { Random } from '../random'
 import { State } from '../game-states/state'
@@ -42,7 +42,7 @@ export interface UI {
   hideMultipleChoiceModal(): void
 
   showDialogModal(world: TlbWorld, random: Random, dialog: DialogType, player: Entity, npc: Entity): void
-  dialogResult(): AnswerType | undefined
+  dialogResult(): Answer | undefined
   dialogShowing(): boolean
   hideDialogModal(): void
 
@@ -71,7 +71,7 @@ export function runDialog(
   player: Entity,
   npc: Entity,
   pushState: (state: State) => void
-): AnswerType | undefined {
+): Answer | undefined {
   const result = ui.dialogResult()
   if (!ui.dialogShowing()) {
     ui.showDialogModal(world, random, dialog, player, npc)
@@ -221,7 +221,7 @@ export class UIResource implements TlbResource, UI {
     this.dialogModal = new DialogModal(world, random, window, dialogs[dialog], player, npc)
   }
 
-  public dialogResult(): AnswerType | undefined {
+  public dialogResult(): Answer | undefined {
     if (this.dialogModal !== undefined) {
       return this.dialogModal.result
     }

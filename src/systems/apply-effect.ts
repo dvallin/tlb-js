@@ -6,9 +6,16 @@ import { LogResource, Log } from '../resources/log'
 import { EquipedItemsComponent, ItemComponent } from '../components/items'
 import { damageBodyPart, healBodyPart, kill } from '../component-reducers/damage-bodypart'
 import { items } from '../assets/items'
+import { Random } from '../random'
+import { Distribution } from '../random/distributions'
 
 export class ApplyEffects implements TlbSystem {
   public readonly components: ComponentName[] = ['effect']
+
+  private readonly uniform: Random
+  public constructor(rng: Distribution) {
+    this.uniform = new Random(rng)
+  }
 
   public update(world: TlbWorld, entity: Entity): void {
     const effectComponent = world.getComponent<EffectComponent>(entity, 'effect')!
@@ -17,7 +24,7 @@ export class ApplyEffects implements TlbSystem {
         this.applyDamage(world, effectComponent)
         break
       case 'kill':
-        kill(world, effectComponent.target)
+        kill(world, this.uniform, effectComponent.target)
         break
       case 'negate':
         this.removeAllNegativeEffects(world, effectComponent)
@@ -67,7 +74,7 @@ export class ApplyEffects implements TlbSystem {
         let damage = Math.max(0, effect.value! - defense)
         log.effectApplied(world, effectComponent, bodyPart)
         if (damage > 0) {
-          damageBodyPart(world, source, target, stats, bodyPart!, damage)
+          damageBodyPart(world, this.uniform, source, target, stats, bodyPart!, damage)
         }
       })
     }

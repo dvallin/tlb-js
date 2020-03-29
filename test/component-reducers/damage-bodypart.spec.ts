@@ -12,12 +12,15 @@ import { createFeatureFromType } from '../../src/components/feature'
 import { mockLog } from '../mocks'
 import { AssetComponent } from '../../src/components/asset'
 import { InventoryComponent } from '../../src/components/items'
+import { Random } from '../../src/random'
+import { Uniform } from '../../src/random/distributions'
 
 describe('damageBodypart', () => {
   let world: TlbWorld
   let player: Entity
   let guard: Entity
   let stats: CharacterStatsComponent
+  let random: Random
   beforeEach(() => {
     world = new World()
     registerComponents(world)
@@ -29,15 +32,16 @@ describe('damageBodypart', () => {
     createFeatureFromType(world, 0, new Vector([0, 0]), 'corridor')
     placeCharacter(world, guard, 0, new Vector([0, 0]))
     stats = world.getComponent<CharacterStatsComponent>(guard, 'character-stats')!
+    random = new Random(new Uniform('damageBodypart'))
   })
 
   it('damages bodyparts', () => {
-    damageBodyPart(world, player, guard, stats, 'torso', 2)
+    damageBodyPart(world, random, player, guard, stats, 'torso', 2)
     expect(stats.current.bodyParts['torso'].health).toEqual(characterStats[stats.type].bodyParts['torso'].health - 2)
   })
 
   it('creates a bleeding effect on torso', () => {
-    damageBodyPart(world, player, guard, stats, 'leftLeg', 200)
+    damageBodyPart(world, random, player, guard, stats, 'leftLeg', 200)
     const effect = world.getComponent<EffectComponent>(world.getStorage('effect').first()!, 'effect')!
     expect(effect.bodyParts).toEqual(['torso'])
     expect(effect.effect.type).toEqual('bleed')
@@ -46,14 +50,14 @@ describe('damageBodypart', () => {
   })
 
   it('kills entity', () => {
-    damageBodyPart(world, player, guard, stats, 'head', 200)
+    damageBodyPart(world, random, player, guard, stats, 'head', 200)
 
     expect(world.hasComponent(guard, 'dead')).toBeTruthy()
     expect(world.hasComponent(guard, 'position')).toBeFalsy()
   })
 
   it('replaces killed entity by loot', () => {
-    damageBodyPart(world, player, guard, stats, 'head', 200)
+    damageBodyPart(world, random, player, guard, stats, 'head', 200)
 
     const asset = world.getStorage('asset').first()!
     expect(world.getComponent<AssetComponent>(asset, 'asset')!.type).toEqual('loot')

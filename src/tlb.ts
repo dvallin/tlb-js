@@ -29,7 +29,6 @@ import { InputResource } from './resources/input'
 import { UIResource } from './resources/ui'
 import { LogResource } from './resources/log'
 
-import { Random } from './random'
 import { Uniform } from './random/distributions'
 
 import { Renderer } from './renderer/renderer'
@@ -46,6 +45,9 @@ import { EffectComponent, ActiveEffectsComponent } from './components/effects'
 import { InventoryComponent, ItemComponent, EquipedItemsComponent } from './components/items'
 import { StartRound } from './systems/start-round'
 import { DialogComponent } from './components/dialog'
+import { LoreComponent } from './components/lore'
+import { ProgressResource } from './resources/progress'
+import { QuestComponent } from './components/quest'
 export type ComponentName =
   | 'active'
   | 'age'
@@ -63,11 +65,13 @@ export type ComponentName =
   | 'has-action'
   | 'inventory'
   | 'item'
+  | 'lore'
   | 'npc'
   | 'overlay'
   | 'player'
   | 'position'
   | 'region'
+  | 'quest'
   | 'structure'
   | 'script'
   | 'active-effects'
@@ -93,7 +97,7 @@ export type SystemName =
   | 'region-builder'
   | 'script'
   | 'trigger'
-export type ResourceName = 'input' | 'map' | 'viewport' | 'ui' | 'log'
+export type ResourceName = 'input' | 'map' | 'viewport' | 'ui' | 'log' | 'progress'
 
 export type TlbWorld = World<ComponentName, SystemName, ResourceName>
 export type TlbResource = Resource<ComponentName, SystemName, ResourceName>
@@ -115,10 +119,12 @@ export function registerComponents<S, R>(world: World<ComponentName, S, R>): voi
   world.registerComponentStorage('has-action', new MapStorage<HasActionComponent>())
   world.registerComponentStorage('inventory', new MapStorage<InventoryComponent>())
   world.registerComponentStorage('structure', new MapStorage<StructureComponent>())
+  world.registerComponentStorage('lore', new MapStorage<LoreComponent>())
   world.registerComponentStorage('equiped-items', new MapStorage<EquipedItemsComponent>())
   world.registerComponentStorage('item', new MapStorage<ItemComponent>())
   world.registerComponentStorage('npc', new SetStorage())
   world.registerComponentStorage('overlay', new MapStorage<OverlayComponent>())
+  world.registerComponentStorage('quest', new MapStorage<QuestComponent>())
   world.registerComponentStorage('player', new SingletonStorage<{}>())
   world.registerComponentStorage('position', new VectorStorage<PositionComponent>())
   world.registerComponentStorage('region', new MapStorage<RegionComponent>())
@@ -144,6 +150,7 @@ export function registerResources(
   world.registerResource(new InputResource(e => renderer.eventToPosition(e)))
   world.registerResource(new UIResource())
   world.registerResource(new LogResource())
+  world.registerResource(new ProgressResource())
 }
 
 export function registerSystems(
@@ -152,16 +159,16 @@ export function registerSystems(
   pushState: (s: State) => void
 ): void {
   const uniform = new Uniform('some seed')
-  world.registerSystem('ai-round-control', new AiRoundControl(queries, new Random(uniform)))
-  world.registerSystem('effect', new ApplyEffects())
+  world.registerSystem('ai-round-control', new AiRoundControl(queries, uniform))
+  world.registerSystem('effect', new ApplyEffects(uniform))
   world.registerSystem('fov', new Fov(queries))
   world.registerSystem('free-mode-control', new FreeModeControl())
-  world.registerSystem('npc', new Npc(queries, new Random(uniform), pushState))
+  world.registerSystem('npc', new Npc(queries, uniform, pushState))
   world.registerSystem('player-control', new PlayerControl())
   world.registerSystem('player-interaction', new PlayerInteraction(pushState))
-  world.registerSystem('player-round-control', new PlayerRoundControl(queries, new Random(uniform)))
+  world.registerSystem('player-round-control', new PlayerRoundControl(queries, uniform))
   world.registerSystem('region-builder', new RegionBuilder(uniform))
   world.registerSystem('script', new Script())
-  world.registerSystem('trigger', new Trigger(new Random(uniform), pushState))
-  world.registerSystem('start-round', new StartRound())
+  world.registerSystem('trigger', new Trigger(uniform, pushState))
+  world.registerSystem('start-round', new StartRound(uniform))
 }

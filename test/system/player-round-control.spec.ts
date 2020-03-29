@@ -3,7 +3,6 @@ import { World } from '../../src/ecs/world'
 import { TlbWorld, registerComponents } from '../../src/tlb'
 import { mockQueries, mockUi, mockReturnValue, mockInput, mockLog, mockImplementation } from '../mocks'
 import { PlayerRoundControl } from '../../src/systems/player-round-control'
-import { Random } from '../../src/random'
 import { characterCreators, take } from '../../src/assets/characters'
 import { Vector } from '../../src/spatial'
 import { TakeTurnComponent, SelectionState } from '../../src/components/rounds'
@@ -39,7 +38,7 @@ describe('PlayerRoundControl', () => {
     placeCharacter(world, player, 0, new Vector([0, 0]))
     world.editEntity(player).withComponent<TakeTurnComponent>('take-turn', { acted: false, moved: false, selectionState: undefined })
 
-    system = new PlayerRoundControl(mockQueries(), new Random(new Uniform('12')))
+    system = new PlayerRoundControl(mockQueries(), new Uniform('12'))
   })
 
   function getSelectionState(): SelectionState | undefined {

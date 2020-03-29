@@ -9,9 +9,11 @@ import { InventoryComponent } from '../components/items'
 import { characterStats } from '../assets/characters'
 import { createAsset } from '../components/asset'
 import { Vector } from '../spatial'
+import { Random } from '../random'
 
 export function damageBodyPart(
   world: TlbWorld,
+  random: Random,
   source: Entity,
   target: Entity,
   stats: CharacterStatsComponent,
@@ -24,7 +26,7 @@ export function damageBodyPart(
   if (bodyPart.health === 0) {
     const isLethal = bodyPart.type === 'torso' || bodyPart.type === 'head'
     if (isLethal) {
-      kill(world, target)
+      kill(world, random, target)
     } else {
       world.createEntity().withComponent<EffectComponent>('effect', {
         effect: bleed(),
@@ -42,7 +44,7 @@ export function healBodyPart(stats: CharacterStatsComponent, bodyPartName: strin
   bodyPart.health = maximum.health
 }
 
-export function kill(world: TlbWorld, entity: Entity) {
+export function kill(world: TlbWorld, random: Random, entity: Entity) {
   if (world.hasComponent(entity, 'position')) {
     const position = world.getComponent<PositionComponent>(entity, 'position')!
     const inventory = world.getComponent<InventoryComponent>(entity, 'inventory')!
@@ -50,7 +52,7 @@ export function kill(world: TlbWorld, entity: Entity) {
     map.levels[position.level].removeCharacter(position.position)
 
     const positionFloor = new Vector([position.position.fX, position.position.fY])
-    const loot = createAsset(world, position.level, positionFloor, 'up', 'loot')
+    const loot = createAsset(world, random, position.level, positionFloor, 'up', 'loot')
     world.editEntity(loot).withComponent<InventoryComponent>('inventory', { ...inventory })
 
     const log: Log = world.getResource<LogResource>('log')

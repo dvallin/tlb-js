@@ -7,6 +7,10 @@ export function indices(to: number): number[] {
 }
 
 export function dropAt<T>(arr: T[], index: number): void {
-  arr[index] = arr[arr.length - 1]
+  arr[index] = tail(arr)!
   arr.pop()
+}
+
+export function tail<T>(arr: T[]): T | undefined {
+  return arr[arr.length - 1]
 }

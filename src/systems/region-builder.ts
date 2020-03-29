@@ -204,7 +204,7 @@ export class RegionBuilder implements TlbSystem {
           createFeatureFromType(world, level, p, 'corridor')
           map.levels[level].setStructure(p, room.entity!)
         })
-        createAssetFromShape(world, level, shape, 'door')
+        createAssetFromShape(world, this.uniform, level, shape, 'door')
       }
     }
   }

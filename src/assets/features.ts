@@ -76,11 +76,13 @@ const featuresDefinition = {
   locker: highObstacle('locker', strangeSymbols[16], primary[1]),
   trash: decoration('trash', strangeSymbols[21], gray[2]),
   door: highObstacle('door', strangeSymbols[27], primary[1]),
-  player: character('you', '@', primary[0]),
+  player: character('@', 'you', primary[0]),
   loot: decoration('some loot', 'l', primary[1]),
   table: lowObstacle('a table', strangeSymbols[3], primary[1]),
+  civilian: character('c', 'civilian', primary[1]),
   guard: character('g', 'guard', primary[1]),
   eliteGuard: character('g', 'elite guard', primary[3]),
+  terminal: lowObstacle('a terminal', strangeSymbols[28], primary[1]),
 }
 export type FeatureType = keyof typeof featuresDefinition
 export const features: { [key in FeatureType]: Feature } = featuresDefinition

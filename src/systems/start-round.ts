@@ -5,9 +5,16 @@ import { ActiveEffectsComponent } from '../components/effects'
 import { damageBodyPart } from '../component-reducers/damage-bodypart'
 import { TakeTurnComponent } from '../components/rounds'
 import { characterStats } from '../assets/characters'
+import { Distribution } from '../random/distributions'
+import { Random } from '../random'
 
 export class StartRound implements TlbSystem {
   public readonly components: ComponentName[] = ['start-turn']
+
+  private readonly uniform: Random
+  public constructor(rng: Distribution) {
+    this.uniform = new Random(rng)
+  }
 
   public update(world: TlbWorld, entity: Entity): void {
     const stats = world.getComponent<CharacterStatsComponent>(entity, 'character-stats')!
@@ -22,7 +29,7 @@ export class StartRound implements TlbSystem {
     activeEffects.effects.forEach(effect => {
       switch (effect.effect.type) {
         case 'bleed':
-          damageBodyPart(world, entity, entity, stats, effect.bodyPart!, 1)
+          damageBodyPart(world, this.uniform, entity, entity, stats, effect.bodyPart!, 1)
           break
         case 'confuse':
           canAim = false

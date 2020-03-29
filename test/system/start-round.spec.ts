@@ -7,6 +7,7 @@ import { TakeTurnComponent } from '../../src/components/rounds'
 import { ActiveEffectsComponent, immobilize, stun, confuse, bleed } from '../../src/components/effects'
 import { CharacterStatsComponent } from '../../src/components/character-stats'
 import { WorldMapResource } from '../../src/resources/world-map'
+import { Uniform } from '../../src/random/distributions'
 
 describe('StartRound', () => {
   let world: TlbWorld
@@ -19,7 +20,7 @@ describe('StartRound', () => {
 
     player = characterCreators.player(world)
     world.editEntity(player).withComponent('start-turn', {})
-    system = new StartRound()
+    system = new StartRound(new Uniform('StartRound'))
   })
 
   it('starts round', () => {

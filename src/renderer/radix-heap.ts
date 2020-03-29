@@ -1,3 +1,5 @@
+import { dropAt } from '../array-utils'
+
 interface Entry<T> {
   priority: number
   key: string
@@ -85,8 +87,7 @@ export class RadixHeap<T> {
     const currentBucket = this.buckets[bucket]
     const index = currentBucket.findIndex(v => v.key === key)!
     const entry = currentBucket[index]
-    currentBucket[index] = currentBucket[currentBucket.length - 1]
-    currentBucket.pop()!
+    dropAt(currentBucket, index)
     return entry
   }
 

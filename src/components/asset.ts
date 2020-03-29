@@ -16,6 +16,8 @@ import { Direction } from '../spatial/direction'
 import { InventoryComponent } from './items'
 import { DialogType } from '../assets/dialogs'
 import { DialogComponent } from './dialog'
+import { Random } from '../random'
+import { sampleLoreForDialog, LoreComponent } from './lore'
 
 export interface AssetComponent {
   type: AssetType
@@ -39,18 +41,25 @@ export function shapeOfAsset(type: AssetType, position: Vector, direction: Direc
   return Rectangle.footprint(position, direction, asset.size)
 }
 
-export function createAsset(world: TlbWorld, level: number, position: Vector, direction: Direction, type: AssetType): Entity {
+export function createAsset(
+  world: TlbWorld,
+  random: Random,
+  level: number,
+  position: Vector,
+  direction: Direction,
+  type: AssetType
+): Entity {
   const shape = shapeOfAsset(type, position, direction)
-  return createAssetFromShape(world, level, shape, type)
+  return createAssetFromShape(world, random, level, shape, type)
 }
 
-export function createAssetFromShape(world: TlbWorld, level: number, shape: Shape, type: AssetType): Entity {
-  const entity = placeAsset(world, type)
+export function createAssetFromShape(world: TlbWorld, random: Random, level: number, shape: Shape, type: AssetType): Entity {
+  const entity = placeAsset(world, random, type)
   placeAssetParts(world, type, entity, level, shape)
   return entity
 }
 
-function placeAsset(world: TlbWorld, type: AssetType): Entity {
+function placeAsset(world: TlbWorld, random: Random, type: AssetType): Entity {
   const asset = assets[type]
   const entity = world
     .createEntity()
@@ -61,6 +70,10 @@ function placeAsset(world: TlbWorld, type: AssetType): Entity {
   }
   if (asset.dialog !== undefined) {
     world.editEntity(entity).withComponent<DialogComponent>('dialog', { type: asset.dialog })
+    const lore = sampleLoreForDialog(world, random, asset.dialog)
+    if (lore !== undefined) {
+      world.editEntity(entity).withComponent<LoreComponent>('lore', { type: lore })
+    }
   }
   return entity
 }
