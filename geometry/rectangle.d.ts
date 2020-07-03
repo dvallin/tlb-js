@@ -1,0 +1,36 @@
+import { AbstractShape } from './shape';
+import { Vector } from '../spatial';
+import { Direction } from '../spatial/direction';
+export declare class Rectangle extends AbstractShape {
+    readonly x: number;
+    readonly y: number;
+    readonly width: number;
+    readonly height: number;
+    static fromBounds(left: number, right: number, top: number, bottom: number): Rectangle;
+    static footprint(position: Vector, direction: Direction, size: Vector): Rectangle;
+    static centerAt(x: number, y: number, size: number): Rectangle;
+    constructor(x: number, y: number, width: number, height: number);
+    readonly left: number;
+    readonly right: number;
+    readonly top: number;
+    readonly bottom: number;
+    readonly topLeft: Vector;
+    readonly topRight: Vector;
+    readonly bottomRight: Vector;
+    readonly bottomLeft: Vector;
+    readonly center: Vector;
+    centerOf(direction: Direction): Vector;
+    readonly centerLeft: Vector;
+    readonly centerRight: Vector;
+    readonly centerTop: Vector;
+    readonly centerBottom: Vector;
+    plus(other: Rectangle): Rectangle;
+    intersect(other: Rectangle): Rectangle;
+    cover(other: Vector): Rectangle;
+    bounds(): Rectangle;
+    containsVector(p: Vector): boolean;
+    translate(t: Vector): Rectangle;
+    grow(cells?: number): Rectangle;
+    shrink(cells?: number): Rectangle;
+    all(f: (position: Vector) => boolean): boolean;
+}

@@ -1,0 +1,30 @@
+import { Storage } from './storage';
+import { System } from './system';
+import { Resource } from './resource';
+import { Entity, EntityModifier } from './entity';
+export declare class World<C, S, R> {
+    readonly components: Map<C, Storage<object>>;
+    readonly resources: Map<R, Resource<C, S, R>>;
+    readonly systems: Map<S, System<C, S, R>>;
+    readonly emptySystems: Set<S>;
+    readonly activeSystems: Set<S>;
+    private openEntities;
+    private lastEntity;
+    readonly entityCount: number;
+    registerComponentStorage<T extends object>(component: C, storage: Storage<T>): void;
+    getStorage<T extends object>(component: C): Storage<T>;
+    getResource<T extends Resource<C, S, R>>(resource: R): T;
+    getComponent<T extends object>(entity: Entity, component: C): T | undefined;
+    hasEntity(entity: Entity): boolean;
+    hasComponent(entity: Entity, component: C): boolean;
+    createEntity(): EntityModifier<C, S, R>;
+    editEntity(entity: Entity): EntityModifier<C, S, R>;
+    deleteEntity(entity: Entity): void;
+    registerSystem(name: S, system: System<C, S, R>): void;
+    enableSystem(name: S): void;
+    disableSystem(name: S): void;
+    activeSystemsList(): S[];
+    registerResource(resource: Resource<C, S, R>): void;
+    updateResources(): void;
+    updateSystems(): void;
+}

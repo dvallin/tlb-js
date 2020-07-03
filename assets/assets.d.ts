@@ -1,0 +1,14 @@
+import { Asset } from '../components/asset';
+declare const assetsDefinition: {
+    door: Asset;
+    locker: Asset;
+    trash: Asset;
+    loot: Asset;
+    table: Asset;
+    generator: Asset;
+};
+export declare type AssetType = keyof typeof assetsDefinition;
+export declare const assets: {
+    [key in AssetType]: Asset;
+};
+export {};
