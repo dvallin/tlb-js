@@ -2,6 +2,7 @@ import { Vector } from '../spatial';
 import { Position } from '../renderer/position';
 import { TlbWorld, ResourceName, TlbResource } from '../tlb';
 import { Entity } from '../ecs/entity';
+import { Color } from '../renderer/color';
 export interface Renderable {
     entity: Entity | undefined;
     opaque: boolean;
@@ -15,6 +16,7 @@ export interface Viewport {
     addLayer(layer: Layer): void;
     gridLocked: boolean;
     boundaries: Vector;
+    ambientColor: Color;
     level: number;
 }
 export interface Layer {
@@ -27,9 +29,11 @@ export declare class ViewportResource implements TlbResource, Viewport {
     gridLocked: boolean;
     topLeft: Vector;
     level: number;
+    ambientColor: Color;
     readonly layers: Layer[];
     constructor(boundaries: Vector);
     update(world: TlbWorld): void;
+    center(): Vector;
     collectRenderables(world: TlbWorld): Renderable[];
     addLayer(layer: Layer): void;
     fromDisplay(p: Position): Vector;

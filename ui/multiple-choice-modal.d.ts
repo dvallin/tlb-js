@@ -5,8 +5,8 @@ import { UIElement } from './ui-element';
 import { TlbWorld } from '../tlb';
 import { WindowDecoration } from './window-decoration';
 import { ItemSelector } from './selector';
-export interface MultipleChoiseOption {
-    entity: Entity;
+export interface MultipleChoiceOption {
+    entity: Entity | number;
     description: string;
 }
 export declare class MultipleChoiceModal implements UIElement {
@@ -17,7 +17,7 @@ export declare class MultipleChoiceModal implements UIElement {
         entity: Entity;
         description: string;
     }>;
-    constructor(window: WindowDecoration, options: MultipleChoiseOption[]);
+    constructor(window: WindowDecoration, options: MultipleChoiceOption[]);
     render(renderer: Renderer): void;
     update(world: TlbWorld): void;
     contains(position: Vector): boolean;

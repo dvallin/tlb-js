@@ -16,11 +16,11 @@ export declare class ItemSelector<T> implements Selector<T> {
     private readonly state;
     constructor(items: T[], state?: SelectorState);
     setItems(items: T[]): void;
-    readonly selected: T | undefined;
-    readonly hovered: T | undefined;
-    readonly selectedIndex: number | undefined;
-    readonly hoveredIndex: number | undefined;
-    readonly length: number;
+    get selected(): T | undefined;
+    get hovered(): T | undefined;
+    get selectedIndex(): number | undefined;
+    get hoveredIndex(): number | undefined;
+    get length(): number;
     itemAtIndex(line: number): T | undefined;
     update(world: TlbWorld, content: Rectangle): void;
     isItemVisible(content: Rectangle, index: number): boolean;

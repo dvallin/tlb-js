@@ -6,6 +6,7 @@ export declare class FunctionalShape extends AbstractShape {
     private readonly boundary;
     static lN(position: Vector, size?: number, center?: boolean): FunctionalShape;
     static l1(position: Vector, size?: number, center?: boolean): FunctionalShape;
+    static empty(position: Vector): FunctionalShape;
     static l2(position: Vector, size?: number, center?: boolean): FunctionalShape;
     static fromMeasure(position: Vector, size: number, center: boolean, measure: (d: Vector) => boolean): FunctionalShape;
     constructor(f: (p: Vector) => boolean, boundary: Rectangle);

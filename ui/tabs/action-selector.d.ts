@@ -6,43 +6,34 @@ import { Selector, ItemSelector } from '../selector';
 import { Tab, TabView, TabsKey } from '../tabs';
 import { KeyboardCommand } from '../../resources/input';
 export interface SelectableAction {
-    action: Action;
-    available: boolean;
-}
-export interface ActionGroup {
+    owner?: string;
     entity: number;
-    description: string;
-    name: string;
-    items: SelectableAction[];
+    action: Action;
 }
 export declare class ActionSelectorFullView implements TabView, Selector<SelectedAction> {
     readonly content: Rectangle;
-    readonly groups: ActionGroup[];
+    readonly selectableActions: SelectableAction[];
     private readonly actions;
     private readonly descriptions;
-    private selectedGroupIndex;
-    readonly groupSelector: ItemSelector<ActionGroup>;
-    actionSelector: ItemSelector<SelectableAction> | undefined;
-    constructor(content: Rectangle, groups: ActionGroup[]);
+    readonly selector: ItemSelector<SelectableAction>;
+    constructor(content: Rectangle, selectableActions: SelectableAction[]);
     render(renderer: Renderer): void;
-    readonly selected: SelectedAction | undefined;
-    readonly hovered: SelectedAction | undefined;
-    readonly length: number;
+    get selected(): SelectedAction | undefined;
+    get hovered(): SelectedAction | undefined;
+    get length(): number;
     update(world: TlbWorld): void;
     private renderActions;
-    private renderGroup;
-    private renderAction;
     private renderDescription;
 }
 export declare class ActionSelectorMinimizedView implements TabView {
     readonly content: Rectangle;
-    readonly groups: ActionGroup[];
-    constructor(content: Rectangle, groups: ActionGroup[]);
+    readonly actions: SelectableAction[];
+    constructor(content: Rectangle, actions: SelectableAction[]);
     update(_world: TlbWorld): void;
     render(renderer: Renderer): void;
 }
 export declare class ActionSelector implements Tab, Selector<SelectedAction> {
-    readonly groups: ActionGroup[];
+    readonly actions: SelectableAction[];
     readonly key: TabsKey;
     readonly name: string;
     readonly shortName: string;
@@ -50,10 +41,10 @@ export declare class ActionSelector implements Tab, Selector<SelectedAction> {
     readonly minimizedHint: TabsKey;
     full: ActionSelectorFullView | undefined;
     minimized: ActionSelectorMinimizedView | undefined;
-    constructor(groups: ActionGroup[]);
+    constructor(actions: SelectableAction[]);
     setFull(content: Rectangle): void;
     setMinimized(content: Rectangle): void;
-    readonly selected: SelectedAction | undefined;
-    readonly hovered: SelectedAction | undefined;
-    readonly length: number;
+    get selected(): SelectedAction | undefined;
+    get hovered(): SelectedAction | undefined;
+    get length(): number;
 }

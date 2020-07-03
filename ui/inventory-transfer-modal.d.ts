@@ -5,6 +5,7 @@ import { UIElement } from './ui-element';
 import { TlbWorld } from '../tlb';
 import { WindowDecoration } from './window-decoration';
 import { InventoryDescription } from '../component-reducers/inventory-description';
+import { Rectangle } from '../geometry/rectangle';
 export interface State {
     leftWindow: WindowDecoration;
     rightWindow: WindowDecoration;
@@ -20,6 +21,7 @@ export declare class InventoryTransferModal implements UIElement {
     closed: boolean;
     constructor(state: State);
     render(renderer: Renderer): void;
+    static build(bounds: Rectangle, source: Entity, sourceTitle: string, target: Entity, targetTitle: string): InventoryTransferModal;
     renderInventory(renderer: Renderer, window: WindowDecoration, inventory: InventoryDescription, active: boolean, hovered: number | undefined): void;
     update(world: TlbWorld): void;
     transfer(source: InventoryDescription, target: InventoryDescription, index: number): void;

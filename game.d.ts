@@ -2,6 +2,7 @@ import { TlbWorld } from './tlb';
 import { State } from './game-states/state';
 import { Renderer } from './renderer/renderer';
 import { Queries } from './renderer/queries';
+import { Uniform } from './random/distributions';
 export declare class Game {
     private readonly world;
     readonly renderer: Renderer;
@@ -13,14 +14,15 @@ export declare class Game {
     currentState: number;
     states: State[];
     rayCaster: Queries;
+    uniform: Uniform;
     constructor(world: TlbWorld, renderer: Renderer, targetFps: number);
     init(): void;
     execute(): void;
     private tick;
-    readonly fps: number;
-    readonly mspf: number;
-    readonly msrpf: number;
-    readonly mscpf: number;
+    get fps(): number;
+    get mspf(): number;
+    get msrpf(): number;
+    get mscpf(): number;
     private pushState;
     private enterState;
 }

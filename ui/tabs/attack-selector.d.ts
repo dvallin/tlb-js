@@ -14,12 +14,11 @@ export declare class AttackSelectorFullView implements TabView, Selector<Path> {
     private readonly range;
     private isSelected;
     private path;
-    private enemies;
     constructor(content: Rectangle, target: Entity, queries: Queries, range: number);
-    render(renderer: Renderer): void;
-    readonly selected: Path | undefined;
-    readonly hovered: Path | undefined;
-    readonly length: number;
+    render(_renderer: Renderer): void;
+    get selected(): Path | undefined;
+    get hovered(): Path | undefined;
+    get length(): number;
     update(world: TlbWorld): void;
 }
 export declare class AttackSelector implements Tab, Selector<Path> {
@@ -36,7 +35,7 @@ export declare class AttackSelector implements Tab, Selector<Path> {
     constructor(target: Entity, queries: Queries, range: number);
     setFull(content: Rectangle): void;
     setMinimized(content: Rectangle): void;
-    readonly selected: Path | undefined;
-    readonly hovered: Path | undefined;
-    readonly length: number;
+    get selected(): Path | undefined;
+    get hovered(): Path | undefined;
+    get length(): number;
 }

@@ -6,6 +6,10 @@ declare const assetsDefinition: {
     loot: Asset;
     table: Asset;
     generator: Asset;
+    elevator: Asset;
+    terminal: Asset;
+    urinal: Asset;
+    core: Asset;
 };
 export declare type AssetType = keyof typeof assetsDefinition;
 export declare const assets: {

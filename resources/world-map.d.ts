@@ -1,4 +1,4 @@
-import { Vector, Space, StackedSpace } from '../spatial';
+import { Vector, Space } from '../spatial';
 import { Entity } from '../ecs/entity';
 import { ResourceName, TlbResource, TlbWorld } from '../tlb';
 import { FeatureComponent } from '../components/feature';
@@ -12,7 +12,6 @@ export declare class Level {
     readonly structures: Space<Entity>;
     visible: SetSpace;
     readonly discovered: SetSpace;
-    lights: StackedSpace<Entity>;
     constructor(width: number);
     setTile(position: Vector, entity: Entity): void;
     getTile(position: Vector): Entity | undefined;
@@ -22,11 +21,11 @@ export declare class Level {
     setCharacter(position: Vector, entity: Entity): void;
     getCharacter(position: Vector): Entity | undefined;
     removeCharacter(position: Vector): Entity | undefined;
-    addLight(position: Vector, entity: Entity): void;
     isDiscovered(position: Vector): boolean;
     isVisible(position: Vector): boolean;
+    blocksJump(world: TlbWorld, position: Vector): boolean;
     isBlocking(world: TlbWorld, position: Vector, self?: Entity | undefined): boolean;
-    isLightBlocking(world: TlbWorld, position: Vector, useCharacters?: boolean): boolean;
+    isLightBlocking(world: TlbWorld, position: Vector): boolean;
     tileMatches(world: TlbWorld, position: Vector, predicate: (f: FeatureComponent | undefined) => boolean): boolean;
     characterMatches(world: TlbWorld, position: Vector, predicate: (f: FeatureComponent | undefined) => boolean, self?: Entity | undefined): boolean;
     featureMatches(world: TlbWorld, entity: Entity | undefined, predicate: (f: FeatureComponent | undefined) => boolean): boolean;

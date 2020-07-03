@@ -4,6 +4,7 @@ export interface Shape {
     bounds(): Rectangle;
     containsVector(p: Vector): boolean;
     contains(s: Shape): boolean;
+    intersects(s: Shape): boolean;
     equals(s: Shape): boolean;
     foreach(f: (p: Vector, i: number) => void): void;
     all(f: (p: Vector) => boolean): boolean;
@@ -20,6 +21,7 @@ export declare abstract class AbstractShape implements Shape {
     abstract grow(cells?: number): Shape;
     abstract shrink(cells?: number): Shape;
     contains(s: Shape): boolean;
+    intersects(s: Shape): boolean;
     equals(s: Shape): boolean;
     foreach(f: (position: Vector, i: number) => void): void;
     some(f: (position: Vector) => boolean): boolean;

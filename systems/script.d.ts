@@ -4,5 +4,5 @@ import { Vector } from '../spatial';
 export declare class Script implements TlbSystem {
     readonly components: ComponentName[];
     update(world: TlbWorld, entity: Entity): void;
-    move(world: TlbWorld, entity: Entity, target: Vector): boolean;
+    moveOrTrigger(world: TlbWorld, entity: Entity, target: Vector): boolean;
 }

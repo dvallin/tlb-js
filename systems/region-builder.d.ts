@@ -1,0 +1,30 @@
+import { Entity } from '../ecs/entity';
+import { Distribution } from '../random/distributions';
+import { WorldMap } from '../resources/world-map';
+import { ComponentName, TlbSystem, TlbWorld } from '../tlb';
+import { ComplexEmbedding } from '../generative/complex-embedder';
+import { Shape } from '../geometry/shape';
+import { Vector } from '../spatial';
+import { Partition } from '../generative/partitioners/Partitioner';
+export declare class RegionBuilder implements TlbSystem {
+    private readonly rng;
+    readonly dry: boolean;
+    readonly components: ComponentName[];
+    private readonly uniform;
+    constructor(rng: Distribution, dry?: boolean);
+    update(world: TlbWorld, entity: Entity): void;
+    private buildElevator;
+    private buildOfficeSpace;
+    private buildEntrance;
+    private buildCore;
+    private printPartition;
+    private tryToBuildPartition;
+    fillPartitionWithStructure(world: TlbWorld, region: Entity, partition: Partition): Entity;
+    removeStructures(world: TlbWorld, region: Entity): void;
+    findEmbedding(world: TlbWorld, entity: Entity, structure: Entity): ComplexEmbedding[] | undefined;
+    private renderPartition;
+    renderExits(world: TlbWorld, map: WorldMap, level: number, entity: Entity, shape: Shape, positions: Vector[]): void;
+    renderDoors(world: TlbWorld, map: WorldMap, level: number, shape: Shape, positions: Vector[]): void;
+    private renderRoom;
+    private setTile;
+}

@@ -1,16 +1,5 @@
 import { Item } from '../components/items';
-declare const itemsDefinition: {
-    nailGun: Item;
-    rifle: Item;
-    sniperRifle: Item;
-    deathPill: Item;
-    bandages: Item;
-    leatherJacket: Item;
-    bootsOfStriding: Item;
-    idCard: Item;
-};
-export declare type ItemType = keyof typeof itemsDefinition;
-export declare const items: {
-    [key in ItemType]: Item;
-};
-export {};
+import { Random } from '../random';
+import { RegionsType } from '../components/region';
+export declare type ItemBaseType = 'deathPill' | 'bandages' | 'nailGun' | 'gun' | 'powerGauntlet' | 'rifle' | 'sniperRifle' | 'leatherJacket' | 'idCard' | 'boots';
+export declare function createItem(base: ItemBaseType, _random: Random, _region: RegionsType): Item;

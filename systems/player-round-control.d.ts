@@ -1,22 +1,24 @@
-import { ComponentName, TlbSystem, TlbWorld } from '../tlb';
-import { TakeTurnComponent } from '../components/rounds';
+import { ComponentName, TlbSystem, TlbWorld, PushState } from '../tlb';
+import { TakeTurnComponent, SelectionState } from '../components/rounds';
 import { Queries } from '../renderer/queries';
 import { Entity } from '../ecs/entity';
-import { SelectedActionComponent, Movement, Attack, Status } from '../components/action';
-import { ActionGroup } from '../ui/tabs/action-selector';
-import { Random } from '../random';
+import { Movement, Attack, Status, Action, SubAction, Jump } from '../components/action';
+import { SelectableAction } from '../ui/tabs/action-selector';
+import { Distribution } from '../random/distributions';
 export declare class PlayerRoundControl implements TlbSystem {
     readonly queries: Queries;
-    readonly random: Random;
+    readonly pushState: PushState;
+    rng: Distribution;
     readonly components: ComponentName[];
-    constructor(queries: Queries, random: Random);
+    private readonly random;
+    constructor(queries: Queries, pushState: PushState, rng: Distribution);
     update(world: TlbWorld, entity: Entity): void;
-    doTurn(world: TlbWorld, entity: Entity, takeTurn: TakeTurnComponent, availableActions: ActionGroup[]): void;
-    handleSubAction(world: TlbWorld, entity: Entity, subAction: Movement | Attack | Status, selectedAction: SelectedActionComponent): boolean;
+    doTurn(world: TlbWorld, entity: Entity, takeTurn: TakeTurnComponent, availableActions: SelectableAction[]): void;
+    handleSubAction(world: TlbWorld, entity: Entity, action: Action, subAction: SubAction, state: SelectionState): boolean;
     endTurn(world: TlbWorld, entity: Entity): void;
-    clearAction(world: TlbWorld, entity: Entity): void;
-    move(world: TlbWorld, entity: Entity, movement: Movement): boolean;
+    move(world: TlbWorld, entity: Entity, movement: Movement | Jump): boolean;
     findTarget(world: TlbWorld, entity: Entity, attack: Attack): Entity | undefined;
-    attackTarget(world: TlbWorld, entity: Entity, attack: Attack, target: Entity): boolean;
-    status(world: TlbWorld, entity: Entity, status: Status): boolean;
+    status(world: TlbWorld, entity: Entity, status: Status, item: Entity): boolean;
+    trigger(world: TlbWorld, entity: Entity, target: Entity): boolean;
+    changeEquipment(world: TlbWorld, entity: Entity): boolean;
 }

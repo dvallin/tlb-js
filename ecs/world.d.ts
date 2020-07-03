@@ -10,7 +10,7 @@ export declare class World<C, S, R> {
     readonly activeSystems: Set<S>;
     private openEntities;
     private lastEntity;
-    readonly entityCount: number;
+    get entityCount(): number;
     registerComponentStorage<T extends object>(component: C, storage: Storage<T>): void;
     getStorage<T extends object>(component: C): Storage<T>;
     getResource<T extends Resource<C, S, R>>(resource: R): T;

@@ -3,7 +3,6 @@ import { AbstractState } from './state';
 import { Entity } from '../ecs/entity';
 export declare class Fighting extends AbstractState {
     constructor();
-    private wasGridLocked;
     start(world: TlbWorld): void;
     stop(world: TlbWorld): void;
     update(world: TlbWorld): void;

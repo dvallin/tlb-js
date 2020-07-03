@@ -3,7 +3,6 @@ import { Entity } from '../../ecs/entity';
 import { TlbWorld } from '../../tlb';
 import { CharacterStatsComponent } from '../../components/character-stats';
 import { TakeTurnComponent } from '../../components/rounds';
-import { LightingComponent } from '../../components/light';
 import { KeyboardCommand } from '../../resources/input';
 import { Rectangle } from '../../geometry/rectangle';
 import { FeatureProvider } from '../../components/feature';
@@ -17,7 +16,6 @@ export interface State {
     enemies: {
         feature?: FeatureProvider;
     }[];
-    lighting?: LightingComponent;
 }
 export declare class OverviewView implements TabView {
     readonly content: Rectangle;

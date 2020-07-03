@@ -1,21 +1,20 @@
 import { TlbResource, ResourceName } from '../tlb';
 import { Vector } from '../spatial';
 import { Position } from '../renderer/position';
-export declare const defaultKeyMapping: {
-    [key in KeyboardCommand]: number | Key;
-};
 export interface Key {
-    shift: boolean;
     ctrl: boolean;
     meta: boolean;
     alt: boolean;
-    pressed: number;
+    key: string;
 }
+export declare const defaultKeyMapping: {
+    [key in KeyboardCommand]: Key;
+};
 export declare type NumericKeyboardCommand = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 export declare type OptionsKeyboardCommand = 'grid';
 export declare type TabKeyboardCommand = 'inventory' | 'log' | 'focus' | 'overview';
 export declare type UIInteractionKeyboardCommand = 'accept' | 'cancel';
-export declare type PlayerInteractionKeyboardCommand = 'left' | 'down' | 'up' | 'right' | 'use';
+export declare type PlayerInteractionKeyboardCommand = 'left' | 'down' | 'up' | 'right' | 'use' | 'plus' | 'minus';
 export declare type KeyboardCommand = NumericKeyboardCommand | PlayerInteractionKeyboardCommand | UIInteractionKeyboardCommand | TabKeyboardCommand | OptionsKeyboardCommand;
 export interface Input {
     position: Position | undefined;
@@ -37,14 +36,15 @@ export declare class InputResource implements TlbResource, Input {
     ctrl: boolean;
     alt: boolean;
     meta: boolean;
-    keyDown: Set<number>;
-    keyPressed: Set<number>;
-    keyReleased: Set<number>;
+    keyDown: Set<string>;
+    keyPressed: Set<string>;
+    keyReleased: Set<string>;
     private mouseEvent;
     private keyEvents;
     constructor(eventToPosition: (event: MouseEvent | TouchEvent) => Position | undefined);
     update(): void;
     isActive(command: KeyboardCommand): boolean;
+    isDown(command: KeyboardCommand): boolean;
     numericActive(): NumericKeyboardCommand | undefined;
     createMovementDelta(): Vector;
     private handleMouseEvent;

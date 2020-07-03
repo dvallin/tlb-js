@@ -1,93 +1,34 @@
 import { Feature } from '../components/feature';
 declare const featuresDefinition: {
-    wall: {
-        character: string;
-        diffuse: import("../renderer/color").Color;
-        blocking: boolean;
-        lightBlocking: boolean;
-        name: string;
-    };
-    corridor: {
-        character: string;
-        diffuse: import("../renderer/color").Color;
-        blocking: boolean;
-        lightBlocking: boolean;
-        name: string;
-    };
-    room: {
-        character: string;
-        diffuse: import("../renderer/color").Color;
-        blocking: boolean;
-        lightBlocking: boolean;
-        name: string;
-    };
-    locker: {
-        character: string;
-        diffuse: import("../renderer/color").Color;
-        blocking: boolean;
-        lightBlocking: boolean;
-        name: string;
-    };
-    trash: {
-        character: string;
-        diffuse: import("../renderer/color").Color;
-        blocking: boolean;
-        lightBlocking: boolean;
-        name: string;
-    };
-    door: {
-        character: string;
-        diffuse: import("../renderer/color").Color;
-        blocking: boolean;
-        lightBlocking: boolean;
-        name: string;
-    };
-    hub: {
-        character: string;
-        diffuse: import("../renderer/color").Color;
-        blocking: boolean;
-        lightBlocking: boolean;
-        name: string;
-    };
-    player: {
-        character: string;
-        diffuse: import("../renderer/color").Color;
-        blocking: boolean;
-        lightBlocking: boolean;
-        name: string;
-    };
-    loot: {
-        character: string;
-        diffuse: import("../renderer/color").Color;
-        blocking: boolean;
-        lightBlocking: boolean;
-        name: string;
-    };
-    table: {
-        character: string;
-        diffuse: import("../renderer/color").Color;
-        blocking: boolean;
-        lightBlocking: boolean;
-        name: string;
-    };
+    wall: Feature;
+    corridor: Feature;
+    room: Feature;
+    hub: Feature;
+    locker: Feature;
+    trash: Feature;
+    urinal: Feature;
+    door: Feature;
+    yellow_player: Feature;
+    green_player: Feature;
+    blue_player: Feature;
+    red_player: Feature;
+    loot: Feature;
+    table: Feature;
+    civilian: Feature;
     guard: Feature;
     eliteGuard: Feature;
+    terminal: Feature;
+    core: Feature;
 };
 export declare type FeatureType = keyof typeof featuresDefinition;
 export declare const features: {
     [key in FeatureType]: Feature;
 };
 declare const generatorsDefinition: {
-    block: (index: number) => {
-        character: string;
-        diffuse: import("../renderer/color").Color;
-        blocking: boolean;
-        lightBlocking: boolean;
-        name: string;
-    };
+    [key: string]: (index: number) => Feature | undefined;
 };
 export declare type FeatureGeneratorsType = keyof typeof generatorsDefinition;
 export declare const generators: {
-    [key in FeatureGeneratorsType]: (index: number) => Feature;
+    [key in FeatureGeneratorsType]: (index: number) => Feature | undefined;
 };
 export {};

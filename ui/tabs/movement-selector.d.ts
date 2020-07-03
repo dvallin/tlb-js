@@ -1,4 +1,4 @@
-import { Movement } from '../../components/action';
+import { Movement, Jump } from '../../components/action';
 import { Renderer } from '../../renderer/renderer';
 import { TlbWorld } from '../../tlb';
 import { Rectangle } from '../../geometry/rectangle';
@@ -16,11 +16,11 @@ export declare class MovementSelectorFullView implements TabView, Selector<Path>
     private isSelected;
     private path;
     private targetFeature;
-    constructor(content: Rectangle, target: Entity, queries: Queries, movement: Movement);
+    constructor(content: Rectangle, target: Entity, queries: Queries, movement: Movement | Jump);
     render(renderer: Renderer): void;
-    readonly selected: Path | undefined;
-    readonly hovered: Path | undefined;
-    readonly length: number;
+    get selected(): Path | undefined;
+    get hovered(): Path | undefined;
+    get length(): number;
     update(world: TlbWorld): void;
 }
 export declare class MovementSelector implements Tab, Selector<Path> {
@@ -34,10 +34,10 @@ export declare class MovementSelector implements Tab, Selector<Path> {
     readonly minimizedHint: TabsKey;
     full: MovementSelectorFullView | undefined;
     minimized: MovementSelectorFullView | undefined;
-    constructor(target: Entity, queries: Queries, movement: Movement);
+    constructor(target: Entity, queries: Queries, movement: Movement | Jump);
     setFull(content: Rectangle): void;
     setMinimized(content: Rectangle): void;
-    readonly selected: Path | undefined;
-    readonly hovered: Path | undefined;
-    readonly length: number;
+    get selected(): Path | undefined;
+    get hovered(): Path | undefined;
+    get length(): number;
 }

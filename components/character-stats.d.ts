@@ -9,15 +9,13 @@ export declare type bodyPartType = 'head' | 'arm' | 'torso' | 'leg';
 export interface BodyPart {
     type: bodyPartType;
     itemAttachments: ItemKind[];
-    health: number;
 }
 export interface CharacterStats {
     bodyParts: {
         [key: string]: BodyPart;
     };
+    health: number;
     strength: number;
-    movement: number;
-    actions: number;
     aim: number;
 }
-export declare function speed(stats: CharacterStatsComponent): number;
+export declare function speed(_stats: CharacterStatsComponent): number;
